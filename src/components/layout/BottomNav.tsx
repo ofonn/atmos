@@ -6,8 +6,8 @@ import { LayoutDashboard, CalendarDays, BarChart2, MessageCircle, Settings } fro
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Home' },
-  { href: '/overview', icon: CalendarDays, label: 'Overview' },
   { href: '/technical', icon: BarChart2, label: 'Details' },
+  { href: '/overview', icon: CalendarDays, label: 'Overview' },
   { href: '/chat', icon: MessageCircle, label: 'Chat' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ]

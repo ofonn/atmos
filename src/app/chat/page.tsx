@@ -16,6 +16,8 @@ const quickPrompts = [
   'UV Index today',
   'Air quality alert',
   'Best time to exercise?',
+  'What to wear today?',
+  'Will it rain today?',
 ]
 
 export default function ChatPage() {
@@ -28,13 +30,41 @@ export default function ChatPage() {
   const { tempUnit } = useSettings()
   const { messages, loading, sendMessage, clearChat } = useChat({ current, hourly, daily })
   const [input, setInput] = useState('')
+  const [typingText, setTypingText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const autoSentRef = useRef(false)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  // Pick up pending auto-message (e.g. from "Plan Your Week" button)
+  useEffect(() => {
+    if (autoSentRef.current) return
+    try {
+      const pending = localStorage.getItem('atmos_chat_pending')
+      if (!pending) return
+      localStorage.removeItem('atmos_chat_pending')
+      autoSentRef.current = true
+
+      // Animate typing the message before sending
+      let i = 0
+      setTypingText('')
+      const interval = setInterval(() => {
+        i++
+        setTypingText(pending.slice(0, i))
+        if (i >= pending.length) {
+          clearInterval(interval)
+          setTimeout(() => {
+            setTypingText('')
+            sendMessage(pending)
+          }, 400)
+        }
+      }, 18)
+    } catch {}
+  }, [sendMessage])
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -252,15 +282,15 @@ export default function ChatPage() {
 
       {/* Input area - fixed at bottom, no BottomNav overlap */}
       <div className="relative z-20 flex-shrink-0 px-4 pt-2 pb-4" style={{ background: 'var(--bg)' }}>
-        {/* Quick prompts */}
+        {/* Quick prompts — all visible in wrapped rows */}
         {messages.length === 0 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3">
+          <div className="flex flex-wrap gap-2 pb-3">
             {quickPrompts.map((p) => (
               <button
                 key={p}
                 onClick={() => sendMessage(p)}
-                disabled={loading}
-                className="whitespace-nowrap px-4 py-1.5 rounded-full font-label text-[11px] transition-colors flex-shrink-0 disabled:opacity-40"
+                disabled={loading || !!typingText}
+                className="px-4 py-1.5 rounded-full font-label text-[11px] transition-colors disabled:opacity-40"
                 style={{
                   background: 'var(--surface)',
                   color: 'var(--text-muted)',
@@ -289,12 +319,13 @@ export default function ChatPage() {
           >
             <input
               type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+              value={typingText || input}
+              onChange={(e) => { if (!typingText) setInput(e.target.value) }}
               placeholder="Ask Atmos (e.g., Do I need a hoodie?)"
               className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem]"
-              style={{ color: 'var(--text)' }}
-              disabled={loading}
+              style={{ color: typingText ? 'var(--primary)' : 'var(--text)' }}
+              disabled={loading || !!typingText}
+              readOnly={!!typingText}
             />
             <div className="flex items-center gap-2">
               <button

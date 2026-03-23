@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { useWeather } from '@/hooks/useWeather'
 import { useLocation } from '@/hooks/useLocation'
+import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import { displayTemp } from '@/lib/utils'
 import { MapPin, Search, Sparkles, X, RefreshCw } from 'lucide-react'
@@ -43,39 +44,23 @@ export default function Home() {
   const { tempUnit } = useSettings()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [aiHeadline, setAiHeadline] = useState<{ headline: string; advice: string } | null>(null)
-  const [headlineLoading, setHeadlineLoading] = useState(false)
 
   const { location, searchCity, loading: locLoading } = useLocation()
-  const { current, loading: weatherLoading } = useWeather(
+  const { current, hourly, daily, refresh: refreshWeather, loading: weatherLoading } = useWeather(
     location?.lat ?? null,
     location?.lon ?? null
   )
 
+  // Single batched AI call — 1hr cache
+  const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
+
   const loading = locLoading || weatherLoading
   const isDark = theme !== 'light'
 
-  const fetchAiHeadline = useCallback(async () => {
-    if (!current) return
-    setHeadlineLoading(true)
-    try {
-      const res = await fetch('/api/headline', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          temp: current.temp,
-          feelsLike: current.feelsLike,
-          description: current.description,
-          conditionCode: current.conditionCode,
-          windSpeed: current.windSpeed,
-          humidity: current.humidity,
-        }),
-      })
-      const data = await res.json()
-      if (data.headline) setAiHeadline({ headline: data.headline, advice: data.advice })
-    } catch {}
-    setHeadlineLoading(false)
-  }, [current])
+  const handleRefresh = () => {
+    refreshWeather()
+    refreshAi()
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,7 +68,7 @@ export default function Home() {
   }
 
   const icon = current ? get3DIconStyle(current.conditionCode) : null
-  const displayed = aiHeadline ?? (current ? getFallbackHeadline(current.temp, current.conditionCode) : null)
+  const displayed = aiContent ?? (current ? getFallbackHeadline(current.temp, current.conditionCode) : null)
 
   // Split headline at last word for gradient effect
   const splitHeadline = (text: string) => {
@@ -187,9 +172,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Headline — fills vertical space, margin-top 30px from temp */}
+            {/* Headline — fills vertical space */}
             <div className="flex-1 flex flex-col justify-start min-h-0" style={{ marginTop: '30px' }}>
-              {headlineLoading ? (
+              {aiLoading && !displayed ? (
                 <div className="flex-1 flex flex-col gap-2 justify-center">
                   <div className="h-16 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
                   <div className="h-16 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
@@ -199,7 +184,7 @@ export default function Home() {
                 <>
                   <h1
                     className="font-headline font-extrabold leading-[0.88] tracking-tighter"
-                    style={{ fontSize: 'clamp(2.8rem, 13vw, 4.2rem)', color: 'var(--text)' }}
+                    style={{ fontSize: 'clamp(2.8rem, 13vw, 4.2rem)', color: 'var(--text)', paddingBottom: '0.25em', overflow: 'visible' }}
                   >
                     {(() => {
                       const { plain, gradient } = splitHeadline(displayed.headline)
@@ -224,12 +209,12 @@ export default function Home() {
 
                   {/* AI Refresh button */}
                   <button
-                    onClick={fetchAiHeadline}
-                    disabled={headlineLoading}
+                    onClick={handleRefresh}
+                    disabled={aiLoading}
                     className="mt-3 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
                     style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
                   >
-                    <RefreshCw className={`w-3 h-3 ${headlineLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} />
                     AI refresh
                   </button>
                 </>
@@ -251,9 +236,14 @@ export default function Home() {
                   style={{ color: 'var(--text-muted)' }}>
                   Ask Atmos…
                 </button>
-                <button onClick={() => router.push('/chat')}
-                  className="px-5 py-2.5 rounded-full font-bold text-xs tracking-wide text-white active:scale-95 transition-transform flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}>
+                <button
+                  onClick={() => router.push('/chat')}
+                  className="px-5 py-2.5 rounded-full font-bold text-xs tracking-wide text-white flex-shrink-0"
+                  style={{
+                    background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)',
+                    animation: 'askGlow 2.5s ease-in-out infinite',
+                  }}
+                >
                   ASK
                 </button>
               </div>

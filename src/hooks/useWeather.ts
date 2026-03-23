@@ -15,7 +15,7 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 export function useWeather(lat: number | null, lon: number | null) {
   const shouldFetch = lat !== null && lon !== null
 
-  const { data: weatherData, error: weatherError } = useSWR(
+  const { data: weatherData, error: weatherError, mutate: mutateWeather } = useSWR(
     shouldFetch ? `/api/weather?lat=${lat}&lon=${lon}` : null,
     fetcher,
     {
@@ -25,7 +25,7 @@ export function useWeather(lat: number | null, lon: number | null) {
     }
   )
 
-  const { data: forecastData, error: forecastError } = useSWR(
+  const { data: forecastData, error: forecastError, mutate: mutateForecast } = useSWR(
     shouldFetch ? `/api/forecast?lat=${lat}&lon=${lon}` : null,
     fetcher,
     {
@@ -124,12 +124,18 @@ export function useWeather(lat: number | null, lon: number | null) {
 
   const apiError = weatherData?.error || forecastData?.error || null
 
+  const refresh = () => {
+    mutateWeather()
+    mutateForecast()
+  }
+
   return {
     current,
     hourly,
     daily,
     metrics,
     sun,
+    refresh,
     loading: shouldFetch && !weatherData,
     error: apiError || weatherError?.message || forecastError?.message || null,
   }

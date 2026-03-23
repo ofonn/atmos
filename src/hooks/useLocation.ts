@@ -102,5 +102,33 @@ export function useLocation() {
     setLoading(false)
   }, [])
 
-  return { location, loading, error, searchCity }
+  const syncLocation = useCallback(() => {
+    if (!navigator.geolocation) return
+    setLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        try {
+          const reverseRes = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`)
+          const weatherData = await reverseRes.json()
+          const loc: Location = {
+            lat: latitude,
+            lon: longitude,
+            name: weatherData.name || 'Unknown',
+            country: weatherData.sys?.country || '',
+          }
+          setCache(loc)
+          setLocation(loc)
+        } catch {
+          const loc: Location = { lat: latitude, lon: longitude, name: 'Current Location', country: '' }
+          setCache(loc)
+          setLocation(loc)
+        }
+        setLoading(false)
+      },
+      () => setLoading(false)
+    )
+  }, [])
+
+  return { location, loading, error, searchCity, syncLocation }
 }

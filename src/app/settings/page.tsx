@@ -12,7 +12,9 @@ import {
   Wind,
   Clock,
   MapPin,
-  ChevronRight,
+  LocateFixed,
+  Search,
+  X,
 } from 'lucide-react'
 
 function SettingRow({
@@ -77,14 +79,25 @@ function SegmentedControl({
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { tempUnit, windUnit, timeFormat, updateSetting } = useSettings()
-  const { location } = useLocation()
+  const { location, loading: locLoading, searchCity, syncLocation } = useLocation()
   const [mounted, setMounted] = useState(false)
+  const [cityInput, setCityInput] = useState('')
+  const [cityEditOpen, setCityEditOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   if (!mounted) return null
+
+  const handleCitySubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (cityInput.trim()) {
+      searchCity(cityInput.trim())
+      setCityInput('')
+      setCityEditOpen(false)
+    }
+  }
 
   const isDark = theme === 'dark'
 
@@ -193,14 +206,15 @@ export default function SettingsPage() {
           </p>
         </div>
 
+        {/* Location display */}
         <div
-          className="flex items-center justify-between px-5 py-4 rounded-2xl"
+          className="px-5 py-4 rounded-2xl"
           style={{ background: 'var(--surface)' }}
         >
-          <div className="flex items-center gap-3">
-            <MapPin className="w-5 h-5" style={{ color: 'var(--primary)' }} />
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <MapPin className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--primary)' }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
                 {location
                   ? `${location.name}${location.country ? `, ${location.country}` : ''}`
                   : 'Not set'}
@@ -208,11 +222,55 @@ export default function SettingsPage() {
               <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                 {location
                   ? `${location.lat.toFixed(2)}, ${location.lon.toFixed(2)}`
-                  : 'Allow location access or search a city'}
+                  : 'No location set'}
               </p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+
+          {/* City search input */}
+          {cityEditOpen && (
+            <form onSubmit={handleCitySubmit} className="mb-3">
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ background: 'var(--surface-mid)', border: '0.5px solid var(--outline)' }}
+              >
+                <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  autoFocus
+                  type="text"
+                  value={cityInput}
+                  onChange={e => setCityInput(e.target.value)}
+                  placeholder="Type a city name…"
+                  className="flex-1 bg-transparent border-none outline-none text-sm"
+                  style={{ color: 'var(--text)' }}
+                />
+                <button type="button" onClick={() => setCityEditOpen(false)}>
+                  <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => syncLocation()}
+              disabled={locLoading}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50"
+              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+            >
+              <LocateFixed className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+              {locLoading ? 'Syncing…' : 'Sync GPS'}
+            </button>
+            <button
+              onClick={() => setCityEditOpen(v => !v)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-colors"
+              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+            >
+              <Search className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+              Enter City
+            </button>
+          </div>
         </div>
 
         {/* About section */}

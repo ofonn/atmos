@@ -168,7 +168,12 @@ export default function OverviewPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => router.push('/chat')}
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('atmos_chat_pending', 'Plan my week based on the weather forecast. Tell me which days are best for outdoor activities, when to expect rain, and what I should prepare for each day.')
+                    } catch {}
+                    router.push('/chat')
+                  }}
                   className="px-5 py-2 rounded-full font-label text-xs uppercase tracking-widest font-bold text-white active:scale-95 transition-transform flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}
                 >

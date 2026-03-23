@@ -80,3 +80,14 @@
     display: none;
   }
 }
+
+@keyframes askGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(128,110,248,0.4), 0 0 20px rgba(88,150,253,0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(128,110,248,0.7), 0 0 35px rgba(88,150,253,0.4);
+    transform: scale(1.04);
+  }
+}
