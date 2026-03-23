@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <SettingsProvider>
             <WeatherProvider>
-              <div className="min-h-screen max-w-md mx-auto relative flex flex-col">
+              <div className="min-h-screen w-full max-w-5xl mx-auto relative flex flex-col px-4 sm:px-6">
                 {children}
               </div>
             </WeatherProvider>

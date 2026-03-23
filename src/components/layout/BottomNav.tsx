@@ -16,7 +16,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50" aria-label="Main navigation">
+    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 lg:bottom-8 lg:scale-90" aria-label="Main navigation">
       <div
         className="flex items-end gap-1 px-3 py-2 rounded-full nav-glass"
       >

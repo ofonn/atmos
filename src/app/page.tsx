@@ -73,9 +73,9 @@ export default function Home() {
 
   const getHeadlineFontSize = (text: string) => {
     const words = text.split(' ').filter(Boolean).length
-    if (words <= 3) return 'clamp(3.2rem, 14vw, 4.4rem)'
-    if (words <= 5) return 'clamp(2.8rem, 12vw, 3.8rem)'
-    return 'clamp(2.2rem, 10vw, 3rem)'
+    if (words <= 3) return 'clamp(2.6rem, 8vw, 3.6rem)'
+    if (words <= 5) return 'clamp(2.3rem, 7vw, 3.2rem)'
+    return 'clamp(2rem, 6vw, 2.8rem)'
   }
 
   const buildHeadlineLines = (plain: string, gradient: string): string[] => {
@@ -151,7 +151,7 @@ export default function Home() {
       )}
 
       {/* Main */}
-      <main className="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-28 min-h-0 overflow-hidden">
+      <main className="relative z-10 flex-1 flex flex-col px-2 sm:px-6 pt-4 pb-28 min-h-0 overflow-hidden">
         {loading ? (
           <div className="flex-1 flex flex-col gap-6">
             <div className="flex items-center gap-5">
@@ -168,145 +168,147 @@ export default function Home() {
             </div>
           </div>
         ) : current && displayed && icon ? (
-          <>
-            {/* Icon + Temp */}
-            <div className="flex items-center gap-3 flex-shrink-0 mb-1">
-              <div
-                className="relative flex-shrink-0"
-                style={{ filter: `drop-shadow(0 0 18px ${icon.glow})` }}
-              >
+          <div className="flex flex-col lg:grid lg:grid-cols-[1.1fr_0.9fr] lg:gap-10 lg:items-start">
+            <section className="flex flex-col">
+              {/* Icon + Temp */}
+              <div className="flex items-center gap-3 flex-shrink-0 mb-1">
                 <div
-                  className="absolute inset-0 rounded-full opacity-60 blur-xl"
-                  style={{ background: `linear-gradient(135deg, ${icon.from}, ${icon.to})` }}
-                />
-                {/* 3D sphere with WeatherIcon inside */}
-                <div
-                  className="relative w-16 h-16 rounded-full flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${icon.from}, ${icon.via}, ${icon.to})`,
-                    boxShadow: `inset -4px -4px 14px rgba(0,0,0,0.25), 0 4px 18px ${icon.glow}`,
-                  }}
+                  className="relative flex-shrink-0"
+                  style={{ filter: `drop-shadow(0 0 18px ${icon.glow})` }}
                 >
-                  {/* Specular highlight */}
-                  <div className="absolute top-2 left-3 w-5 h-2.5 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
-                  <WeatherIcon
-                    conditionCode={current.conditionCode}
-                    iconCode={current.icon}
-                    size={28}
-                    className="relative z-10 opacity-90 drop-shadow-sm"
+                  <div
+                    className="absolute inset-0 rounded-full opacity-60 blur-xl"
+                    style={{ background: `linear-gradient(135deg, ${icon.from}, ${icon.to})` }}
                   />
-                </div>
-              </div>
-              <div>
-                <p
-                  className="font-headline font-bold leading-none tracking-tighter"
-                  style={{ fontSize: '3.2rem', color: 'var(--text)' }}
-                >
-                  {displayTemp(current.temp, tempUnit)}
-                </p>
-                <p className="font-label text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                  Feels like {displayTemp(current.feelsLike, tempUnit)}
-                </p>
-              </div>
-            </div>
-
-            {/* Headline + advice */}
-            <div className="flex flex-col justify-start flex-shrink-0" style={{ marginTop: '20px' }}>
-              {aiLoading && !displayed ? (
-                <div className="flex flex-col gap-2">
-                  <div className="h-12 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-                  <div className="h-12 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
-                  <div className="h-12 w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
-                </div>
-              ) : (
-                <>
-                  <h1
-                    className="font-headline font-extrabold leading-[0.9] tracking-tighter"
+                  {/* 3D sphere with WeatherIcon inside */}
+                  <div
+                    className="relative w-16 h-16 rounded-full flex items-center justify-center"
                     style={{
-                      fontSize: getHeadlineFontSize(displayed.headline),
-                      color: 'var(--text)',
-                      paddingBottom: '0.45em',
-                      overflow: 'visible',
+                      background: `linear-gradient(135deg, ${icon.from}, ${icon.via}, ${icon.to})`,
+                      boxShadow: `inset -4px -4px 14px rgba(0,0,0,0.25), 0 4px 18px ${icon.glow}`,
                     }}
                   >
-                    {(() => {
-                      const { plain, gradient } = splitHeadline(displayed.headline)
-                      const lines = buildHeadlineLines(plain, gradient)
-                      const gradientStyle = {
-                        background: isDark
-                          ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
-                          : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
-                        WebkitBackgroundClip: 'text' as const,
-                        WebkitTextFillColor: 'transparent' as const,
-                        backgroundClip: 'text' as const,
-                      }
-                      const isLastLine = (i: number) => i === lines.length - 1
-                      return lines.map((line, i) => (
-                        <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
-                          {line}
-                        </span>
-                      ))
-                    })()}
-                  </h1>
-
+                    {/* Specular highlight */}
+                    <div className="absolute top-2 left-3 w-5 h-2.5 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
+                    <WeatherIcon
+                      conditionCode={current.conditionCode}
+                      iconCode={current.icon}
+                      size={28}
+                      className="relative z-10 opacity-90 drop-shadow-sm"
+                    />
+                  </div>
+                </div>
+                <div>
                   <p
-                    className="font-body text-sm mt-3 max-w-[280px] leading-relaxed flex-shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="font-headline font-bold leading-none tracking-tighter"
+                    style={{ fontSize: '3rem', color: 'var(--text)' }}
                   >
-                    {displayed.advice}
+                    {displayTemp(current.temp, tempUnit)}
                   </p>
+                  <p className="font-label text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    Feels like {displayTemp(current.feelsLike, tempUnit)}
+                  </p>
+                </div>
+              </div>
 
-                  <button
-                    onClick={handleRefresh}
-                    disabled={aiLoading}
-                    aria-label="Refresh AI summary"
-                    className="mt-2 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
-                    style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
-                  >
-                    <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                    AI refresh
-                  </button>
-                </>
+              {/* Headline + advice */}
+              <div className="flex flex-col justify-start flex-shrink-0" style={{ marginTop: '18px' }}>
+                {aiLoading && !displayed ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="h-12 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+                    <div className="h-12 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
+                    <div className="h-12 w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
+                  </div>
+                ) : (
+                  <>
+                    <h1
+                      className="font-headline font-extrabold leading-[0.92] tracking-tighter"
+                      style={{
+                        fontSize: getHeadlineFontSize(displayed.headline),
+                        color: 'var(--text)',
+                        paddingBottom: '0.35em',
+                        overflow: 'visible',
+                      }}
+                    >
+                      {(() => {
+                        const { plain, gradient } = splitHeadline(displayed.headline)
+                        const lines = buildHeadlineLines(plain, gradient)
+                        const gradientStyle = {
+                          background: isDark
+                            ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
+                            : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
+                          WebkitBackgroundClip: 'text' as const,
+                          WebkitTextFillColor: 'transparent' as const,
+                          backgroundClip: 'text' as const,
+                        }
+                        const isLastLine = (i: number) => i === lines.length - 1
+                        return lines.map((line, i) => (
+                          <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
+                            {line}
+                          </span>
+                        ))
+                      })()}
+                    </h1>
+
+                    <p
+                      className="font-body text-sm mt-3 max-w-[320px] leading-relaxed flex-shrink-0"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {displayed.advice}
+                    </p>
+
+                    <button
+                      onClick={handleRefresh}
+                      disabled={aiLoading}
+                      aria-label="Refresh AI summary"
+                      className="mt-2 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
+                      style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
+                    >
+                      <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                      AI refresh
+                    </button>
+                  </>
+                )}
+              </div>
+            </section>
+
+            <aside className="flex flex-col gap-4 mt-6 lg:mt-0">
+              {/* Hourly forecast strip */}
+              {hourly && hourly.length > 0 && (
+                <div className="flex-shrink-0">
+                  <HourlyForecast data={hourly} />
+                </div>
               )}
-            </div>
 
-            {/* Hourly forecast strip */}
-            {hourly && hourly.length > 0 && (
-              <div className="flex-shrink-0 mt-5">
-                <HourlyForecast data={hourly} />
-              </div>
-            )}
-
-            <div className="flex-1" />
-
-            {/* Ask Bar */}
-            <div className="flex-shrink-0 mt-4">
-              <div
-                className="rounded-full flex items-center gap-3 pl-5 pr-2 py-2 glass-input"
-              >
-                <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-                <button
-                  onClick={() => router.push('/chat')}
-                  className="flex-1 text-left text-sm font-body py-3"
-                  style={{ color: 'var(--text-muted)' }}
-                  aria-label="Ask Atmos a question"
+              {/* Ask Bar */}
+              <div className="flex-shrink-0">
+                <div
+                  className="rounded-full flex items-center gap-3 pl-5 pr-2 py-2 glass-input"
                 >
-                  Ask Atmos…
-                </button>
-                <button
-                  onClick={() => router.push('/chat')}
-                  className="px-5 py-2.5 rounded-full font-bold text-xs tracking-wide text-white flex-shrink-0"
-                  aria-label="Open AI chat"
-                  style={{
-                    background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)',
-                    animation: 'askGlow 2.5s ease-in-out infinite',
-                  }}
-                >
-                  ASK
-                </button>
+                  <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+                  <button
+                    onClick={() => router.push('/chat')}
+                    className="flex-1 text-left text-sm font-body py-3"
+                    style={{ color: 'var(--text-muted)' }}
+                    aria-label="Ask Atmos a question"
+                  >
+                    Ask Atmos…
+                  </button>
+                  <button
+                    onClick={() => router.push('/chat')}
+                    className="px-5 py-2.5 rounded-full font-bold text-xs tracking-wide text-white flex-shrink-0"
+                    aria-label="Open AI chat"
+                    style={{
+                      background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)',
+                      animation: 'askGlow 2.5s ease-in-out infinite',
+                    }}
+                  >
+                    ASK
+                  </button>
+                </div>
               </div>
-            </div>
-          </>
+            </aside>
+          </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <div className="relative w-20 h-20 mb-6">
