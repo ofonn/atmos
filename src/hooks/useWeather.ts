@@ -18,13 +18,21 @@ export function useWeather(lat: number | null, lon: number | null) {
   const { data: weatherData, error: weatherError } = useSWR(
     shouldFetch ? `/api/weather?lat=${lat}&lon=${lon}` : null,
     fetcher,
-    { refreshInterval: 300000 } // 5 min
+    {
+      refreshInterval: 300000, // 5 min
+      errorRetryCount: 5,
+      errorRetryInterval: 3000,
+    }
   )
 
   const { data: forecastData, error: forecastError } = useSWR(
     shouldFetch ? `/api/forecast?lat=${lat}&lon=${lon}` : null,
     fetcher,
-    { refreshInterval: 300000 }
+    {
+      refreshInterval: 300000,
+      errorRetryCount: 5,
+      errorRetryInterval: 3000,
+    }
   )
 
   const current: CurrentWeatherData | null = weatherData?.main
@@ -122,7 +130,7 @@ export function useWeather(lat: number | null, lon: number | null) {
     daily,
     metrics,
     sun,
-    loading: shouldFetch && (!weatherData && !weatherError),
+    loading: shouldFetch && !weatherData,
     error: apiError || weatherError?.message || forecastError?.message || null,
   }
 }
