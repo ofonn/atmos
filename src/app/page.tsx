@@ -213,7 +213,7 @@ export default function Home() {
                     style={{
                       fontSize: getHeadlineFontSize(displayed.headline),
                       color: 'var(--text)',
-                      paddingBottom: '0.2em',
+                      paddingBottom: '0.45em',
                       overflow: 'visible',
                     }}
                   >
