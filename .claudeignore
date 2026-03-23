@@ -1,0 +1,6 @@
+node_modules/
+.next/
+references/
+designs_inspo/
+prev_chat.txt
+public/sw.js

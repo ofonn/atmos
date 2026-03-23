@@ -177,10 +177,6 @@ export default function TechnicalPage() {
     location ? `/api/weather?lat=${location.lat}&lon=${location.lon}` : null,
     fetcher, { refreshInterval: 300000 }
   )
-  const { data: forecastRaw } = useSWR(
-    location ? `/api/forecast?lat=${location.lat}&lon=${location.lon}` : null,
-    fetcher, { refreshInterval: 300000 }
-  )
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
     fetcher, { refreshInterval: 300000 }
@@ -191,14 +187,11 @@ export default function TechnicalPage() {
   )
 
   const owm = owmRaw && !owmRaw.error ? owmRaw : null
-  const forecast = forecastRaw && !forecastRaw.error ? forecastRaw : null
   const mc = meteo?.current
   const mh = meteo?.hourly
-  const md = meteo?.daily
   const air = airData?.list?.[0]
   const offset: number = owm?.timezone ?? 0
 
-  // Find current hour index in Open-Meteo hourly arrays (which use location-local time via timezone=auto)
   const nowHourIdx = useMemo(() => {
     if (!mh?.time) return 0
     const nowUtcMs = Date.now()
@@ -209,18 +202,6 @@ export default function TechnicalPage() {
     const idx = mh.time.findIndex((t: string) => t >= nowStr)
     return idx >= 0 ? idx : 0
   }, [mh, offset])
-
-  // Group OWM forecast list by date
-  const forecastByDay = useMemo(() => {
-    if (!forecast?.list) return [] as [string, any[]][]
-    const groups: Record<string, any[]> = {}
-    forecast.list.forEach((item: any) => {
-      const date = item.dt_txt.slice(0, 10)
-      if (!groups[date]) groups[date] = []
-      groups[date].push(item)
-    })
-    return Object.entries(groups) as [string, any[]][]
-  }, [forecast])
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -395,20 +376,6 @@ export default function TechnicalPage() {
           <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
         )}
 
-        {/* ── 5-Day / 3-Hour Forecast (OWM) ───────────────────────────── */}
-        {forecast ? (
-          <ForecastSection forecastByDay={forecastByDay} offset={offset} />
-        ) : (
-          <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
-        )}
-
-        {/* ── 16-Day Daily (Open-Meteo) ────────────────────────────────── */}
-        {md ? (
-          <DailyMeteoSection md={md} />
-        ) : (
-          <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
-        )}
-
         {/* ── Air Quality ──────────────────────────────────────────────── */}
         {air && (
           <Section title="Air Quality" icon={<Wind className="w-4 h-4" style={{ color: 'var(--secondary)' }} />}>
@@ -570,204 +537,3 @@ function HourlyMeteoSection({ mh, startIdx }: { mh: any; startIdx: number }) {
   )
 }
 
-// ── 5-Day / 3-Hour Forecast (OWM) ───────────────────────────────────────────
-
-function ForecastSection({ forecastByDay, offset }: { forecastByDay: [string, any[]][]; offset: number }) {
-  return (
-    <Section title="5-Day / 3-Hour Forecast" icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} />} defaultOpen={false}>
-      {forecastByDay.map(([date, items]) => (
-        <ForecastDayGroup key={date} date={date} items={items} offset={offset} />
-      ))}
-    </Section>
-  )
-}
-
-function ForecastDayGroup({ date, items, offset }: { date: string; items: any[]; offset: number }) {
-  const label = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', {
-    weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC',
-  })
-  return (
-    <div className="mb-4">
-      <p className="text-[0.65rem] font-label uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
-      <div className="flex flex-col gap-1.5">
-        {items.map((item: any) => (
-          <ForecastSlot key={item.dt} item={item} offset={offset} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ForecastSlot({ item, offset }: { item: any; offset: number }) {
-  const [open, setOpen] = useState(false)
-  const pop = Math.round(item.pop * 100)
-  const isDay = item.sys?.pod === 'd'
-
-  return (
-    <div className="rounded-xl overflow-hidden" style={{ border: '0.5px solid var(--outline)' }}>
-      <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-2 p-2.5 text-left"
-        style={{ background: 'var(--surface-mid)' }}>
-        <span className="text-[0.68rem] font-label font-bold w-10 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-          {fmtUnix(item.dt, offset)}
-        </span>
-        <span className="text-base flex-shrink-0">{isDay ? '☀️' : '🌙'}</span>
-        <img src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`} alt="" className="w-7 h-7 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <span className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{kC(item.main.temp)}°C</span>
-          <span className="text-[0.65rem] font-label ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>
-            {item.weather[0].description}
-          </span>
-        </div>
-        {pop > 0 && <span className="text-[0.65rem] font-label flex-shrink-0" style={{ color: '#60a5fa' }}>{pop}%</span>}
-        <ChevronDown className="w-3 h-3 flex-shrink-0 ml-1"
-          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }} />
-      </button>
-
-      {open && (
-        <div className="p-3 grid grid-cols-2 gap-x-4 gap-y-1"
-          style={{ borderTop: '0.5px solid var(--outline)' }}>
-          {([
-            ['Feels Like', `${kC(item.main.feels_like)}°C`],
-            ['Min / Max', `${kC(item.main.temp_min)} / ${kC(item.main.temp_max)}°C`],
-            ['Humidity', `${item.main.humidity}%`],
-            ['Sea-Level P.', `${item.main.sea_level ?? item.main.pressure} hPa`],
-            ['Ground P.', item.main.grnd_level ? `${item.main.grnd_level} hPa` : null],
-            ['Temp Correction', item.main.temp_kf != null ? `${item.main.temp_kf.toFixed(2)}°C` : null],
-            ['Wind', `${item.wind.speed.toFixed(1)} m/s ${getWindDir16(item.wind.deg)}`],
-            ['Gust', item.wind.gust > 0 ? `${item.wind.gust.toFixed(1)} m/s` : null],
-            ['Visibility', `${(item.visibility / 1000).toFixed(1)} km`],
-            ['Clouds', `${item.clouds.all}%`],
-            ['Rain (3h)', item.rain?.['3h'] > 0 ? `${item.rain['3h'].toFixed(1)} mm` : null],
-            ['Snow (3h)', item.snow?.['3h'] > 0 ? `${item.snow['3h'].toFixed(1)} mm` : null],
-            ['Day/Night', isDay ? 'Day ☀️' : 'Night 🌙'],
-          ] as [string, string | null][]).filter(([, v]) => v != null).map(([label, val]) => (
-            <div key={label} className="py-1" style={{ borderBottom: '0.5px solid var(--outline)' }}>
-              <p className="text-[0.58rem] font-label uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
-              <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{val}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── 16-Day Daily (Open-Meteo) ────────────────────────────────────────────────
-
-function DailyMeteoSection({ md }: { md: any }) {
-  return (
-    <Section title="16-Day Forecast" icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} />} defaultOpen={false}>
-      {(md.time as string[]).map((_, i) => (
-        <DailyMeteoRow key={md.time[i]} md={md} idx={i} />
-      ))}
-    </Section>
-  )
-}
-
-function DailyMeteoRow({ md, idx }: { md: any; idx: number }) {
-  const [open, setOpen] = useState(false)
-  const date: string = md.time[idx]
-  const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : fmtISODate(date)
-  const wmo: number = md.weather_code?.[idx] ?? 0
-  const tmax: string = md.temperature_2m_max?.[idx]?.toFixed(1) ?? '—'
-  const tmin: string = md.temperature_2m_min?.[idx]?.toFixed(1) ?? '—'
-  const pop: number = md.precipitation_probability_max?.[idx] ?? 0
-  const uvi: number | null = md.uv_index_max?.[idx] ?? null
-
-  return (
-    <div className="mb-2 rounded-xl overflow-hidden" style={{ border: '0.5px solid var(--outline)' }}>
-      <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-3 p-3 text-left"
-        style={{ background: 'var(--surface-mid)' }}>
-        <span className="text-lg flex-shrink-0">{wmoEmoji(wmo, 1)}</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{label}</p>
-          <p className="text-[0.65rem] font-body truncate" style={{ color: 'var(--text-muted)' }}>{wmoDesc(wmo)}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0 text-xs">
-          {pop > 0 && <span className="font-label" style={{ color: '#60a5fa' }}>{pop}%</span>}
-          {uvi != null && <span className="font-label" style={{ color: uviColor(uvi) }}>UV {uvi.toFixed(0)}</span>}
-          <span className="font-bold font-headline" style={{ color: 'var(--text)' }}>{tmax}°</span>
-          <span className="font-label" style={{ color: 'var(--text-muted)' }}>{tmin}°</span>
-        </div>
-        <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 ml-1"
-          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }} />
-      </button>
-
-      {open && (
-        <div className="p-3 space-y-3" style={{ borderTop: '0.5px solid var(--outline)' }}>
-          {/* Temp grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              ['High', `${tmax}°C`],
-              ['Low', `${tmin}°C`],
-              ['Feels High', md.apparent_temperature_max?.[idx] != null ? `${md.apparent_temperature_max[idx].toFixed(1)}°C` : null],
-              ['Feels Low', md.apparent_temperature_min?.[idx] != null ? `${md.apparent_temperature_min[idx].toFixed(1)}°C` : null],
-            ] as [string, string | null][]).filter(([, v]) => v != null).map(([label, val]) => (
-              <div key={label} className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                <p className="text-[0.55rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
-                <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{val}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Sun / Daylight */}
-          <div className="grid grid-cols-2 gap-2">
-            {md.sunrise?.[idx] && (
-              <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                <p className="text-[0.6rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunrise / Sunset</p>
-                <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>
-                  {fmtISOTime(md.sunrise[idx])} / {fmtISOTime(md.sunset[idx])}
-                </p>
-                {md.daylight_duration?.[idx] != null && (
-                  <p className="text-[0.6rem] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    Daylight: {secsToHm(md.daylight_duration[idx])}
-                  </p>
-                )}
-              </div>
-            )}
-            {md.sunshine_duration?.[idx] != null && (
-              <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                <p className="text-[0.6rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunshine</p>
-                <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{secsToHm(md.sunshine_duration[idx])}</p>
-                <p className="text-[0.6rem] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>of actual sun</p>
-              </div>
-            )}
-          </div>
-
-          {/* Detailed rows */}
-          <div className="space-y-0">
-            {uvi != null && (
-              <DataRow label="UV Index Max"
-                value={<span style={{ color: uviColor(uvi) }}>{uvi.toFixed(1)} — {uviLabel(uvi)}</span>}
-                tooltip="Solar UV radiation intensity. 0-2: Low, 3-5: Moderate, 6-7: High, 8-10: Very High, 11+: Extreme." />
-            )}
-            {md.uv_index_clear_sky_max?.[idx] != null && (
-              <DataRow label="UV (clear sky potential)" value={`${md.uv_index_clear_sky_max[idx].toFixed(1)}`} />
-            )}
-            {md.precipitation_sum?.[idx] > 0 && (
-              <DataRow label="Total Precipitation" value={`${md.precipitation_sum[idx].toFixed(1)}`} unit=" mm" />
-            )}
-            {md.rain_sum?.[idx] > 0 && <DataRow label="Rain Total" value={`${md.rain_sum[idx].toFixed(1)}`} unit=" mm" />}
-            {md.showers_sum?.[idx] > 0 && <DataRow label="Showers Total" value={`${md.showers_sum[idx].toFixed(1)}`} unit=" mm" />}
-            {md.snowfall_sum?.[idx] > 0 && <DataRow label="Snowfall Total" value={`${md.snowfall_sum[idx].toFixed(1)}`} unit=" cm" />}
-            {md.precipitation_hours?.[idx] > 0 && (
-              <DataRow label="Precipitation Hours" value={`${md.precipitation_hours[idx]}h`} />
-            )}
-            {md.wind_speed_10m_max?.[idx] != null && (
-              <DataRow label="Max Wind" value={`${md.wind_speed_10m_max[idx].toFixed(1)}`} unit=" km/h" />
-            )}
-            {md.wind_gusts_10m_max?.[idx] > 0 && (
-              <DataRow label="Max Gust" value={`${md.wind_gusts_10m_max[idx].toFixed(1)}`} unit=" km/h" />
-            )}
-            {md.wind_direction_10m_dominant?.[idx] != null && (
-              <DataRow label="Dominant Wind"
-                value={`${getWindDir16(md.wind_direction_10m_dominant[idx])} (${md.wind_direction_10m_dominant[idx]}°)`} />
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
