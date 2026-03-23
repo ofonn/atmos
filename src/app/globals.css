@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #f0f2f8;
+    --surface: #ffffff;
+    --surface-mid: #e8eaf2;
+    --text: #10131c;
+    --text-muted: #5a5d6e;
+    --primary: #5b47d1;
+    --secondary: #2563EB;
+    --outline: #c8c5d4;
+  }
+  .dark {
+    --bg: #10131c;
+    --surface: #1c1f28;
+    --surface-mid: #272a33;
+    --text: #e0e2ee;
+    --text-muted: #c9c4d6;
+    --primary: #c7bfff;
+    --secondary: #acc7ff;
+    --outline: #474554;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+    @apply antialiased;
+  }
+}
+
+@layer components {
+  .bg-atmospheric-glow {
+    background: radial-gradient(circle at 50% -5%, #4329b8 0%, var(--bg) 60%);
+  }
+
+  .glass-input {
+    background: rgba(39, 42, 51, 0.45);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 0.5px solid rgba(146, 142, 160, 0.2);
+  }
+
+  .glass-card {
+    background: rgba(39, 42, 51, 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 0.5px solid rgba(71, 69, 84, 0.2);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .nav-glass {
+    background: rgba(24, 27, 36, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    border: 0.5px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .weather-metric-card {
+    background: var(--surface);
+    color: var(--text);
+    @apply rounded-2xl p-4 flex flex-col items-center gap-2;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

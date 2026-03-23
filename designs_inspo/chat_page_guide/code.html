@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#002f67",
+              "error-container": "#93000a",
+              "on-error-container": "#ffdad6",
+              "on-tertiary-container": "#002a53",
+              "surface-container-lowest": "#0b0e16",
+              "on-surface": "#e0e2ee",
+              "on-secondary-fixed": "#001a40",
+              "surface-dim": "#10131c",
+              "on-surface-variant": "#c9c4d6",
+              "inverse-surface": "#e0e2ee",
+              "tertiary-fixed-dim": "#a9c8fa",
+              "surface": "#10131c",
+              "primary-fixed-dim": "#c7bfff",
+              "on-primary-fixed-variant": "#4329b8",
+              "on-tertiary": "#0b315a",
+              "on-secondary-container": "#cedcff",
+              "secondary": "#acc7ff",
+              "outline-variant": "#474554",
+              "surface-container": "#1c1f28",
+              "secondary-container": "#005ec2",
+              "surface-container-low": "#181b24",
+              "surface-container-high": "#272a33",
+              "tertiary-container": "#7492c1",
+              "on-tertiary-fixed": "#001c3a",
+              "primary-fixed": "#e5deff",
+              "tertiary": "#a9c8fa",
+              "on-secondary-fixed-variant": "#004591",
+              "inverse-on-surface": "#2d303a",
+              "surface-container-highest": "#32343e",
+              "surface-variant": "#32343e",
+              "secondary-fixed": "#d7e2ff",
+              "tertiary-fixed": "#d4e3ff",
+              "on-primary-fixed": "#180065",
+              "surface-bright": "#363943",
+              "background": "#10131c",
+              "surface-tint": "#c7bfff",
+              "primary-container": "#8f7fff",
+              "inverse-primary": "#5b47d1",
+              "error": "#ffb4ab",
+              "outline": "#928ea0",
+              "on-tertiary-fixed-variant": "#274872",
+              "on-primary": "#2b009e",
+              "on-error": "#690005",
+              "on-background": "#e0e2ee",
+              "primary": "#c7bfff",
+              "on-primary-container": "#25008c",
+              "secondary-fixed-dim": "#acc7ff"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Plus Jakarta Sans"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(44, 48, 62, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .ai-bubble {
+            background: rgba(143, 127, 255, 0.15);
+            box-shadow: inset 0 0 20px rgba(199, 191, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-top: 1px solid rgba(199, 191, 255, 0.2);
+        }
+        .user-bubble {
+            background: rgba(224, 226, 238, 0.05);
+            border: 1px solid rgba(224, 226, 238, 0.1);
+        }
+        .nebula-bg {
+            background: radial-gradient(circle at 20% 30%, rgba(128, 110, 248, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(88, 150, 253, 0.1) 0%, transparent 50%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body min-h-screen overflow-x-hidden selection:bg-primary/30">
+<!-- Top App Bar (Shared Component Anchor) -->
+<header class="fixed top-0 w-full z-50 bg-[#10131c]/80 backdrop-blur-xl flex items-center justify-between px-6 h-16 w-full font-['Plus_Jakarta_Sans'] tracking-tight text-[#e0e2ee]">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[#c7bfff]">menu</span>
+</button>
+<span class="text-xl font-bold bg-gradient-to-r from-[#806EF8] to-[#5896FD] bg-clip-text text-transparent">Atmos AI</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="User profile avatar smiling portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgXV5SHHzTcl7UjeBSH5dV6sUrdcrdWEgUKXhQRFxvqvXsGoZpsr9avzNsQFMjWUQYtp-AIY87zj9P6yozaMs78WNVQqw9SKtQ3waAUnNC7rIRQYqA-viobg7k2pQLJeK90iPIEPcvZoVL03KZKLqr5CTtOW_BmBeZnwiWfIW7_uT-P0F7DUCnZ_e6J-cAN8lRliT6Q1KuJXUrRWMlHvLHBSu7kgFelJoaqsIpCkbVX7KdGcNURVfVCSppvB4lDijZbvwnrVuf_pGU"/>
+</div>
+</header>
+<!-- Main Chat Canvas -->
+<main class="relative pt-24 pb-32 px-4 max-w-3xl mx-auto min-h-screen flex flex-col nebula-bg">
+<!-- Abstract 3D Background Elements (Decorative) -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+<div class="absolute top-1/4 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px]"></div>
+<div class="absolute bottom-1/4 -right-20 w-80 h-80 bg-secondary/5 rounded-full blur-[120px]"></div>
+</div>
+<!-- Chat Thread -->
+<div class="flex-1 space-y-8 relative z-10">
+<!-- Date/Context Divider -->
+<div class="flex justify-center">
+<span class="px-4 py-1 rounded-full bg-surface-container-low text-on-surface-variant font-label text-[10px] uppercase tracking-[0.2em]">Today • London, UK</span>
+</div>
+<!-- User Message -->
+<div class="flex flex-col items-end animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="user-bubble glass-panel px-6 py-4 rounded-[2rem] rounded-tr-lg max-w-[85%]">
+<p class="text-[0.9375rem] leading-relaxed tracking-tight">How should I dress going out today?</p>
+</div>
+<span class="mt-2 mr-2 font-label text-[10px] text-on-surface-variant/50">10:42 AM</span>
+</div>
+<!-- Atmos AI Reply -->
+<div class="flex flex-col items-start animate-in fade-in slide-in-from-bottom-6 duration-1000">
+<div class="flex items-end gap-3 max-w-[90%]">
+<div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 mb-6">
+<span class="material-symbols-outlined text-[16px] text-on-primary-container" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Text Bubble -->
+<div class="ai-bubble glass-panel px-6 py-5 rounded-[2rem] rounded-bl-lg">
+<p class="text-[0.9375rem] leading-relaxed tracking-tight text-on-surface">
+                                It's <span class="text-secondary font-bold">16°C</span> and windy. A hoodie is great now, but heavy rain starts at <span class="text-primary font-bold">5 PM</span>, so bring a waterproof shell.
+                                <span class="inline-flex ml-1 align-middle">
+<span class="material-symbols-outlined text-secondary text-lg" style="font-variation-settings: 'FILL' 1;">cloudy_snowing</span>
+</span>
+</p>
+</div>
+<!-- Proactive Card: Mini Forecast -->
+<div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-[1.5rem] p-5 border-t border-white/5 flex flex-col gap-4 shadow-2xl">
+<div class="flex items-center justify-between">
+<span class="font-headline font-semibold text-sm tracking-tight">Timeline Insight</span>
+<span class="font-label text-[10px] text-primary uppercase tracking-widest">Active Alert</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface-container-high/40">
+<span class="font-label text-[10px] text-on-surface-variant">2PM</span>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">partly_cloudy_day</span>
+<span class="font-headline text-xs font-bold">18°</span>
+</div>
+<div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface-container-high/40">
+<span class="font-label text-[10px] text-on-surface-variant">4PM</span>
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 1;">cloud</span>
+<span class="font-headline text-xs font-bold">17°</span>
+</div>
+<div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-primary/20 ring-1 ring-primary/30">
+<span class="font-label text-[10px] text-primary font-bold">5PM</span>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">rainy</span>
+<span class="font-headline text-xs font-bold">15°</span>
+</div>
+<div class="flex flex-col items-center gap-2 p-2 rounded-xl bg-surface-container-high/40">
+<span class="font-label text-[10px] text-on-surface-variant">7PM</span>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">thunderstorm</span>
+<span class="font-headline text-xs font-bold">14°</span>
+</div>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-highest/30 p-3 rounded-lg">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-dim flex-shrink-0">
+<img class="w-full h-full object-cover opacity-60" data-alt="Raincoat texture macro shot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAut-mjI9d-LsQpdP_d-1xFa4BTCNCVUZpPqGt5Rq1ubMJIwlVSjR3Q9QLOMG-9T9j5FiwgL9NmnCTyzn6LJeH0aBbH9yKktLLIaaBv2InJAWLKiA-f9wvWJlN417yQspzFpfgiIJUz30fRcs6Qx9Z003ii3Q7MYfswCG6uJCU9ettFCHnGngvair7X0vq4vtl83GlPO6fPIPsW5wxltGxtAqN8EQaTFkhYoQVYAr_bgUB-al2lp58O-Y48zIZBbatWYSSkOmS3wNs_"/>
+</div>
+<div class="flex-1">
+<p class="text-[11px] font-medium leading-snug">Shell Recommendation: Lightweight Gore-Tex or similar windbreaker.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<span class="mt-2 ml-14 font-label text-[10px] text-on-surface-variant/50">10:43 AM</span>
+</div>
+</div>
+</main>
+<!-- Chat Input Section -->
+<div class="fixed bottom-0 left-0 w-full px-4 pb-10 pt-4 z-50 pointer-events-none">
+<div class="max-w-3xl mx-auto w-full pointer-events-auto">
+<div class="relative group">
+<!-- Subtle glow behind input -->
+<div class="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+<div class="relative flex items-center bg-[#181b24]/90 backdrop-blur-3xl rounded-full p-2 pl-6 pr-2 shadow-[0_20px_50px_rgba(0,0,0,0.4)] border border-white/5">
+<input class="bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-on-surface-variant/40 flex-1 py-3 font-body text-[0.9375rem]" placeholder="Ask Atmos (e.g., Do I need a hoodie?)" type="text"/>
+<div class="flex items-center gap-2">
+<button class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:text-primary transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="w-11 h-11 flex items-center justify-center rounded-full bg-gradient-to-br from-[#806EF8] to-[#5896FD] text-on-primary-container shadow-lg hover:shadow-primary/20 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined font-bold">arrow_upward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Contextual Suggestions -->
+<div class="flex justify-center gap-2 mt-4 overflow-x-auto no-scrollbar pb-2">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low/60 border border-white/5 text-[11px] font-label text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    Weekend forecast?
+                </button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low/60 border border-white/5 text-[11px] font-label text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    UV Index today
+                </button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-container-low/60 border border-white/5 text-[11px] font-label text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    Air quality alert
+                </button>
+</div>
+</div>
+</div>
+<!-- Bottom Nav Bar (Shared Component - Hidden as per task intent for focused Chat) -->
+<!-- Navigation is suppressed here to prioritize the focused conversational task and input bar -->
+</body></html>
