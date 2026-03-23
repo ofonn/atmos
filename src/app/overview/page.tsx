@@ -2,59 +2,21 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { MapPin, Sparkles, ChevronDown, ChevronUp, Sun, Info } from 'lucide-react'
+import { MapPin, Sparkles, ChevronDown, Sun, Info } from 'lucide-react'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
-import { formatDay, displayTempShort } from '@/lib/utils'
-
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-const WMO: Record<number, string> = {
-  0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-  45: 'Fog', 48: 'Rime fog',
-  51: 'Light drizzle', 53: 'Drizzle', 55: 'Dense drizzle',
-  61: 'Light rain', 63: 'Moderate rain', 65: 'Heavy rain',
-  71: 'Light snow', 73: 'Moderate snow', 75: 'Heavy snow',
-  80: 'Light showers', 81: 'Moderate showers', 82: 'Heavy showers',
-  95: 'Thunderstorm', 96: 'Thunderstorm + hail', 99: 'Thunderstorm + heavy hail',
-}
-function wmoDesc(code: number): string { return WMO[code] ?? `Code ${code}` }
-function wmoEmoji(code: number): string {
-  if (code === 0 || code === 1) return '☀️'
-  if (code === 2 || code === 3) return '⛅'
-  if (code >= 45 && code <= 48) return '🌫️'
-  if (code >= 51 && code <= 67) return '🌧️'
-  if (code >= 71 && code <= 77) return '❄️'
-  if (code >= 80 && code <= 82) return '🌦️'
-  if (code >= 95) return '⛈️'
-  return '🌤️'
-}
-function kelvinToC(k: number): number { return k - 273.15 }
-function kC(k: number): string { return kelvinToC(k).toFixed(1) }
-function secsToHm(s: number): string { return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m` }
-function fmtISOTime(iso: string): string { return iso.slice(11, 16) }
-function fmtISODate(iso: string): string {
-  return new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC',
-  })
-}
-function fmtUnix(dt: number, off: number): string {
-  return new Date((dt + off) * 1000).toLocaleTimeString('en-US', {
-    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
-  })
-}
-function getWindDir16(deg: number): string {
-  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(deg / 22.5) % 16]
-}
-function uviColor(u: number) { return u <= 2 ? '#22c55e' : u <= 5 ? '#eab308' : u <= 7 ? '#f97316' : u <= 10 ? '#ef4444' : '#a855f7' }
-function uviLabel(u: number) { return u <= 2 ? 'Low' : u <= 5 ? 'Moderate' : u <= 7 ? 'High' : u <= 10 ? 'Very High' : 'Extreme' }
+import { formatDay, displayTempShort, displayTemp } from '@/lib/utils'
+import {
+  wmoDesc, wmoEmoji, getWindDir16, secsToHm, uviColor, uviLabel,
+  fmtISOTime, fmtISODate, fmtUnix, displayKelvin, displayCelsius,
+} from '@/lib/weatherUtils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-// ── Sub-components ───────────────────────────────────────────────────────────
+// ── Shared sub-components ────────────────────────────────────────────────────
 
 function Section({ title, icon, children, defaultOpen = true }: {
   title: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean
@@ -62,15 +24,21 @@ function Section({ title, icon, children, defaultOpen = true }: {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="rounded-2xl overflow-hidden mb-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
-      <button onClick={() => setOpen(v => !v)}
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-5 py-4 text-left"
-        style={{ borderBottom: open ? '0.5px solid var(--outline)' : 'none' }}>
+        style={{ borderBottom: open ? '0.5px solid var(--outline)' : 'none' }}
+      >
         <div className="flex items-center gap-2">
           {icon}
           <span className="font-headline font-bold text-sm tracking-tight" style={{ color: 'var(--text)' }}>{title}</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-               : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />}
+        <ChevronDown
+          className="w-4 h-4 transition-transform"
+          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }}
+          aria-hidden="true"
+        />
       </button>
       {open && <div className="px-5 py-4">{children}</div>}
     </div>
@@ -82,17 +50,25 @@ function DataRow({ label, value, unit, tooltip }: {
 }) {
   const [tip, setTip] = useState(false)
   return (
-    <div className="flex items-center justify-between py-2" style={{ borderBottom: '0.5px solid var(--outline)' }}>
+    <div className="flex items-center justify-between py-2.5" style={{ borderBottom: '0.5px solid var(--outline)' }}>
       <div className="flex items-center gap-1.5">
         <span className="text-xs font-label" style={{ color: 'var(--text-muted)' }}>{label}</span>
         {tooltip && (
           <div className="relative">
-            <button onClick={() => setTip(v => !v)} className="opacity-40 hover:opacity-80">
-              <Info className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
+            <button
+              onClick={() => setTip(v => !v)}
+              aria-label={`Info: ${label}`}
+              aria-expanded={tip}
+              className="opacity-40 hover:opacity-80 transition-opacity"
+            >
+              <Info className="w-3 h-3" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
             </button>
             {tip && (
-              <div className="absolute left-0 bottom-5 z-50 w-52 text-[11px] leading-snug rounded-xl p-3 shadow-xl"
-                style={{ background: 'var(--surface-mid)', color: 'var(--text-muted)', border: '0.5px solid var(--outline)' }}>
+              <div
+                className="absolute left-0 bottom-6 z-50 w-56 text-xs leading-snug rounded-xl p-3 shadow-xl"
+                style={{ background: 'var(--surface-mid)', color: 'var(--text-muted)', border: '0.5px solid var(--outline)' }}
+                role="tooltip"
+              >
                 {tooltip}
               </div>
             )}
@@ -137,22 +113,26 @@ export default function OverviewPage() {
     return Object.entries(groups) as [string, any[]][]
   }, [forecast])
 
-  const featured = daily?.[1] ?? null
-  const rest = daily?.slice(2) ?? []
+  const featured = daily?.[1] ?? null  // Tomorrow
+  const rest = daily?.slice(2) ?? []   // Day after tomorrow onward
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4"
-        style={{ background: 'transparent' }}>
+      <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
+
+      <header
+        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4"
+        style={{ background: 'transparent' }}
+      >
         <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+          <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
           <span className="font-headline font-extrabold tracking-tight text-2xl" style={{ color: 'var(--primary)' }}>
             Atmos
           </span>
         </div>
       </header>
 
-      <main className="pt-24 pb-32 px-4">
+      <main className="relative z-10 pt-24 pb-32 px-4">
         <div className="px-2 mb-6">
           <p className="font-label text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--primary)' }}>
             Atmospheric Narrative
@@ -174,23 +154,29 @@ export default function OverviewPage() {
           <div className="px-2 space-y-4">
             <div className="h-56 rounded-[2rem] animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
             <div className="grid grid-cols-2 gap-4">
-              {[1,2,3,4,5,6].map(i => (
+              {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="h-36 rounded-[1.5rem] animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
               ))}
             </div>
           </div>
         ) : (
           <>
-            {/* Featured Day (Tomorrow) */}
+            {/* Featured Day — Tomorrow */}
             {featured && (
               <section className="px-2 mb-6">
-                <div className="rounded-[2rem] p-7 relative overflow-hidden flex items-center gap-6"
-                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
-                  <div className="absolute -top-20 -right-20 w-56 h-56 blur-[80px] rounded-full pointer-events-none"
-                    style={{ background: 'rgba(199,191,255,0.2)' }} />
+                <div
+                  className="rounded-[2rem] p-7 relative overflow-hidden flex items-center gap-6"
+                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+                >
+                  <div
+                    className="absolute -top-20 -right-20 w-56 h-56 blur-[80px] rounded-full pointer-events-none"
+                    style={{ background: 'rgba(199,191,255,0.2)' }}
+                  />
                   <div className="relative z-10 flex-1">
-                    <span className="font-label text-[10px] px-3 py-1 rounded-full mb-4 inline-block uppercase tracking-widest"
-                      style={{ background: 'rgba(199,191,255,0.1)', color: 'var(--primary)' }}>
+                    <span
+                      className="font-label text-[10px] px-3 py-1 rounded-full mb-4 inline-block uppercase tracking-widest"
+                      style={{ background: 'rgba(199,191,255,0.1)', color: 'var(--primary)' }}
+                    >
                       Tomorrow
                     </span>
                     <h2 className="font-headline text-3xl font-bold mb-2 capitalize" style={{ color: 'var(--text)' }}>
@@ -220,15 +206,22 @@ export default function OverviewPage() {
               </section>
             )}
 
-            {/* 5-Day Grid */}
+            {/* Day grid — starts at Day+2, not Today */}
             {rest.length > 0 && (
               <section className="px-2 grid grid-cols-2 gap-4 mb-6">
-                {rest.map((day, i) => (
-                  <div key={day.dt} className="rounded-[1.5rem] p-5" style={{ background: 'var(--surface)' }}>
-                    <div className="flex justify-between items-start mb-5">
+                {rest.map((day) => (
+                  <div
+                    key={day.dt}
+                    className="rounded-[1.5rem] p-5"
+                    style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+                  >
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <p className="font-label uppercase text-[10px] tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                          {i === 0 ? 'Today' : formatDay(day.dt)}
+                        <p
+                          className="font-label uppercase text-[10px] tracking-widest mb-0.5"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          {formatDay(day.dt)}
                         </p>
                         <h3 className="font-headline text-lg font-bold" style={{ color: 'var(--text)' }}>
                           {new Date(day.dt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -236,6 +229,25 @@ export default function OverviewPage() {
                       </div>
                       <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
                     </div>
+
+                    {/* Precipitation probability bar */}
+                    {day.pop > 0 && (
+                      <div className="mb-3">
+                        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--surface-mid)' }}>
+                          <div
+                            className="h-1 rounded-full transition-all"
+                            style={{
+                              width: `${day.pop}%`,
+                              background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
+                            }}
+                          />
+                        </div>
+                        <p className="text-[10px] font-label mt-1" style={{ color: '#60a5fa' }}>
+                          {day.pop}% rain
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2">
                       <span className="font-headline text-2xl font-bold" style={{ color: 'var(--text)' }}>
                         {displayTempShort(day.tempMax, tempUnit)}
@@ -251,24 +263,26 @@ export default function OverviewPage() {
 
             {/* 5-Day / 3-Hour Forecast */}
             {forecast ? (
-              <ForecastSection forecastByDay={forecastByDay} offset={offset} />
+              <ForecastSection forecastByDay={forecastByDay} offset={offset} tempUnit={tempUnit} />
             ) : (
-              <div className="h-16 rounded-2xl animate-pulse mb-4 mx-0" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+              <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             )}
 
             {/* 16-Day Daily */}
             {md ? (
-              <DailyMeteoSection md={md} />
+              <DailyMeteoSection md={md} tempUnit={tempUnit} />
             ) : (
               <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             )}
 
             {/* Plan Your Week AI Card */}
-            <section className="px-0 mb-4">
-              <div className="rounded-2xl p-5 flex items-center gap-4"
-                style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
+            <section className="mb-4">
+              <div
+                className="rounded-2xl p-5 flex items-center gap-4"
+                style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+              >
                 <div className="rounded-xl p-2.5" style={{ background: 'rgba(199,191,255,0.1)' }}>
-                  <Sparkles className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                  <Sparkles className="w-5 h-5" style={{ color: 'var(--primary)' }} aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <h4 className="font-headline text-base font-bold mb-0.5" style={{ color: 'var(--text)' }}>Plan your week</h4>
@@ -284,7 +298,8 @@ export default function OverviewPage() {
                     router.push('/chat')
                   }}
                   className="px-5 py-2 rounded-full font-label text-xs uppercase tracking-widest font-bold text-white active:scale-95 transition-transform flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}>
+                  style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}
+                >
                   Ask
                 </button>
               </div>
@@ -300,59 +315,100 @@ export default function OverviewPage() {
 
 // ── 5-Day / 3-Hour Forecast ──────────────────────────────────────────────────
 
-function ForecastSection({ forecastByDay, offset }: { forecastByDay: [string, any[]][]; offset: number }) {
+function ForecastSection({
+  forecastByDay,
+  offset,
+  tempUnit,
+}: {
+  forecastByDay: [string, any][];
+  offset: number;
+  tempUnit: 'C' | 'F';
+}) {
   return (
-    <Section title="5-Day / 3-Hour Forecast" icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} />} defaultOpen={false}>
+    <Section
+      title="5-Day / 3-Hour Forecast"
+      icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />}
+      defaultOpen={false}
+    >
       {forecastByDay.map(([date, items]) => (
-        <ForecastDayGroup key={date} date={date} items={items} offset={offset} />
+        <ForecastDayGroup key={date} date={date} items={items} offset={offset} tempUnit={tempUnit} />
       ))}
     </Section>
   )
 }
 
-function ForecastDayGroup({ date, items, offset }: { date: string; items: any[]; offset: number }) {
+function ForecastDayGroup({
+  date,
+  items,
+  offset,
+  tempUnit,
+}: {
+  date: string;
+  items: any[];
+  offset: number;
+  tempUnit: 'C' | 'F';
+}) {
   const label = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', {
     weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC',
   })
   return (
     <div className="mb-4">
-      <p className="text-[0.65rem] font-label uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <p className="text-xs font-label uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
       <div className="flex flex-col gap-1.5">
-        {items.map((item: any) => <ForecastSlot key={item.dt} item={item} offset={offset} />)}
+        {items.map((item: any) => <ForecastSlot key={item.dt} item={item} offset={offset} tempUnit={tempUnit} />)}
       </div>
     </div>
   )
 }
 
-function ForecastSlot({ item, offset }: { item: any; offset: number }) {
+function ForecastSlot({
+  item,
+  offset,
+  tempUnit,
+}: {
+  item: any;
+  offset: number;
+  tempUnit: 'C' | 'F';
+}) {
   const [open, setOpen] = useState(false)
   const pop = Math.round(item.pop * 100)
-  const isDay = item.sys?.pod === 'd'
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '0.5px solid var(--outline)' }}>
-      <button onClick={() => setOpen(v => !v)} className="w-full flex items-center gap-2 p-2.5 text-left"
-        style={{ background: 'var(--surface-mid)' }}>
-        <span className="text-[0.68rem] font-label font-bold w-10 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-2 p-2.5 text-left"
+        style={{ background: 'var(--surface-mid)' }}
+      >
+        <span className="text-xs font-label font-bold w-10 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
           {fmtUnix(item.dt, offset)}
         </span>
-        <span className="text-base flex-shrink-0">{isDay ? '☀️' : '🌙'}</span>
-        <img src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`} alt="" className="w-7 h-7 flex-shrink-0" />
+        <img
+          src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`}
+          alt={item.weather[0].description}
+          className="w-7 h-7 flex-shrink-0"
+        />
         <div className="flex-1 min-w-0">
-          <span className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{kC(item.main.temp)}°C</span>
-          <span className="text-[0.65rem] font-label ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>
+            {displayKelvin(item.main.temp, tempUnit)}
+          </span>
+          <span className="text-xs font-label ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>
             {item.weather[0].description}
           </span>
         </div>
-        {pop > 0 && <span className="text-[0.65rem] font-label flex-shrink-0" style={{ color: '#60a5fa' }}>{pop}%</span>}
-        <ChevronDown className="w-3 h-3 flex-shrink-0 ml-1"
-          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }} />
+        {pop > 0 && <span className="text-xs font-label flex-shrink-0" style={{ color: '#60a5fa' }}>{pop}%</span>}
+        <ChevronDown
+          className="w-3 h-3 flex-shrink-0 ml-1 transition-transform"
+          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }}
+          aria-hidden="true"
+        />
       </button>
       {open && (
         <div className="p-3 grid grid-cols-2 gap-x-4 gap-y-1" style={{ borderTop: '0.5px solid var(--outline)' }}>
           {([
-            ['Feels Like', `${kC(item.main.feels_like)}°C`],
-            ['Min / Max', `${kC(item.main.temp_min)} / ${kC(item.main.temp_max)}°C`],
+            ['Feels Like', displayKelvin(item.main.feels_like, tempUnit)],
+            ['Min / Max', `${displayKelvin(item.main.temp_min, tempUnit, 0)} / ${displayKelvin(item.main.temp_max, tempUnit, 0)}`],
             ['Humidity', `${item.main.humidity}%`],
             ['Pressure', `${item.main.sea_level ?? item.main.pressure} hPa`],
             ['Ground P.', item.main.grnd_level ? `${item.main.grnd_level} hPa` : null],
@@ -362,10 +418,9 @@ function ForecastSlot({ item, offset }: { item: any; offset: number }) {
             ['Clouds', `${item.clouds.all}%`],
             ['Rain (3h)', item.rain?.['3h'] > 0 ? `${item.rain['3h'].toFixed(1)} mm` : null],
             ['Snow (3h)', item.snow?.['3h'] > 0 ? `${item.snow['3h'].toFixed(1)} mm` : null],
-            ['Day/Night', isDay ? 'Day ☀️' : 'Night 🌙'],
           ] as [string, string | null][]).filter(([, v]) => v != null).map(([label, val]) => (
-            <div key={label} className="py-1" style={{ borderBottom: '0.5px solid var(--outline)' }}>
-              <p className="text-[0.58rem] font-label uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
+            <div key={label} className="py-1.5" style={{ borderBottom: '0.5px solid var(--outline)' }}>
+              <p className="text-[0.65rem] font-label uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
               <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{val}</p>
             </div>
           ))}
@@ -377,53 +432,68 @@ function ForecastSlot({ item, offset }: { item: any; offset: number }) {
 
 // ── 16-Day Daily Forecast ────────────────────────────────────────────────────
 
-function DailyMeteoSection({ md }: { md: any }) {
+function DailyMeteoSection({ md, tempUnit }: { md: any; tempUnit: 'C' | 'F' }) {
   return (
-    <Section title="16-Day Forecast" icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} />} defaultOpen={false}>
+    <Section
+      title="16-Day Forecast"
+      icon={<Sun className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />}
+      defaultOpen={false}
+    >
       {(md.time as string[]).map((_, i) => (
-        <DailyMeteoRow key={md.time[i]} md={md} idx={i} />
+        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} />
       ))}
     </Section>
   )
 }
 
-function DailyMeteoRow({ md, idx }: { md: any; idx: number }) {
+function DailyMeteoRow({ md, idx, tempUnit }: { md: any; idx: number; tempUnit: 'C' | 'F' }) {
   const [open, setOpen] = useState(false)
   const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : fmtISODate(md.time[idx])
   const wmo: number = md.weather_code?.[idx] ?? 0
-  const tmax: string = md.temperature_2m_max?.[idx]?.toFixed(1) ?? '—'
-  const tmin: string = md.temperature_2m_min?.[idx]?.toFixed(1) ?? '—'
+  const tmax = md.temperature_2m_max?.[idx]
+  const tmin = md.temperature_2m_min?.[idx]
   const pop: number = md.precipitation_probability_max?.[idx] ?? 0
   const uvi: number | null = md.uv_index_max?.[idx] ?? null
 
+  const tmaxStr = tmax != null ? displayCelsius(tmax, tempUnit, 1) : '—'
+  const tminStr = tmin != null ? displayCelsius(tmin, tempUnit, 1) : '—'
+
   return (
     <div className="mb-2 rounded-xl overflow-hidden" style={{ border: '0.5px solid var(--outline)' }}>
-      <button onClick={() => setOpen(v => !v)} className="w-full flex items-center gap-3 p-3 text-left"
-        style={{ background: 'var(--surface-mid)' }}>
-        <span className="text-lg flex-shrink-0">{wmoEmoji(wmo)}</span>
+      <button
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-3 p-3 text-left"
+        style={{ background: 'var(--surface-mid)' }}
+      >
+        <span className="text-lg flex-shrink-0" role="img" aria-label={wmoDesc(wmo)}>{wmoEmoji(wmo)}</span>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{label}</p>
-          <p className="text-[0.65rem] font-body truncate" style={{ color: 'var(--text-muted)' }}>{wmoDesc(wmo)}</p>
+          <p className="text-xs font-body truncate" style={{ color: 'var(--text-muted)' }}>{wmoDesc(wmo)}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 text-xs">
           {pop > 0 && <span className="font-label" style={{ color: '#60a5fa' }}>{pop}%</span>}
           {uvi != null && <span className="font-label" style={{ color: uviColor(uvi) }}>UV {uvi.toFixed(0)}</span>}
-          <span className="font-bold font-headline" style={{ color: 'var(--text)' }}>{tmax}°</span>
-          <span className="font-label" style={{ color: 'var(--text-muted)' }}>{tmin}°</span>
+          <span className="font-bold font-headline" style={{ color: 'var(--text)' }}>{tmaxStr}</span>
+          <span className="font-label" style={{ color: 'var(--text-muted)' }}>{tminStr}</span>
         </div>
-        <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 ml-1"
-          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }} />
+        <ChevronDown
+          className="w-3.5 h-3.5 flex-shrink-0 ml-1 transition-transform"
+          style={{ color: 'var(--text-muted)', transform: open ? 'rotate(180deg)' : '' }}
+          aria-hidden="true"
+        />
       </button>
       {open && (
         <div className="p-3 space-y-3" style={{ borderTop: '0.5px solid var(--outline)' }}>
           <div className="grid grid-cols-2 gap-2">
             {([
-              ['High', `${tmax}°C`], ['Low', `${tmin}°C`],
-              ['Feels High', md.apparent_temperature_max?.[idx] != null ? `${md.apparent_temperature_max[idx].toFixed(1)}°C` : null],
-              ['Feels Low', md.apparent_temperature_min?.[idx] != null ? `${md.apparent_temperature_min[idx].toFixed(1)}°C` : null],
+              ['High', tmax != null ? displayCelsius(tmax, tempUnit) : null],
+              ['Low', tmin != null ? displayCelsius(tmin, tempUnit) : null],
+              ['Feels High', md.apparent_temperature_max?.[idx] != null ? displayCelsius(md.apparent_temperature_max[idx], tempUnit) : null],
+              ['Feels Low', md.apparent_temperature_min?.[idx] != null ? displayCelsius(md.apparent_temperature_min[idx], tempUnit) : null],
             ] as [string, string | null][]).filter(([, v]) => v != null).map(([l, v]) => (
               <div key={l} className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                <p className="text-[0.55rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{l}</p>
+                <p className="text-[0.65rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{l}</p>
                 <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>{v}</p>
               </div>
             ))}
@@ -431,27 +501,31 @@ function DailyMeteoRow({ md, idx }: { md: any; idx: number }) {
           {md.sunrise?.[idx] && (
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                <p className="text-[0.6rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunrise / Sunset</p>
+                <p className="text-[0.65rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunrise / Sunset</p>
                 <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>
                   {fmtISOTime(md.sunrise[idx])} / {fmtISOTime(md.sunset[idx])}
                 </p>
                 {md.daylight_duration?.[idx] != null && (
-                  <p className="text-[0.6rem] mt-0.5" style={{ color: 'var(--text-muted)' }}>Daylight: {secsToHm(md.daylight_duration[idx])}</p>
+                  <p className="text-[0.65rem] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    Daylight: {secsToHm(md.daylight_duration[idx])}
+                  </p>
                 )}
               </div>
               {md.sunshine_duration?.[idx] != null && (
                 <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
-                  <p className="text-[0.6rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunshine</p>
+                  <p className="text-[0.65rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunshine</p>
                   <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{secsToHm(md.sunshine_duration[idx])}</p>
                 </div>
               )}
             </div>
           )}
-          <div className="space-y-0">
+          <div>
             {uvi != null && (
-              <DataRow label="UV Index Max"
+              <DataRow
+                label="UV Index Max"
                 value={<span style={{ color: uviColor(uvi) }}>{uvi.toFixed(1)} — {uviLabel(uvi)}</span>}
-                tooltip="Solar UV radiation intensity. 0-2: Low, 3-5: Moderate, 6-7: High, 8-10: Very High, 11+: Extreme." />
+                tooltip="Solar UV radiation intensity. 0-2: Low, 3-5: Moderate, 6-7: High, 8-10: Very High, 11+: Extreme."
+              />
             )}
             {md.precipitation_sum?.[idx] > 0 && <DataRow label="Precipitation" value={`${md.precipitation_sum[idx].toFixed(1)}`} unit=" mm" />}
             {md.rain_sum?.[idx] > 0 && <DataRow label="Rain Total" value={`${md.rain_sum[idx].toFixed(1)}`} unit=" mm" />}

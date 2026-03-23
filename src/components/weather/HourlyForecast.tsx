@@ -10,28 +10,50 @@ interface HourlyForecastProps {
 
 export function HourlyForecast({ data }: HourlyForecastProps) {
   return (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
       {data.map((hour, i) => {
         const isNow = i === 0
+        const hasRain = hour.pop > 20
+
         return (
           <div
             key={hour.dt}
-            className={`flex flex-col items-center gap-1.5 min-w-[68px] py-3 px-2 rounded-2xl transition ${
-              isNow
-                ? 'bg-hero-gradient text-white shadow-glass'
-                : 'bg-surface-container-high text-on-surface'
+            className={`flex flex-col items-center gap-1.5 min-w-[64px] py-3 px-2 rounded-2xl flex-shrink-0 ${
+              isNow ? 'bg-hero-gradient text-white shadow-glass' : ''
             }`}
+            style={
+              isNow
+                ? {}
+                : { background: 'var(--surface)', border: '0.5px solid var(--outline)' }
+            }
           >
-            <span className={`text-[10px] font-label ${isNow ? 'text-white/80' : 'text-on-surface-variant/60'}`}>
+            <span
+              className="text-[10px] font-label"
+              style={{ color: isNow ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)' }}
+            >
               {isNow ? 'Now' : formatTime(hour.dt)}
             </span>
-            <WeatherIcon
-              conditionCode={hour.conditionCode}
-              iconCode={hour.icon}
-              size={24}
-            />
-            <span className={`font-semibold text-sm font-headline ${isNow ? '' : ''}`}>
+
+            <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={22} />
+
+            <span
+              className="font-semibold text-sm font-headline"
+              style={{ color: isNow ? 'white' : 'var(--text)' }}
+            >
               {hour.temp}°
+            </span>
+
+            {/* Precipitation probability */}
+            <span
+              className="text-[9px] font-label leading-none"
+              style={{
+                color: isNow
+                  ? (hasRain ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)')
+                  : (hasRain ? '#60a5fa' : 'var(--text-muted)'),
+                opacity: hasRain ? 1 : 0.5,
+              }}
+            >
+              {hour.pop}%
             </span>
           </div>
         )

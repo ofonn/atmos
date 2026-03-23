@@ -12,6 +12,10 @@
     --primary: #5b47d1;
     --secondary: #2563EB;
     --outline: #c8c5d4;
+
+    /* RGB channels for adaptive glass backgrounds */
+    --glass-rgb: 220, 222, 235;
+    --glass-border-rgb: 100, 100, 130;
   }
   .dark {
     --bg: #10131c;
@@ -22,6 +26,9 @@
     --primary: #c7bfff;
     --secondary: #acc7ff;
     --outline: #474554;
+
+    --glass-rgb: 39, 42, 51;
+    --glass-border-rgb: 71, 69, 84;
   }
 
   body {
@@ -33,22 +40,35 @@
 }
 
 @layer components {
+  /* Layered atmospheric glow — top glow plus subtle side ambients */
   .bg-atmospheric-glow {
-    background: radial-gradient(circle at 50% -5%, #4329b8 0%, var(--bg) 60%);
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(67, 41, 184, 0.75) 0%, transparent 55%),
+      radial-gradient(ellipse at -15% 75%, rgba(88, 150, 253, 0.12) 0%, transparent 40%),
+      radial-gradient(ellipse at 115% 65%, rgba(128, 110, 248, 0.08) 0%, transparent 40%),
+      var(--bg);
+  }
+  :root .bg-atmospheric-glow {
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(130, 100, 230, 0.25) 0%, transparent 55%),
+      radial-gradient(ellipse at -15% 75%, rgba(88, 150, 253, 0.06) 0%, transparent 40%),
+      radial-gradient(ellipse at 115% 65%, rgba(128, 110, 248, 0.04) 0%, transparent 40%),
+      var(--bg);
+  }
+
+  /* Glass morphism — adaptive to light/dark via CSS variables */
+  .glass-card {
+    background: rgba(var(--glass-rgb), 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 0.5px solid rgba(var(--glass-border-rgb), 0.25);
   }
 
   .glass-input {
-    background: rgba(39, 42, 51, 0.45);
+    background: rgba(var(--glass-rgb), 0.5);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 0.5px solid rgba(146, 142, 160, 0.2);
-  }
-
-  .glass-card {
-    background: rgba(39, 42, 51, 0.4);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 0.5px solid rgba(71, 69, 84, 0.2);
+    border: 0.5px solid rgba(var(--glass-border-rgb), 0.3);
   }
 
   .gradient-text {
@@ -58,12 +78,13 @@
     background-clip: text;
   }
 
+  /* Nav glass — stays dark by design (pill floats above content) */
   .nav-glass {
-    background: rgba(24, 27, 36, 0.85);
+    background: rgba(16, 19, 28, 0.88);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    border: 0.5px solid rgba(255, 255, 255, 0.05);
+    border: 0.5px solid rgba(255, 255, 255, 0.06);
   }
 
   .weather-metric-card {
@@ -81,13 +102,25 @@
   }
 }
 
+/* Ask-bar glow pulse */
 @keyframes askGlow {
   0%, 100% {
-    box-shadow: 0 0 10px rgba(128,110,248,0.4), 0 0 20px rgba(88,150,253,0.2);
+    box-shadow: 0 0 10px rgba(128, 110, 248, 0.4), 0 0 20px rgba(88, 150, 253, 0.2);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 20px rgba(128,110,248,0.7), 0 0 35px rgba(88,150,253,0.4);
+    box-shadow: 0 0 20px rgba(128, 110, 248, 0.7), 0 0 35px rgba(88, 150, 253, 0.4);
     transform: scale(1.04);
+  }
+}
+
+/* Respect user motion preference — disable all decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
