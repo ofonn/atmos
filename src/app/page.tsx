@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { useWeather } from '@/hooks/useWeather'
-import { useLocation } from '@/hooks/useLocation'
+import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import { displayTemp } from '@/lib/utils'
@@ -45,11 +44,7 @@ export default function Home() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const { location, searchCity, loading: locLoading } = useLocation()
-  const { current, hourly, daily, refresh: refreshWeather, loading: weatherLoading } = useWeather(
-    location?.lat ?? null,
-    location?.lon ?? null
-  )
+  const { location, locLoading, searchCity, current, hourly, daily, refresh: refreshWeather, loading: weatherLoading } = useWeatherContext()
 
   // Single batched AI call — 1hr cache
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
@@ -81,9 +76,32 @@ export default function Home() {
   // Scale font size down for longer headlines so they fit on one screen
   const getHeadlineFontSize = (text: string) => {
     const words = text.split(' ').filter(Boolean).length
-    if (words <= 3) return 'clamp(3rem, 14vw, 4.2rem)'
-    if (words <= 5) return 'clamp(2.4rem, 11vw, 3.4rem)'
-    return 'clamp(1.9rem, 9vw, 2.6rem)'
+    if (words <= 3) return 'clamp(3.2rem, 14vw, 4.4rem)'
+    if (words <= 5) return 'clamp(2.8rem, 12vw, 3.8rem)'
+    return 'clamp(2.2rem, 10vw, 3rem)'
+  }
+
+  // For 5+ words, group into pairs to halve the line count
+  const buildHeadlineLines = (plain: string, gradient: string): string[] => {
+    const words = plain.split(' ').filter(Boolean)
+    const total = words.length + 1 // +1 for gradient word
+    if (total <= 4) {
+      // Each word its own line
+      return [...words, gradient]
+    }
+    // Group in pairs
+    const lines: string[] = []
+    for (let i = 0; i < words.length; i += 2) {
+      lines.push(words.slice(i, i + 2).join(' '))
+    }
+    // Last line: if gradient word pairs with an orphan, combine; otherwise own line
+    const lastLine = lines[lines.length - 1]
+    if (lastLine && !lastLine.includes(' ')) {
+      lines[lines.length - 1] = lastLine + ' ' + gradient
+    } else {
+      lines.push(gradient)
+    }
+    return lines
   }
 
   return (
@@ -156,26 +174,26 @@ export default function Home() {
           </div>
         ) : current && displayed && icon ? (
           <>
-            {/* Icon + Temp */}
-            <div className="flex items-center gap-4 flex-shrink-0 mb-1">
-              <div className="relative flex-shrink-0" style={{ filter: `drop-shadow(0 0 28px ${icon.glow})` }}>
-                <div className="absolute inset-0 rounded-full opacity-60 blur-2xl"
+            {/* Icon + Temp — compact so headline has room */}
+            <div className="flex items-center gap-3 flex-shrink-0 mb-1">
+              <div className="relative flex-shrink-0" style={{ filter: `drop-shadow(0 0 18px ${icon.glow})` }}>
+                <div className="absolute inset-0 rounded-full opacity-60 blur-xl"
                   style={{ background: `linear-gradient(135deg, ${icon.from}, ${icon.to})` }} />
-                <div className="relative w-24 h-24 rounded-full"
+                <div className="relative w-16 h-16 rounded-full"
                   style={{
                     background: `linear-gradient(135deg, ${icon.from}, ${icon.via}, ${icon.to})`,
-                    boxShadow: `inset -6px -6px 20px rgba(0,0,0,0.25), 0 6px 28px ${icon.glow}`,
+                    boxShadow: `inset -4px -4px 14px rgba(0,0,0,0.25), 0 4px 18px ${icon.glow}`,
                   }}>
-                  <div className="absolute top-3 left-4 w-8 h-3.5 bg-white/40 blur-md rounded-full -rotate-[30deg]" />
+                  <div className="absolute top-2 left-3 w-5 h-2.5 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
                 </div>
               </div>
               <div>
                 <p className="font-headline font-bold leading-none tracking-tighter"
-                  style={{ fontSize: '4.2rem', color: 'var(--text)' }}>
+                  style={{ fontSize: '3.2rem', color: 'var(--text)' }}>
                   {displayTemp(current.temp, tempUnit)}
                 </p>
-                <p className="font-label text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-                  But it feels more like {displayTemp(current.feelsLike, tempUnit)}
+                <p className="font-label text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  Feels like {displayTemp(current.feelsLike, tempUnit)}
                 </p>
               </div>
             </div>
@@ -201,18 +219,21 @@ export default function Home() {
                   >
                     {(() => {
                       const { plain, gradient } = splitHeadline(displayed.headline)
-                      return plain.split(' ').filter(Boolean).map((word, i) => (
-                        <span key={i} className="block">{word}</span>
-                      )).concat(
-                        <span key="gradient" className="block" style={{
-                          background: isDark
-                            ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
-                            : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text',
-                        }}>{gradient}</span>
-                      )
+                      const lines = buildHeadlineLines(plain, gradient)
+                      const gradientStyle = {
+                        background: isDark
+                          ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
+                          : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
+                        WebkitBackgroundClip: 'text' as const,
+                        WebkitTextFillColor: 'transparent' as const,
+                        backgroundClip: 'text' as const,
+                      }
+                      const isLastLine = (i: number) => i === lines.length - 1
+                      return lines.map((line, i) => (
+                        <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
+                          {line}
+                        </span>
+                      ))
                     })()}
                   </h1>
 

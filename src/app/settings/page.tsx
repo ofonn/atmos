@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { useSettings } from '@/contexts/SettingsContext'
-import { useLocation } from '@/hooks/useLocation'
+import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
   Sun,
   Moon,
@@ -79,7 +79,7 @@ function SegmentedControl({
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { tempUnit, windUnit, timeFormat, updateSetting } = useSettings()
-  const { location, loading: locLoading, searchCity, syncLocation } = useLocation()
+  const { location, locLoading, searchCity, syncLocation } = useWeatherContext()
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
   const [cityEditOpen, setCityEditOpen] = useState(false)

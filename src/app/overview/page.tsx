@@ -4,19 +4,14 @@ import { useRouter } from 'next/navigation'
 import { MapPin, Sparkles } from 'lucide-react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
-import { useWeather } from '@/hooks/useWeather'
-import { useLocation } from '@/hooks/useLocation'
+import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { formatDay, displayTempShort } from '@/lib/utils'
 
 export default function OverviewPage() {
   const router = useRouter()
-  const { location } = useLocation()
+  const { location, current, daily, loading, error } = useWeatherContext()
   const { tempUnit } = useSettings()
-  const { current, daily, loading, error } = useWeather(
-    location?.lat ?? null,
-    location?.lon ?? null
-  )
 
   const featured = daily?.[1] ?? null
   const rest = daily?.slice(2) ?? []

@@ -4,8 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Mic, ArrowUp, Sparkles, Trash2 } from 'lucide-react'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
-import { useWeather } from '@/hooks/useWeather'
-import { useLocation } from '@/hooks/useLocation'
+import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useChat } from '@/hooks/useChat'
 import { useState } from 'react'
 import { formatTime, displayTempShort } from '@/lib/utils'
@@ -66,11 +65,7 @@ const quickPrompts = [
 
 export default function ChatPage() {
   const router = useRouter()
-  const { location } = useLocation()
-  const { current, hourly, daily } = useWeather(
-    location?.lat ?? null,
-    location?.lon ?? null
-  )
+  const { location, current, hourly, daily } = useWeatherContext()
   const { tempUnit } = useSettings()
   const { messages, loading, sendMessage, clearChat } = useChat({ current, hourly, daily })
   const [input, setInput] = useState('')

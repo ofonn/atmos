@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import { SettingsProvider } from '@/contexts/SettingsContext'
+import { WeatherProvider } from '@/contexts/WeatherContext'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -28,9 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${jakarta.className} min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <SettingsProvider>
-            <div className="min-h-screen max-w-md mx-auto relative flex flex-col">
-              {children}
-            </div>
+            <WeatherProvider>
+              <div className="min-h-screen max-w-md mx-auto relative flex flex-col">
+                {children}
+              </div>
+            </WeatherProvider>
           </SettingsProvider>
         </ThemeProvider>
       </body>
