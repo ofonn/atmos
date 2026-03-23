@@ -11,6 +11,50 @@ import { useState } from 'react'
 import { formatTime, displayTempShort } from '@/lib/utils'
 import { useSettings } from '@/contexts/SettingsContext'
 
+// Render markdown: **bold**, *italic*, bullet lists
+function renderMarkdown(text: string) {
+  const lines = text.split('\n')
+  const result: React.ReactNode[] = []
+
+  lines.forEach((line, li) => {
+    const trimmed = line.trim()
+    if (!trimmed) {
+      result.push(<br key={`br-${li}`} />)
+      return
+    }
+
+    // Bullet point
+    const isBullet = /^[\*\-]\s+/.test(trimmed)
+    const content = isBullet ? trimmed.replace(/^[\*\-]\s+/, '') : trimmed
+
+    // Inline: **bold** and *italic*
+    const parts: React.ReactNode[] = []
+    const regex = /\*\*(.+?)\*\*|\*(.+?)\*/g
+    let last = 0
+    let match
+    while ((match = regex.exec(content)) !== null) {
+      if (match.index > last) parts.push(content.slice(last, match.index))
+      if (match[1] !== undefined) parts.push(<strong key={match.index}>{match[1]}</strong>)
+      else if (match[2] !== undefined) parts.push(<em key={match.index}>{match[2]}</em>)
+      last = match.index + match[0].length
+    }
+    if (last < content.length) parts.push(content.slice(last))
+
+    if (isBullet) {
+      result.push(
+        <div key={li} className="flex gap-2 mt-1">
+          <span style={{ opacity: 0.5, flexShrink: 0 }}>•</span>
+          <span>{parts}</span>
+        </div>
+      )
+    } else {
+      result.push(<p key={li} className={li > 0 ? 'mt-2' : ''}>{parts}</p>)
+    }
+  })
+
+  return result
+}
+
 const quickPrompts = [
   'Weekend forecast?',
   'UV Index today',
@@ -33,6 +77,7 @@ export default function ChatPage() {
   const [typingText, setTypingText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const autoSentRef = useRef(false)
+  const pendingMsgRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -40,31 +85,39 @@ export default function ChatPage() {
     }
   }, [messages])
 
-  // Pick up pending auto-message (e.g. from "Plan Your Week" button)
+  // Read pending message from localStorage once on mount
   useEffect(() => {
-    if (autoSentRef.current) return
     try {
       const pending = localStorage.getItem('atmos_chat_pending')
-      if (!pending) return
-      localStorage.removeItem('atmos_chat_pending')
-      autoSentRef.current = true
-
-      // Animate typing the message before sending
-      let i = 0
-      setTypingText('')
-      const interval = setInterval(() => {
-        i++
-        setTypingText(pending.slice(0, i))
-        if (i >= pending.length) {
-          clearInterval(interval)
-          setTimeout(() => {
-            setTypingText('')
-            sendMessage(pending)
-          }, 400)
-        }
-      }, 18)
+      if (pending) {
+        localStorage.removeItem('atmos_chat_pending')
+        pendingMsgRef.current = pending
+      }
     } catch {}
-  }, [sendMessage])
+  }, [])
+
+  // Fire auto-send only once weather context is loaded
+  useEffect(() => {
+    if (autoSentRef.current || !pendingMsgRef.current || !current) return
+    autoSentRef.current = true
+    const pending = pendingMsgRef.current
+    pendingMsgRef.current = null
+
+    // Animate typing the message before sending
+    let i = 0
+    setTypingText('')
+    const interval = setInterval(() => {
+      i++
+      setTypingText(pending.slice(0, i))
+      if (i >= pending.length) {
+        clearInterval(interval)
+        setTimeout(() => {
+          setTypingText('')
+          sendMessage(pending)
+        }, 400)
+      }
+    }, 18)
+  }, [current, sendMessage])
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
@@ -196,52 +249,150 @@ export default function ChatPage() {
                           color: 'var(--text)',
                         }}
                       >
-                        <p>{msg.content}</p>
+                        {isUser ? <p>{msg.content}</p> : <div className="text-[0.9rem] leading-relaxed">{renderMarkdown(msg.content)}</div>}
                       </div>
 
-                      {/* Inline hourly timeline card for first AI message */}
-                      {!isUser && idx === 1 && hourly && hourly.length > 0 && (
-                        <div
-                          className="rounded-[1.5rem] p-4"
-                          style={{
-                            background: 'rgba(11,14,22,0.4)',
-                            backdropFilter: 'blur(20px)',
-                            WebkitBackdropFilter: 'blur(20px)',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                          }}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="font-headline font-semibold text-xs tracking-tight" style={{ color: 'var(--text)' }}>
-                              Timeline Insight
-                            </span>
-                            <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: 'var(--primary)' }}>
-                              Active
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-4 gap-1.5">
-                            {hourly.slice(0, 4).map((hour, hi) => {
-                              const isAlert = hour.pop > 60
-                              return (
-                                <div
-                                  key={hour.dt}
-                                  className="flex flex-col items-center gap-1.5 p-2 rounded-xl"
-                                  style={isAlert
-                                    ? { background: 'rgba(199,191,255,0.15)', boxShadow: '0 0 0 1px rgba(199,191,255,0.2)' }
-                                    : { background: 'rgba(39,42,51,0.4)' }
-                                  }
-                                >
-                                  <span className={`font-label text-[10px] ${isAlert ? 'font-bold' : ''}`}
-                                    style={{ color: isAlert ? 'var(--primary)' : 'var(--text-muted)' }}>
-                                    {hi === 0 ? 'Now' : formatTime(hour.dt)}
-                                  </span>
-                                  <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={18} />
-                                  <span className="font-headline text-xs font-bold" style={{ color: 'var(--text)' }}>{displayTempShort(hour.temp, tempUnit)}</span>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
+                      {/* Contextual inline card — shown after each AI response */}
+                      {!isUser && (() => {
+                        // Find the user message that triggered this AI response
+                        const userMsg = messages[idx - 1]?.content?.toLowerCase() ?? ''
+
+                        const isWeekQuery = /week|weekend|days|plan|forecast|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(userMsg)
+                        const isRainQuery = /rain|umbrella|wet|storm|drizzle|precipit/.test(userMsg)
+                        const isWearQuery = /wear|dress|outfit|clothes|jacket|hoodie|coat|shirt|shorts/.test(userMsg)
+                        const isMetricsQuery = /humid|uv|pressure|wind|visibility|air quality/.test(userMsg)
+                        const isHourlyQuery = /hour|today|now|later|afternoon|morning|evening|tonight/.test(userMsg)
+
+                        const cardStyle: React.CSSProperties = {
+                          background: 'rgba(11,14,22,0.4)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          borderTop: '1px solid rgba(255,255,255,0.05)',
+                        }
+
+                        // Weekly forecast card
+                        if (isWeekQuery && daily && daily.length > 0) {
+                          return (
+                            <div className="rounded-[1.5rem] p-4" style={cardStyle}>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-headline font-semibold text-xs" style={{ color: 'var(--text)' }}>Weekly Snapshot</span>
+                                <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: 'var(--primary)' }}>7 Days</span>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                {daily.slice(0, 5).map((day, di) => {
+                                  const label = di === 0 ? 'Today' : di === 1 ? 'Tomorrow' : new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })
+                                  const hasRain = day.pop > 40
+                                  return (
+                                    <div key={day.dt} className="flex items-center gap-3 px-1">
+                                      <span className="text-[0.7rem] font-label w-14 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{label}</span>
+                                      <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={16} />
+                                      <span className="flex-1 text-[0.7rem] font-body capitalize truncate" style={{ color: 'var(--text-muted)' }}>{day.description}</span>
+                                      {hasRain && <span className="text-[0.65rem] font-label" style={{ color: '#60a5fa' }}>{day.pop}%</span>}
+                                      <span className="text-[0.75rem] font-bold font-headline w-10 text-right" style={{ color: 'var(--text)' }}>{displayTempShort(day.tempMax, tempUnit)}</span>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // Current conditions card (wear/dress queries)
+                        if (isWearQuery && current) {
+                          return (
+                            <div className="rounded-[1.5rem] p-4" style={cardStyle}>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-headline font-semibold text-xs" style={{ color: 'var(--text)' }}>Right Now</span>
+                                <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: 'var(--primary)' }}>Conditions</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { label: 'Feels Like', value: displayTempShort(current.feelsLike, tempUnit) },
+                                  { label: 'Humidity', value: `${current.humidity}%` },
+                                  { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
+                                  { label: 'Rain chance', value: `${hourly?.[0]?.pop ?? 0}%` },
+                                ].map(({ label, value }) => (
+                                  <div key={label} className="rounded-xl p-2.5" style={{ background: 'rgba(39,42,51,0.5)' }}>
+                                    <p className="text-[0.6rem] font-label uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                                    <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>{value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // Metrics card (humidity/UV/pressure queries)
+                        if (isMetricsQuery && current) {
+                          return (
+                            <div className="rounded-[1.5rem] p-4" style={cardStyle}>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-headline font-semibold text-xs" style={{ color: 'var(--text)' }}>Atmospheric Data</span>
+                                <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: 'var(--primary)' }}>Live</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { label: 'Humidity', value: `${current.humidity}%` },
+                                  { label: 'Pressure', value: `${current.pressure} hPa` },
+                                  { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
+                                  { label: 'Visibility', value: `${Math.round((current.visibility ?? 0) / 1000)} km` },
+                                ].map(({ label, value }) => (
+                                  <div key={label} className="rounded-xl p-2.5" style={{ background: 'rgba(39,42,51,0.5)' }}>
+                                    <p className="text-[0.6rem] font-label uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
+                                    <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>{value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // Rain card
+                        if (isRainQuery && hourly && hourly.length > 0) {
+                          return (
+                            <div className="rounded-[1.5rem] p-4" style={cardStyle}>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-headline font-semibold text-xs" style={{ color: 'var(--text)' }}>Rain Outlook</span>
+                                <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: '#60a5fa' }}>Next 8h</span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {hourly.slice(0, 4).map((hour, hi) => (
+                                  <div key={hour.dt} className="flex flex-col items-center gap-1 p-2 rounded-xl"
+                                    style={{ background: hour.pop > 50 ? 'rgba(96,165,250,0.15)' : 'rgba(39,42,51,0.4)' }}>
+                                    <span className="font-label text-[10px]" style={{ color: 'var(--text-muted)' }}>{hi === 0 ? 'Now' : formatTime(hour.dt)}</span>
+                                    <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={18} />
+                                    <span className="text-[0.65rem] font-bold" style={{ color: hour.pop > 50 ? '#60a5fa' : 'var(--text-muted)' }}>{hour.pop}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // Hourly card (today/now/later queries)
+                        if (isHourlyQuery && hourly && hourly.length > 0) {
+                          return (
+                            <div className="rounded-[1.5rem] p-4" style={cardStyle}>
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-headline font-semibold text-xs" style={{ color: 'var(--text)' }}>Hourly Forecast</span>
+                                <span className="font-label text-[10px] uppercase tracking-widest" style={{ color: 'var(--primary)' }}>Today</span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {hourly.slice(0, 4).map((hour, hi) => (
+                                  <div key={hour.dt} className="flex flex-col items-center gap-1.5 p-2 rounded-xl"
+                                    style={{ background: 'rgba(39,42,51,0.4)' }}>
+                                    <span className="font-label text-[10px]" style={{ color: 'var(--text-muted)' }}>{hi === 0 ? 'Now' : formatTime(hour.dt)}</span>
+                                    <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={18} />
+                                    <span className="font-headline text-xs font-bold" style={{ color: 'var(--text)' }}>{displayTempShort(hour.temp, tempUnit)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        return null
+                      })()}
                     </div>
                   </div>
                   <span className={`mt-1.5 font-label text-[10px] ${isUser ? 'mr-2' : 'ml-11'}`}
@@ -282,9 +433,9 @@ export default function ChatPage() {
 
       {/* Input area - fixed at bottom, no BottomNav overlap */}
       <div className="relative z-20 flex-shrink-0 px-4 pt-2 pb-4" style={{ background: 'var(--bg)' }}>
-        {/* Quick prompts — all visible in wrapped rows */}
+        {/* Quick prompts — centered, all visible in wrapped rows */}
         {messages.length === 0 && (
-          <div className="flex flex-wrap gap-2 pb-3">
+          <div className="flex flex-wrap gap-2 pb-3 justify-center">
             {quickPrompts.map((p) => (
               <button
                 key={p}

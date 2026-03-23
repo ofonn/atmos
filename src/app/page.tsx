@@ -70,12 +70,20 @@ export default function Home() {
   const icon = current ? get3DIconStyle(current.conditionCode) : null
   const displayed = aiContent ?? (current ? getFallbackHeadline(current.temp, current.conditionCode) : null)
 
-  // Split headline at last word for gradient effect
+  // Split headline at last word for gradient effect — strip all trailing punctuation first
   const splitHeadline = (text: string) => {
-    const clean = text.replace(/\.$/, '')
-    const words = clean.split(' ')
+    const clean = text.replace(/[.!?,;]+$/, '')
+    const words = clean.split(' ').filter(Boolean)
     const last = words.pop() ?? ''
     return { plain: words.join(' '), gradient: last + '.' }
+  }
+
+  // Scale font size down for longer headlines so they fit on one screen
+  const getHeadlineFontSize = (text: string) => {
+    const words = text.split(' ').filter(Boolean).length
+    if (words <= 3) return 'clamp(3rem, 14vw, 4.2rem)'
+    if (words <= 5) return 'clamp(2.4rem, 11vw, 3.4rem)'
+    return 'clamp(1.9rem, 9vw, 2.6rem)'
   }
 
   return (
@@ -172,23 +180,28 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Headline — fills vertical space */}
-            <div className="flex-1 flex flex-col justify-start min-h-0" style={{ marginTop: '30px' }}>
+            {/* Headline + advice — sized to fit, never clipped */}
+            <div className="flex flex-col justify-start flex-shrink-0" style={{ marginTop: '24px' }}>
               {aiLoading && !displayed ? (
-                <div className="flex-1 flex flex-col gap-2 justify-center">
-                  <div className="h-16 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-                  <div className="h-16 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
-                  <div className="h-16 w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
+                <div className="flex flex-col gap-2">
+                  <div className="h-12 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+                  <div className="h-12 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
+                  <div className="h-12 w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
                 </div>
               ) : (
                 <>
                   <h1
-                    className="font-headline font-extrabold leading-[0.88] tracking-tighter"
-                    style={{ fontSize: 'clamp(2.8rem, 13vw, 4.2rem)', color: 'var(--text)', paddingBottom: '0.25em', overflow: 'visible' }}
+                    className="font-headline font-extrabold leading-[0.9] tracking-tighter"
+                    style={{
+                      fontSize: getHeadlineFontSize(displayed.headline),
+                      color: 'var(--text)',
+                      paddingBottom: '0.2em',
+                      overflow: 'visible',
+                    }}
                   >
                     {(() => {
                       const { plain, gradient } = splitHeadline(displayed.headline)
-                      return plain.split(' ').map((word, i) => (
+                      return plain.split(' ').filter(Boolean).map((word, i) => (
                         <span key={i} className="block">{word}</span>
                       )).concat(
                         <span key="gradient" className="block" style={{
@@ -203,7 +216,7 @@ export default function Home() {
                     })()}
                   </h1>
 
-                  <p className="font-body text-sm mt-8 max-w-[280px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  <p className="font-body text-sm mt-5 max-w-[280px] leading-relaxed flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
                     {displayed.advice}
                   </p>
 
@@ -220,6 +233,9 @@ export default function Home() {
                 </>
               )}
             </div>
+
+            {/* Spacer to push ask bar to bottom */}
+            <div className="flex-1" />
 
             {/* Ask Bar */}
             <div className="flex-shrink-0 mt-4">
