@@ -151,7 +151,7 @@ export default function Home() {
       )}
 
       {/* Main */}
-      <main className="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-28 min-h-0 overflow-hidden">
+      <main className="relative z-10 flex-1 flex flex-col px-6 pt-4 pb-28 min-h-0 overflow-y-auto scrollbar-hide">
         {loading ? (
           <div className="flex-1 flex flex-col gap-6">
             <div className="flex items-center gap-5">
@@ -277,10 +277,8 @@ export default function Home() {
               </div>
             )}
 
-            <div className="flex-1" />
-
-            {/* Ask Bar */}
-            <div className="flex-shrink-0 mt-4">
+            {/* Ask Bar — mt-auto pushes it to the bottom without a blank spacer div */}
+            <div className="flex-shrink-0 mt-auto pt-6">
               <div
                 className="rounded-full flex items-center gap-3 pl-5 pr-2 py-2 glass-input"
               >
