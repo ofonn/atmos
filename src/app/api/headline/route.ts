@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { geminiGenerateWithRotation } from '@/lib/gemini'
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,19 +27,7 @@ CRITICAL RULES:
 
 Return exactly: {"headline": "...", "advice": "..."}`
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      }
-    )
-
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error?.message || 'Gemini error')
-
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const raw = await geminiGenerateWithRotation(prompt, apiKey)
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const parsed = JSON.parse(cleaned)
 

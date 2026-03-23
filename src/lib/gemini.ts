@@ -1,6 +1,53 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { WeatherContextData } from '@/types/weather'
 
+export const GEMINI_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-3.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-pro',
+]
+
+function isRateLimitError(data: any, status: number): boolean {
+  if (status === 429) return true
+  const msg = data?.error?.message || data?.error?.status || ''
+  return msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota') || msg.includes('429')
+}
+
+/**
+ * Calls Gemini REST API with automatic model rotation on rate limit.
+ * Throws only for non-rate-limit errors or when all models are exhausted.
+ */
+export async function geminiGenerateWithRotation(
+  prompt: string,
+  apiKey: string
+): Promise<string> {
+  for (const modelId of GEMINI_MODELS) {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      }
+    )
+    const data = await res.json()
+
+    if (!res.ok) {
+      if (isRateLimitError(data, res.status)) {
+        console.warn(`Rate limit on ${modelId}, trying next model`)
+        continue
+      }
+      throw new Error(data.error?.message || 'Gemini error')
+    }
+
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  }
+  throw new Error('Service temporarily unavailable. Please try again shortly.')
+}
+
 export function buildSystemPrompt(weather: WeatherContextData): string {
   let prompt = `You are Atmos, a friendly and knowledgeable AI weather assistant. You help users make practical decisions based on real weather data.
 
