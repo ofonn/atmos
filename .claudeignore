@@ -4,3 +4,5 @@ references/
 designs_inspo/
 prev_chat.txt
 public/sw.js
+.playwright-mcp
+

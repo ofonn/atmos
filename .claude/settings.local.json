@@ -1,0 +1,30 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "c:\\Users\\ofoni\\atmos\\.claude\\cc-context-awareness\\bridge.sh"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c:\\Users\\ofoni\\atmos\\.claude\\cc-context-awareness\\check-thresholds.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c:\\Users\\ofoni\\atmos\\.claude\\cc-context-awareness\\reset.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

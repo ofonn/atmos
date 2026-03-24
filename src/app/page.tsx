@@ -71,12 +71,16 @@ export default function Home() {
     return { plain: words.join(' '), gradient: last + '.' }
   }
 
-  /* Use vh so headline scales with screen height — keeps page non-scrollable */
+  /*
+   * Container-relative font sizing: uses cqw/cqh so the headline
+   * scales to fit its own bounding box, not the viewport.
+   * The headline container has `container-type: size`.
+   */
   const getHeadlineFontSize = (text: string) => {
     const words = text.split(' ').filter(Boolean).length
-    if (words <= 3) return 'clamp(3rem, 7.5vh, 4.5rem)'
-    if (words <= 5) return 'clamp(2.8rem, 7vh, 4rem)'
-    return 'clamp(2.5rem, 6.5vh, 3.5rem)'
+    if (words <= 3) return 'clamp(2rem, min(16cqw, 28cqh), 5rem)'
+    if (words <= 5) return 'clamp(1.8rem, min(13cqw, 20cqh), 4.5rem)'
+    return 'clamp(1.5rem, min(11cqw, 15cqh), 3.8rem)'
   }
 
   const buildHeadlineLines = (plain: string, gradient: string): string[] => {
@@ -98,11 +102,14 @@ export default function Home() {
 
   return (
     <div className="relative flex flex-col h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)' }}>
-      {/* Atmospheric glow */}
+      {/* Decorative glow — not a layout element */}
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 pt-5 pb-0 flex-shrink-0">
+      {/* ═══════════════════════════════════════════════════════════
+          CONTAINER 1 — HEADER
+          Fixed-height bounding box: location + search toggle
+          ═══════════════════════════════════════════════════════════ */}
+      <header className="relative flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-1">
         <button
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label={searchOpen ? 'Close city search' : 'Open city search'}
@@ -116,7 +123,6 @@ export default function Home() {
               : 'Set location'}
           </span>
         </button>
-
         <button
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label={searchOpen ? 'Close search' : 'Search city'}
@@ -128,9 +134,9 @@ export default function Home() {
         </button>
       </header>
 
-      {/* Search bar */}
+      {/* Search overlay — borrows space from headline container when open */}
       {searchOpen && (
-        <div className="relative z-10 px-6 pt-3 flex-shrink-0">
+        <div className="relative flex-shrink-0 px-5 pt-2 pb-1">
           <form onSubmit={handleSearch}>
             <div className="flex items-center gap-3 rounded-2xl px-4 py-2.5 glass-input">
               <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
@@ -149,28 +155,31 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main — flex-1 fills remaining viewport, never scrolls */}
-      <main className="relative z-10 flex-1 flex flex-col px-5 sm:px-6 pt-3 min-h-0 overflow-hidden">
+      {/* ═══════════════════════════════════════════════════════════
+          MAIN CONTENT AREA — flex-1, distributes space to children
+          ═══════════════════════════════════════════════════════════ */}
+      <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
         {loading ? (
-          /* Loading skeleton */
-          <div className="flex-1 flex flex-col gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-full animate-pulse flex-shrink-0" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
+          /* Loading skeleton — same container proportions */
+          <div className="flex-1 flex flex-col px-5">
+            <div className="flex-shrink-0 flex items-center gap-4 py-2">
+              <div className="w-14 h-14 rounded-full animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
               <div className="flex flex-col gap-2">
-                <div className="h-10 w-28 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
+                <div className="h-9 w-24 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
                 <div className="h-3 w-20 rounded animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
               </div>
             </div>
-            <div className="flex-1 flex flex-col gap-2">
-              <div className="h-[18%] w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-              <div className="h-[18%] w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
-              <div className="h-[18%] w-4/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
+            <div className="flex-1 flex flex-col gap-2 py-2">
+              <div className="h-[16%] w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+              <div className="h-[16%] w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
+              <div className="h-[16%] w-4/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
             </div>
           </div>
         ) : current && displayed && icon ? (
           <>
-            {/* ── Icon + Temperature ── */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            {/* ═══ CONTAINER 2 — WEATHER DISPLAY ═══
+                Fixed-height: icon orb + temperature + feels like */}
+            <section className="relative flex-shrink-0 flex items-center gap-3 px-5 py-1">
               <div
                 className="relative flex-shrink-0"
                 style={{ filter: `drop-shadow(0 0 18px ${icon.glow})` }}
@@ -198,7 +207,7 @@ export default function Home() {
               <div>
                 <p
                   className="font-headline font-bold leading-none tracking-tighter"
-                  style={{ fontSize: 'clamp(2.4rem, 5.5vh, 3.2rem)', color: 'var(--text)' }}
+                  style={{ fontSize: 'clamp(2.2rem, 8vw, 3.5rem)', color: 'var(--text)' }}
                 >
                   {displayTemp(current.temp, tempUnit)}
                 </p>
@@ -206,15 +215,21 @@ export default function Home() {
                   Feels like {displayTemp(current.feelsLike, tempUnit)}
                 </p>
               </div>
-            </div>
+            </section>
 
-            {/* ── Headline + Advice — grows to fill available space ── */}
-            <div className="flex-1 flex flex-col min-h-0 mt-3">
+            {/* ═══ CONTAINER 3 — HEADLINE (flex-1, container-query sized) ═══
+                This is the elastic container. It absorbs all remaining vertical
+                space. The h1 font-size uses cqw/cqh so the text scales
+                relative to THIS box — not the viewport. */}
+            <section
+              className="relative flex-1 flex flex-col min-h-0 overflow-hidden px-5 py-1"
+              style={{ containerType: 'size' }}
+            >
               {aiLoading && !displayed ? (
                 <div className="flex flex-col gap-2 pt-2">
-                  <div className="h-10 w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-                  <div className="h-10 w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
-                  <div className="h-10 w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
+                  <div className="h-[15%] w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+                  <div className="h-[15%] w-5/6 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.3 }} />
+                  <div className="h-[15%] w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
                 </div>
               ) : (
                 <>
@@ -223,8 +238,7 @@ export default function Home() {
                     style={{
                       fontSize: getHeadlineFontSize(displayed.headline),
                       color: 'var(--text)',
-                      paddingBottom: '0.35em',
-                      overflow: 'visible',
+                      paddingBottom: '0.25em',
                     }}
                   >
                     {(() => {
@@ -248,7 +262,7 @@ export default function Home() {
                   </h1>
 
                   <p
-                    className="font-body text-sm max-w-[320px] leading-relaxed flex-shrink-0"
+                    className="font-body text-sm max-w-[90%] leading-relaxed flex-shrink-0"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {displayed.advice}
@@ -258,7 +272,7 @@ export default function Home() {
                     onClick={handleRefresh}
                     disabled={aiLoading}
                     aria-label="Refresh AI summary"
-                    className="mt-1.5 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
+                    className="mt-1 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30 flex-shrink-0"
                     style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
                   >
                     <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -266,21 +280,24 @@ export default function Home() {
                   </button>
                 </>
               )}
-            </div>
+            </section>
 
-            {/* ── Bottom cluster: hourly + ask bar ── */}
-            <div className="flex-shrink-0 flex flex-col gap-3 pb-[5.5rem]">
+            {/* ═══ CONTAINER 4 — HOURLY FORECAST ═══
+                Fixed-height: horizontal scrollable card strip */}
+            <section className="relative flex-shrink-0 px-5 py-1.5">
               {hourly && hourly.length > 0 && (
                 <HourlyForecast data={hourly} />
               )}
+            </section>
 
-              <div
-                className="rounded-full flex items-center gap-3 pl-5 pr-2 py-2 glass-input"
-              >
+            {/* ═══ CONTAINER 5 — ASK BAR ═══
+                Fixed-height: search-style CTA pill */}
+            <section className="relative flex-shrink-0 px-5 py-1.5">
+              <div className="rounded-full flex items-center gap-3 pl-5 pr-2 py-1.5 glass-input">
                 <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
                 <button
                   onClick={() => router.push('/chat')}
-                  className="flex-1 text-left text-sm font-body py-2.5"
+                  className="flex-1 text-left text-sm font-body py-2"
                   style={{ color: 'var(--text-muted)' }}
                   aria-label="Ask Atmos a question"
                 >
@@ -298,11 +315,11 @@ export default function Home() {
                   ASK
                 </button>
               </div>
-            </div>
+            </section>
           </>
         ) : (
           /* Welcome — no location set */
-          <div className="flex-1 flex flex-col items-center justify-center text-center pb-24">
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-5">
             <div className="relative w-20 h-20 mb-6">
               <div
                 className="absolute inset-0 rounded-full opacity-30 blur-xl"
@@ -323,7 +340,11 @@ export default function Home() {
         )}
       </main>
 
-      <BottomNav />
+      {/* ═══════════════════════════════════════════════════════════
+          CONTAINER 6 — BOTTOM NAV
+          Fixed-height, IN the page flow (not fixed/absolute).
+          ═══════════════════════════════════════════════════════════ */}
+      <BottomNav inline />
     </div>
   )
 }
