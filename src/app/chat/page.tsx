@@ -118,9 +118,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden relative" style={{ background: 'var(--bg)' }}>
+    <div className="relative flex flex-col h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)' }}>
       {/* Ambient blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute top-1/4 -left-20 w-64 h-64 rounded-full blur-[100px]"
           style={{ background: 'rgba(128,110,248,0.12)' }}
@@ -133,7 +133,7 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="relative z-20 flex items-center justify-between px-4 h-14 flex-shrink-0"
+        className="relative z-10 flex items-center justify-between px-4 h-14 flex-shrink-0"
         style={{ background: 'var(--bg)', borderBottom: '0.5px solid var(--outline)' }}
       >
         <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto px-4 py-4">
+      <main ref={scrollRef} className="relative flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
@@ -320,7 +320,7 @@ export default function ChatPage() {
 
       {/* Input area */}
       <div
-        className="relative z-20 flex-shrink-0 px-4 pt-2 pb-4"
+        className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4"
         style={{ background: 'var(--bg)' }}
       >
         {/* Quick prompts — only in empty state (handled above), show inline chips otherwise */}

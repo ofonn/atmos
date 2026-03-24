@@ -147,17 +147,14 @@ export default function TechnicalPage() {
   const tempSuffix = tempUnit === 'F' ? '°F' : '°C'
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header
-        className="fixed top-0 w-full z-50 px-6 py-4"
-        style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', background: 'transparent' }}
-      >
+      <header className="sticky top-0 z-30 px-6 py-4 backdrop-blur-xl">
         <h1 className="text-2xl font-bold tracking-tighter font-headline" style={{ color: 'var(--primary)' }}>Atmos</h1>
       </header>
 
-      <main className="relative z-10 pt-20 px-4 pb-32">
+      <main className="relative z-10 px-4 pb-32">
         {/* Title */}
         <div className="mb-6 px-2">
           <h2

@@ -102,9 +102,11 @@ export default function SettingsPage() {
   const isDark = theme === 'dark'
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+      <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
+
       {/* Header */}
-      <header className="px-6 pt-14 pb-2">
+      <header className="relative z-10 px-6 pt-14 pb-2">
         <h1
           className="text-3xl font-extrabold font-headline tracking-tight"
           style={{ color: 'var(--text)' }}
@@ -116,7 +118,7 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <main className="flex-1 px-6 pt-6 pb-32 space-y-3">
+      <main className="relative z-10 flex-1 px-6 pt-6 pb-32 space-y-3">
         {/* Appearance section */}
         <p
           className="text-[10px] font-label uppercase tracking-widest px-1 mb-1"

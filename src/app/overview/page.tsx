@@ -117,13 +117,10 @@ export default function OverviewPage() {
   const rest = daily?.slice(2) ?? []   // Day after tomorrow onward
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header
-        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4"
-        style={{ background: 'transparent' }}
-      >
+      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
           <span className="font-headline font-extrabold tracking-tight text-2xl" style={{ color: 'var(--primary)' }}>
@@ -132,7 +129,7 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      <main className="relative z-10 pt-24 pb-32 px-4">
+      <main className="relative z-10 pb-32 px-4">
         <div className="px-2 mb-6">
           <p className="font-label text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--primary)' }}>
             Atmospheric Narrative
