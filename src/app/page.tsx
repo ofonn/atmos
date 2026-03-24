@@ -217,13 +217,12 @@ export default function Home() {
               </div>
             </section>
 
-            {/* ═══ CONTAINER 3 — HEADLINE (flex-1, container-query sized) ═══
-                This is the elastic container. It absorbs all remaining vertical
-                space. The h1 font-size uses cqw/cqh so the text scales
-                relative to THIS box — not the viewport. */}
+            {/* ═══ CONTAINER 3 — HEADLINE ONLY (flex-1, container-query sized) ═══
+                Elastic container. Absorbs remaining vertical space.
+                Only the headline lives here — advice/refresh are separate. */}
             <section
-              className="relative flex-1 flex flex-col min-h-0 overflow-hidden px-5 py-1"
-              style={{ containerType: 'size' }}
+              className="relative flex-1 flex flex-col justify-center min-h-0 overflow-hidden px-5"
+              style={{ containerType: 'size', marginTop: '20px' }}
             >
               {aiLoading && !displayed ? (
                 <div className="flex flex-col gap-2 pt-2">
@@ -232,55 +231,58 @@ export default function Home() {
                   <div className="h-[15%] w-2/3 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.2 }} />
                 </div>
               ) : (
-                <>
-                  <h1
-                    className="font-headline font-extrabold leading-[0.92] tracking-tighter"
-                    style={{
-                      fontSize: getHeadlineFontSize(displayed.headline),
-                      color: 'var(--text)',
-                      paddingBottom: '0.25em',
-                    }}
-                  >
-                    {(() => {
-                      const { plain, gradient } = splitHeadline(displayed.headline)
-                      const lines = buildHeadlineLines(plain, gradient)
-                      const gradientStyle = {
-                        background: isDark
-                          ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
-                          : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
-                        WebkitBackgroundClip: 'text' as const,
-                        WebkitTextFillColor: 'transparent' as const,
-                        backgroundClip: 'text' as const,
-                      }
-                      const isLastLine = (i: number) => i === lines.length - 1
-                      return lines.map((line, i) => (
-                        <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
-                          {line}
-                        </span>
-                      ))
-                    })()}
-                  </h1>
-
-                  <p
-                    className="font-body text-sm max-w-[90%] leading-relaxed flex-shrink-0"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {displayed.advice}
-                  </p>
-
-                  <button
-                    onClick={handleRefresh}
-                    disabled={aiLoading}
-                    aria-label="Refresh AI summary"
-                    className="mt-1 self-start flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30 flex-shrink-0"
-                    style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
-                  >
-                    <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                    AI refresh
-                  </button>
-                </>
+                <h1
+                  className="font-headline font-extrabold leading-[0.92] tracking-tighter"
+                  style={{
+                    fontSize: getHeadlineFontSize(displayed.headline),
+                    color: 'var(--text)',
+                  }}
+                >
+                  {(() => {
+                    const { plain, gradient } = splitHeadline(displayed.headline)
+                    const lines = buildHeadlineLines(plain, gradient)
+                    const gradientStyle = {
+                      background: isDark
+                        ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
+                        : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
+                      WebkitBackgroundClip: 'text' as const,
+                      WebkitTextFillColor: 'transparent' as const,
+                      backgroundClip: 'text' as const,
+                    }
+                    const isLastLine = (i: number) => i === lines.length - 1
+                    return lines.map((line, i) => (
+                      <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
+                        {line}
+                      </span>
+                    ))
+                  })()}
+                </h1>
               )}
             </section>
+
+            {/* ═══ CONTAINER 3.5 — ADVICE + AI REFRESH ═══
+                Fixed-height, always sits directly above the hourly cards.
+                Detached from headline so it never gets swallowed. */}
+            {displayed && !aiLoading && (
+              <section className="relative flex-shrink-0 px-5 pb-1">
+                <p
+                  className="font-body text-sm max-w-[90%] leading-relaxed"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {displayed.advice}
+                </p>
+                <button
+                  onClick={handleRefresh}
+                  disabled={aiLoading}
+                  aria-label="Refresh AI summary"
+                  className="mt-1 flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
+                  style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
+                >
+                  <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  AI refresh
+                </button>
+              </section>
+            )}
 
             {/* ═══ CONTAINER 4 — HOURLY FORECAST ═══
                 Fixed-height: horizontal scrollable card strip */}

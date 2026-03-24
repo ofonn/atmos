@@ -10,7 +10,7 @@ interface HourlyForecastProps {
 
 export function HourlyForecast({ data }: HourlyForecastProps) {
   return (
-    <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
       {data.map((hour, i) => {
         const isNow = i === 0
         const hasRain = hour.pop > 20
@@ -18,7 +18,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
         return (
           <div
             key={hour.dt}
-            className={`flex flex-col items-center gap-1.5 min-w-[64px] py-3 px-2 rounded-2xl flex-shrink-0 ${
+            className={`flex flex-col items-center gap-1 min-w-[56px] flex-1 py-2.5 px-1.5 rounded-2xl ${
               isNow ? 'bg-hero-gradient text-white shadow-glass' : ''
             }`}
             style={
