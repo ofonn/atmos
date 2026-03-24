@@ -236,7 +236,7 @@ export default function Home() {
                   style={{
                     fontSize: getHeadlineFontSize(displayed.headline),
                     color: 'var(--text)',
-                    paddingBottom: '0.15em',
+                    paddingBottom: '0.25em',
                   }}
                 >
                   {(() => {
