@@ -221,7 +221,7 @@ export default function Home() {
                 Elastic container. Absorbs remaining vertical space.
                 Only the headline lives here — advice/refresh are separate. */}
             <section
-              className="relative flex-1 flex flex-col justify-center min-h-0 overflow-hidden px-5"
+              className="relative flex-1 flex flex-col justify-center min-h-0 px-5"
               style={{ containerType: 'size', marginTop: '20px' }}
             >
               {aiLoading && !displayed ? (
@@ -232,10 +232,11 @@ export default function Home() {
                 </div>
               ) : (
                 <h1
-                  className="font-headline font-extrabold leading-[0.92] tracking-tighter"
+                  className="font-headline font-extrabold leading-[1.05] tracking-tighter"
                   style={{
                     fontSize: getHeadlineFontSize(displayed.headline),
                     color: 'var(--text)',
+                    paddingBottom: '0.15em',
                   }}
                 >
                   {(() => {
