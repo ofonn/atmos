@@ -236,7 +236,7 @@ export default function Home() {
                   style={{
                     fontSize: getHeadlineFontSize(displayed.headline),
                     color: 'var(--text)',
-                    paddingBottom: '0.25em',
+                    paddingBottom: '0.15em',
                   }}
                 >
                   {(() => {
@@ -252,7 +252,7 @@ export default function Home() {
                     }
                     const isLastLine = (i: number) => i === lines.length - 1
                     return lines.map((line, i) => (
-                      <span key={i} className="block" style={isLastLine(i) ? gradientStyle : {}}>
+                      <span key={i} className="block" style={isLastLine(i) ? { ...gradientStyle, paddingBottom: '0.25em' } : {}}>
                         {line}
                       </span>
                     ))
