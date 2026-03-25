@@ -10,31 +10,32 @@ function getProactiveHeadline(data: CurrentWeatherData): { headline: string; adv
   const temp = data.temp
   const code = data.conditionCode
 
-  if (code >= 200 && code < 300) {
+  // WMO codes (0-99)
+  if (code >= 95) {
     return {
       headline: "Thunderstorms are rolling in.",
       advice: "Stay indoors and avoid open areas until the storm passes.",
     }
   }
-  if (code >= 300 && code < 400) {
+  if (code >= 51 && code <= 57) {
     return {
       headline: "A light drizzle is falling.",
       advice: "Carry a light jacket or umbrella if you're heading out.",
     }
   }
-  if (code >= 500 && code < 600) {
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) {
     return {
       headline: "It's raining outside.",
       advice: "Bring an umbrella and wear waterproof shoes today.",
     }
   }
-  if (code >= 600 && code < 700) {
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
     return {
       headline: "Snow is expected today.",
       advice: "Bundle up and watch for icy patches on roads.",
     }
   }
-  if (code >= 700 && code < 800) {
+  if (code >= 45 && code <= 48) {
     return {
       headline: "Visibility is low today.",
       advice: "Drive carefully and use fog lights if needed.",
@@ -71,31 +72,33 @@ function getProactiveHeadline(data: CurrentWeatherData): { headline: string; adv
 }
 
 function getWeatherGradient(code: number): string {
-  if (code >= 200 && code < 300) return 'from-[#2D1B69] via-[#1a1040] to-[#10131c]'
-  if (code >= 500 && code < 600) return 'from-[#1B3A5C] via-[#152238] to-[#10131c]'
-  if (code >= 600 && code < 700) return 'from-[#3A4A6B] via-[#1e2a40] to-[#10131c]'
-  if (code === 800) return 'from-[#4329b8] via-[#1a1040] to-[#10131c]'
+  // WMO codes
+  if (code >= 95) return 'from-[#2D1B69] via-[#1a1040] to-[#10131c]'
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return 'from-[#1B3A5C] via-[#152238] to-[#10131c]'
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return 'from-[#3A4A6B] via-[#1e2a40] to-[#10131c]'
+  if (code === 0 || code === 1) return 'from-[#4329b8] via-[#1a1040] to-[#10131c]'
   return 'from-[#4329b8] via-[#1a1040] to-[#10131c]'
 }
 
 function get3DIconStyle(code: number): { bg: string; glow: string } {
-  if (code >= 200 && code < 300) return {
+  // WMO codes
+  if (code >= 95) return {
     bg: 'from-[#8B5CF6] via-[#6D28D9] to-[#4C1D95]',
     glow: 'rgba(139, 92, 246, 0.4)',
   }
-  if (code >= 500 && code < 600) return {
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return {
     bg: 'from-[#60A5FA] via-[#3B82F6] to-[#2563EB]',
     glow: 'rgba(96, 165, 250, 0.4)',
   }
-  if (code >= 600 && code < 700) return {
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return {
     bg: 'from-[#E0E7FF] via-[#C7D2FE] to-[#A5B4FC]',
     glow: 'rgba(165, 180, 252, 0.4)',
   }
-  if (code === 800) return {
+  if (code === 0 || code === 1) return {
     bg: 'from-[#FFF7CC] via-[#FFA500] to-[#FF8C00]',
     glow: 'rgba(255, 165, 0, 0.4)',
   }
-  if (code > 800) return {
+  if (code === 2 || code === 3) return {
     bg: 'from-[#94A3B8] via-[#64748B] to-[#475569]',
     glow: 'rgba(148, 163, 184, 0.3)',
   }

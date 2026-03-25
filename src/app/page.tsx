@@ -13,26 +13,30 @@ import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
 import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react'
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
-  if (code >= 200 && code < 300) return { from: '#8B5CF6', via: '#6D28D9', to: isDark ? '#4C1D95' : '#8B5CF6', glow: 'rgba(139,92,246,0.5)' }
-  if (code >= 500 && code < 600) return { from: '#60A5FA', via: '#3B82F6', to: isDark ? '#1D4ED8' : '#60A5FA', glow: 'rgba(96,165,250,0.5)' }
-  if (code >= 600 && code < 700) return { from: '#E0E7FF', via: '#C7D2FE', to: isDark ? '#A5B4FC' : '#E0E7FF', glow: 'rgba(165,180,252,0.5)' }
-  if (code === 800) return { from: '#FFD359', via: '#FFB800', to: isDark ? '#FF8C00' : '#FFB800', glow: 'rgba(255,184,0,0.5)' }
-  if (code <= 804 && code > 800) return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
+  // WMO codes (0-99)
+  if (code === 0 || code === 1) return { from: '#FFD359', via: '#FFB800', to: isDark ? '#FF8C00' : '#FFB800', glow: 'rgba(255,184,0,0.5)' }
+  if (code === 2 || code === 3) return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
+  if (code >= 45 && code <= 48) return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
+  if (code >= 51 && code <= 67) return { from: '#60A5FA', via: '#3B82F6', to: isDark ? '#1D4ED8' : '#60A5FA', glow: 'rgba(96,165,250,0.5)' }
+  if (code >= 71 && code <= 86) return { from: '#E0E7FF', via: '#C7D2FE', to: isDark ? '#A5B4FC' : '#E0E7FF', glow: 'rgba(165,180,252,0.5)' }
+  if (code >= 80 && code <= 82) return { from: '#60A5FA', via: '#3B82F6', to: isDark ? '#1D4ED8' : '#60A5FA', glow: 'rgba(96,165,250,0.5)' }
+  if (code >= 95) return { from: '#8B5CF6', via: '#6D28D9', to: isDark ? '#4C1D95' : '#8B5CF6', glow: 'rgba(139,92,246,0.5)' }
   return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
 }
 
 function getFallbackHeadline(temp: number, code: number): { headline: string; advice: string } {
-  if (code >= 200 && code < 300) return { headline: "A big storm is coming today.", advice: "You really don't want to be outside right now. Stay in if you can." }
-  if (code >= 300 && code < 400) return { headline: "It'll drizzle on and off today.", advice: "Not heavy rain, but you'll want a jacket just in case you get caught." }
-  if (code >= 500 && code < 600) return { headline: "It's going to rain all day.", advice: "Grab an umbrella before you leave. Your shoes will thank you later." }
-  if (code >= 600 && code < 700) return { headline: "It's going to snow today.", advice: "Dress warm and be careful on the roads. They might get slippery." }
-  if (code >= 700 && code < 800) return { headline: "You can barely see outside today.", advice: "It's really foggy out there. Take it slow if you're driving anywhere." }
-  if (code === 800 && temp >= 35) return { headline: "It's crazy hot out today.", advice: "Drink lots of water and try to stay in the shade during the afternoon." }
-  if (code === 800 && temp >= 25) return { headline: "It's a really nice day today.", advice: "Great weather to go out. Maybe put on some sunscreen if you'll be outside." }
-  if (code === 800 && temp >= 15) return { headline: "It's sunny but not too warm.", advice: "Nice during the day but it might get chilly later. Bring a light jacket." }
-  if (code === 800) return { headline: "It's cold but the sky is clear.", advice: "You'll want a warm jacket today. The sun is out but it won't warm you." }
-  if (code === 801 || code === 802) return { headline: "A few clouds but mostly nice.", advice: "The sun will come and go today. Good enough for anything you've planned." }
-  if (code >= 803) return { headline: "It's cloudy but won't rain.", advice: "The sky is grey today but it probably won't rain. No umbrella needed." }
+  // WMO codes (0-99)
+  if (code >= 95) return { headline: "A big storm is coming today.", advice: "You really don't want to be outside right now. Stay in if you can." }
+  if (code >= 51 && code <= 57) return { headline: "It'll drizzle on and off today.", advice: "Not heavy rain, but you'll want a jacket just in case you get caught." }
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return { headline: "It's going to rain all day.", advice: "Grab an umbrella before you leave. Your shoes will thank you later." }
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return { headline: "It's going to snow today.", advice: "Dress warm and be careful on the roads. They might get slippery." }
+  if (code >= 45 && code <= 48) return { headline: "You can barely see outside today.", advice: "It's really foggy out there. Take it slow if you're driving anywhere." }
+  if ((code === 0 || code === 1) && temp >= 35) return { headline: "It's crazy hot out today.", advice: "Drink lots of water and try to stay in the shade during the afternoon." }
+  if ((code === 0 || code === 1) && temp >= 25) return { headline: "It's a really nice day today.", advice: "Great weather to go out. Maybe put on some sunscreen if you'll be outside." }
+  if ((code === 0 || code === 1) && temp >= 15) return { headline: "It's sunny but not too warm.", advice: "Nice during the day but it might get chilly later. Bring a light jacket." }
+  if (code === 0 || code === 1) return { headline: "It's cold but the sky is clear.", advice: "You'll want a warm jacket today. The sun is out but it won't warm you." }
+  if (code === 2) return { headline: "A few clouds but mostly nice.", advice: "The sun will come and go today. Good enough for anything you've planned." }
+  if (code === 3) return { headline: "It's cloudy but won't rain.", advice: "The sky is grey today but it probably won't rain. No umbrella needed." }
   if (temp >= 35) return { headline: "It's dangerously hot out there.", advice: "Stay hydrated and avoid being outside too long. The heat is no joke today." }
   if (temp <= 5) return { headline: "It's freezing cold outside today.", advice: "Bundle up with heavy layers. You really don't want to be out too long." }
   return { headline: "Nothing unusual going on today.", advice: "Pretty normal weather. Check back later if you want to plan something outside." }
