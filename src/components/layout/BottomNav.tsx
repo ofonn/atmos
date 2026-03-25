@@ -19,12 +19,12 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
     <nav
       className={
         inline
-          ? 'relative flex-shrink-0 flex justify-center py-1 w-full max-w-xl mx-auto'
-          : 'fixed bottom-2 md:bottom-5 left-1/2 -translate-x-1/2 z-40 w-full max-w-xl px-4 md:px-0 flex justify-center'
+          ? 'relative flex-shrink-0 flex justify-center py-1'
+          : 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50'
       }
       aria-label="Main navigation"
     >
-      <div className="flex items-end justify-between md:justify-center gap-0 md:gap-4 px-1.5 py-0.5 md:px-3 md:py-2 rounded-full nav-glass w-full md:w-auto">
+      <div className="flex items-end gap-1 px-3 py-2 rounded-full nav-glass">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = pathname === href
           return (
@@ -33,37 +33,31 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
               href={href}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center gap-0 min-w-[36px] min-h-[32px] md:min-w-[48px] md:min-h-[48px] px-1 py-0 md:px-2 md:py-1 rounded-full transition-all duration-300 active:scale-90 ${
-                active ? '' : 'hover:opacity-80'
+              className={`relative flex flex-col items-center gap-0.5 px-1 py-1 rounded-full transition-all duration-300 active:scale-90 ${
+                active ? '' : 'opacity-40 hover:opacity-70'
               }`}
             >
               <div
-                className={`flex items-center justify-center w-6 h-6 md:w-9 md:h-9 rounded-full transition-all duration-300 ${
+                className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
                   active
                     ? 'bg-hero-gradient shadow-[0_0_20px_rgba(128,110,248,0.35)]'
                     : ''
                 }`}
               >
                 <Icon
-                  className="w-3 h-3 md:w-[18px] md:h-[18px] transition-colors"
-                  style={{
-                    color: active ? '#ffffff' : 'var(--text-muted)',
-                    opacity: active ? 1 : 0.6,
-                  }}
+                  className={`w-[18px] h-[18px] transition-colors ${
+                    active ? 'text-white' : 'text-[#e0e2ee]'
+                  }`}
                 />
               </div>
-              {/* Always show label — persistent labels on all tabs (#001) */}
-              <span
-                className={`font-label text-[8px] md:text-[11px] leading-none tracking-[0.02em] md:tracking-wide transition-colors ${
-                  active ? 'font-semibold' : 'font-normal'
-                }`}
-                style={{
-                  color: active ? 'var(--primary)' : 'var(--text-muted)',
-                  opacity: active ? 1 : 0.7,
-                }}
-              >
-                {label}
-              </span>
+              {active && (
+                <span
+                  className="font-label text-[9px] leading-none tracking-wide"
+                  style={{ color: 'var(--primary)' }}
+                >
+                  {label}
+                </span>
+              )}
             </Link>
           )
         })}
