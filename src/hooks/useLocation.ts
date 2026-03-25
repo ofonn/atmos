@@ -27,35 +27,40 @@ function getSavedCached(): Location[] {
 }
 
 function setCache(loc: Location) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(loc))
-  } catch {}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(loc)) } catch {}
 }
 
 function setSavedCache(locs: Location[]) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(locs)) } catch {}
+}
+
+/** Reverse geocode coords to city name via /api/geocode */
+async function reverseGeocode(lat: number, lon: number): Promise<Location> {
   try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(locs))
+    const res = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`)
+    const data = await res.json()
+    if (data.length > 0) {
+      return { lat, lon, name: data[0].name, country: data[0].country }
+    }
   } catch {}
+  return { lat, lon, name: 'Current Location', country: '' }
 }
 
 export function useLocation() {
-  // Start with null to match server render, then hydrate from localStorage
   const [location, setLocation] = useState<Location | null>(null)
   const [savedLocations, setSavedLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Immediately use cached location
     const cached = getCached()
     if (cached) {
       setLocation(cached)
       setLoading(false)
     }
-    
+
     setSavedLocations(getSavedCached())
 
-    // Always try to refresh location in the background
     if (!navigator.geolocation) {
       if (!cached) {
         setError('Geolocation is not supported')
@@ -67,32 +72,13 @@ export function useLocation() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords
-        try {
-          const reverseRes = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`)
-          const weatherData = await reverseRes.json()
-          const loc: Location = {
-            lat: latitude,
-            lon: longitude,
-            name: weatherData.name || 'Unknown',
-            country: weatherData.sys?.country || '',
-          }
-          setCache(loc)
-          setLocation(loc)
-        } catch {
-          // Only set fallback if we don't already have a cached location
-          if (!cached) {
-            const loc: Location = { lat: latitude, lon: longitude, name: 'Current Location', country: '' }
-            setCache(loc)
-            setLocation(loc)
-          }
-        }
+        const loc = await reverseGeocode(latitude, longitude)
+        setCache(loc)
+        setLocation(loc)
         setLoading(false)
       },
       () => {
-        // Geolocation denied — use cache if available, otherwise show error
-        if (!cached) {
-          setError('Location access denied')
-        }
+        if (!cached) setError('Location access denied')
         setLoading(false)
       }
     )
@@ -134,28 +120,15 @@ export function useLocation() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords
-        try {
-          const reverseRes = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`)
-          const weatherData = await reverseRes.json()
-          const loc: Location = {
-            lat: latitude,
-            lon: longitude,
-            name: weatherData.name || 'Unknown',
-            country: weatherData.sys?.country || '',
-          }
-          setCache(loc)
-          setLocation(loc)
-          setSavedLocations(prev => {
-            if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
-            const next = [...prev, loc]
-            setSavedCache(next)
-            return next
-          })
-        } catch {
-          const loc: Location = { lat: latitude, lon: longitude, name: 'Current Location', country: '' }
-          setCache(loc)
-          setLocation(loc)
-        }
+        const loc = await reverseGeocode(latitude, longitude)
+        setCache(loc)
+        setLocation(loc)
+        setSavedLocations(prev => {
+          if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
+          const next = [...prev, loc]
+          setSavedCache(next)
+          return next
+        })
         setLoading(false)
       },
       () => setLoading(false)
@@ -164,7 +137,6 @@ export function useLocation() {
 
   const saveLocation = useCallback((loc: Location) => {
     setSavedLocations(prev => {
-      // prevent duplicates based on lat/lon
       if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
       const next = [...prev, loc]
       setSavedCache(next)

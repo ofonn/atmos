@@ -1,0 +1,250 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.w{padding:1rem 0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.4rem}
+.tab{padding:5px 13px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:20px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all .15s;font-family:var(--font-sans)}
+.tab.active{background:var(--color-background-secondary);color:var(--color-text-primary);border-color:var(--color-border-primary);font-weight:500}
+.pane{display:none}.pane.on{display:block}
+.chip{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.bug{background:#fff0f0;color:#cc2222}.new{background:#f0f4ff;color:#1a3ecc}.ok{background:#f0faf4;color:#1a7a40}.med{background:#fff8ec;color:#a05c00}.low{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+@media(prefers-color-scheme:dark){.bug{background:#3a1a1a;color:#ff7070}.new{background:#0d1a3a;color:#7799ff}.ok{background:#0d2e1a;color:#66cc88}.med{background:#3a2e00;color:#ffcc66}}
+.card{border:0.5px solid var(--color-border-tertiary);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.85rem;background:var(--color-background-primary)}
+.ch{display:flex;align-items:flex-start;gap:9px;margin-bottom:.6rem}
+.ct{font-size:14px;font-weight:500;color:var(--color-text-primary);line-height:1.4;flex:1}
+.cb{font-size:13px;color:var(--color-text-secondary);line-height:1.65;margin-bottom:.65rem}
+.fix{background:var(--color-background-secondary);border-radius:8px;padding:.65rem .9rem}
+.fl{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.25rem}
+.ft{font-size:13px;color:var(--color-text-primary);line-height:1.6}
+.ok-box{border:0.5px solid #a3d9b5;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;background:#f0faf4}
+@media(prefers-color-scheme:dark){.ok-box{background:#0d2e1a;border-color:#1a5c33}}
+.ok-lbl{font-size:11px;font-weight:500;color:#1a7a40;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
+@media(prefers-color-scheme:dark){.ok-lbl{color:#66cc88}}
+.ob{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.sl{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--color-text-tertiary);text-transform:uppercase;margin-bottom:.9rem}
+.sc{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.2rem}
+.scc{flex:1;min-width:85px;background:var(--color-background-secondary);border-radius:8px;padding:.65rem;text-align:center}
+.scn{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.scl{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.pl{margin-top:.5rem}
+.pi{display:flex;gap:10px;align-items:flex-start;padding:.65rem 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pi:last-child{border-bottom:none}
+.pn{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0;margin-top:1px}
+.pt{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.pt strong{color:var(--color-text-primary);font-weight:500}
+.src{font-size:11px;color:var(--color-text-tertiary);margin-top:.35rem;font-style:italic}
+</style>
+<div class="w">
+<div class="tabs">
+  <button class="tab active" onclick="sw('wins',this)">What's Done ✓</button>
+  <button class="tab" onclick="sw('bugs',this)">Active Bugs</button>
+  <button class="tab" onclick="sw('home',this)">Home</button>
+  <button class="tab" onclick="sw('conditions',this)">Conditions</button>
+  <button class="tab" onclick="sw('chat',this)">AI Chat</button>
+  <button class="tab" onclick="sw('settings',this)">Settings</button>
+  <button class="tab" onclick="sw('new',this)">New Issues</button>
+  <button class="tab" onclick="sw('plan',this)">Action Plan</button>
+</div>
+
+<div id="wins" class="pane on">
+  <div class="sl">Progress confirmed from screenshots</div>
+  <div class="ok-box">
+    <div class="ok-lbl">Resolved since last critique</div>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Nav labels on all tabs.</strong> Home, Details, Outlook, Chat, Settings — all five tabs are labeled. Touch targets look healthy.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Stats row below temperature.</strong> H:30° L:28° 27% Rain 13 km/h — exactly the compact data row requested. Well executed.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">AI source attribution in chat.</strong> "SHOW DATA →" and "BASED ON HOURLY FORECAST • UPDATED 03:02 AM" appear on every AI response. This is the trust mechanism the app needed.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Conditions rename + freshness signal.</strong> "Conditions" heading with "UPDATED AT 10:21" — both done.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Proactive Insight timestamp + reactions.</strong> Timestamp and thumbs up/down visible on the card. Show Data link present.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Location chevron dropdown.</strong> Tappable location header with dropdown indicator — done.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Chat scope + empty state.</strong> "Weather answers and planning help" subheader with 3 starter chips on empty state.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Clear History via ··· menu.</strong> The destructive action is now behind a menu, not a bare trash icon.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Settings: human location signal.</strong> "Precise location active • Synced recently" replaces raw GPS coordinates.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Settings: Feedback section.</strong> Manage Saved Places, Search for a city, Use current location, and FEEDBACK section all present.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">Daily Briefing button.</strong> "DAILY BRIEFING →" with a refresh icon on the home screen — new feature added.</p><br>
+    <p class="ob"><strong style="color:var(--color-text-primary)">60-Min Precipitation section.</strong> Section exists on Conditions screen. (Chart rendering is broken — see Bugs tab.)</p>
+  </div>
+</div>
+
+<div id="bugs" class="pane">
+  <div class="sl">Active bugs — confirmed from screenshots</div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · Critical</span><span class="ct">Refresh icon disappears instead of animating</span></div>
+    <p class="cb">When the Daily Briefing refresh button is tapped, the icon vanishes entirely from the DOM instead of rotating in place. This leaves a blank space and gives no feedback that anything is happening. The icon should persist and spin for the duration of the refresh, then stop. Disappearing is worse than no animation at all — it reads as a broken state.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Keep the icon element mounted at all times. On refresh trigger: add a CSS class that applies `animation: spin 1s linear infinite`. On completion: remove the class. Never toggle `display:none` or unmount the icon. Use a single `@keyframes spin { to { transform: rotate(360deg); } }` rule.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · Critical</span><span class="ct">Hourly strip cards use hardcoded times (16:00, 19:00, 22:00)</span></div>
+    <p class="cb">The hourly forecast strip always starts at 16:00, 19:00, 22:00, 01:00 regardless of the current time. If it's 5:00 PM, the first future slot should be 7:00 PM. If it's 11:00 PM, it should be 1:00 AM. The "Now" slot is correct — but everything after it is hardcoded, not driven by the current time. This is a data logic bug, not a UI bug.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Calculate slots dynamically: `startHour = Math.ceil(currentHour / 3) * 3`, then generate slots at +3h intervals from there. If the interval is not 3h, derive it from the API data — use the actual forecast timestamps and filter to show the next N hours from `Date.now()`. Never hardcode 16, 19, 22, 1 as time values.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · Critical</span><span class="ct">60-minute precipitation chart not rendering</span></div>
+    <p class="cb">The 60-Min Precipitation section on the Conditions screen shows "No precipitation expected in the next hour" with a timeline row (Now, +15m, +30m, +45m) but no actual chart visualization appears. The section exists and the label works, but the chart itself is empty — no bars, no lines, no visual data. This is a rendering failure.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Audit the chart initialization code — likely a missing canvas reference, a failed API response, or a data shape mismatch. The chart should render even for zero-precipitation data (flat line at 0mm). Test with both zero and non-zero precipitation data. Use Open-Meteo's `precipitation` field at 15-minute intervals if available, or interpolate from hourly data.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · Critical</span><span class="ct">24h → 12h time format toggle has no effect</span></div>
+    <p class="cb">Switching between 24h and 12h in Settings changes the UI state of the segmented control, but no time values anywhere in the app actually reformat. Hourly strip slots still show 16:00, 19:00, 22:00. AI response timestamps still use 24h. The setting is persisted nowhere and applied nowhere.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Store the time format preference in localStorage (key: `atmos_time_format`). Create a global `formatTime(date, format)` utility function that all time displays consume. On settings change, re-render all visible time displays. On app load, read the preference and apply it before first render. Affected surfaces: hourly strip, AI response timestamps, Proactive Insight timestamp, Conditions updated-at label, chat message timestamps.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · High</span><span class="ct">··· menu items are non-functional</span></div>
+    <p class="cb">The ··· menu in the AI Chat header shows "Clear History" (and possibly other items) but clicking them does nothing. The menu opens correctly but actions have no handlers attached. This means there is currently no working way to clear conversation history.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Wire up all menu item click handlers. "Clear History" should: (1) show a confirmation modal ("Clear conversation? This can't be undone."), (2) on confirm, clear the messages array from state and localStorage, (3) return to the empty state with the starter chips visible. Test each menu item individually after wiring.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · High</span><span class="ct">Blue loading bar artifact visible under headline (light mode)</span></div>
+    <p class="cb">In the Galaxy A12 screenshots (light mode), a solid blue horizontal bar appears directly below the editorial headline text — "It's super hot and a bit" — where the last word or gradient accent should be. This is not a design element; it looks like a CSS background, a progress bar, or a gradient container that is rendering incorrectly and overflowing or clipping the text.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Inspect the headline element's computed styles in light mode at 360px. Check for any `background`, `background-image`, or `background-clip: text` applied to the last word span that may not be clipping correctly. The gradient text treatment for the accent word needs `-webkit-background-clip: text; -webkit-text-fill-color: transparent` with a fallback color. Verify the containing element has `overflow: hidden` if needed and that no child element is painting outside its bounds.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · High</span><span class="ct">AI narrative doesn't match actual conditions</span></div>
+    <p class="cb">In the Whispering Pines screenshot, the temperature is -1°C but the editorial headline reads "It's super hot and a bit grey out." This is a catastrophic data mismatch — the AI narrative is either cached from a different location's data, or the narrative generation is not receiving the correct temperature input. At -1°C, "super hot" is objectively wrong and destroys the app's credibility instantly.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Audit the narrative generation pipeline. The current weather data (temperature, feels-like, condition) must be passed as context to the AI prompt that generates the headline. Add a validation step: if the generated narrative's sentiment doesn't roughly align with actual conditions (e.g., "hot" language when temp < 10°C), regenerate or fallback to a template. This is a data pipeline issue, not a UI issue.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · Medium</span><span class="ct">Desktop: only 3 suggested prompts in chat empty state</span></div>
+    <p class="cb">The chat empty state shows 3 starter chips: "Will it rain tomorrow?", "Dress for a run?", "Weekend outlook?" On desktop where there's significantly more horizontal and vertical space, this leaves a large blank area and undersells the AI's capabilities. 6 chips are needed at minimum on desktop to fill the space properly and show the full range of what Atmos can do.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add 3 additional contextually relevant suggestion chips: "What should I wear today?", "Best time to go outside?", "Air quality today?" — or generate them dynamically based on current conditions. At desktop breakpoints (≥1024px), display all 6 in a 2×3 or 3×2 grid. On mobile, show the original 3. Use CSS grid with `repeat(auto-fit, minmax(160px, 1fr))` for responsive layout.</div></div>
+  </div>
+</div>
+
+<div id="home" class="pane">
+  <div class="sl">Home screen — new observations</div>
+  <div class="card">
+    <div class="ch"><span class="chip med">Medium</span><span class="ct">Pill nav bar padding is too generous</span></div>
+    <p class="cb">The floating pill nav bar at the bottom has visible padding on all sides that makes it sit higher from the bottom edge than necessary and gives it a heavier visual footprint than it needs. On 360px devices it eats vertical space. The pill itself is taller than the content inside it requires.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Reduce vertical padding inside the nav bar by 20–25%. Target height: 56px max on mobile. Reduce horizontal margin from screen edge to 16px on mobile (from what appears to be 20–24px). The pill should feel lean and unobtrusive, not prominent. Also ensure bottom safe area padding is added so it doesn't overlap the system home indicator on iOS.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip med">Medium</span><span class="ct">Hourly strip temperatures showing 7° in light mode (London?) vs 30° in dark</span></div>
+    <p class="cb">In the light mode screenshots (Samsung Galaxy, 360px), the hourly strip shows 7°, 7°, 7°, 7° — which appears to be London data. In the dark mode screenshots, it shows 30°, 30°, 28°, 28° — which matches Eket. The data source is rendering different location data across the two views, suggesting a location context bug or a stale cache issue across themes/sessions.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">This is a data/session issue, not a theme issue. Ensure that location context is persisted independently of theme and that switching themes doesn't trigger a data refetch from a different cached location. Audit the weather data fetching pipeline to confirm location is read from a single source of truth on every fetch.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Daily Briefing CTA could be more descriptive</span></div>
+    <p class="cb">"DAILY BRIEFING →" is a good concept but the all-caps label is harder to read at small sizes and gives no preview of what the briefing contains. First-time users don't know what to expect when they tap it.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Change label to sentence case: "Daily briefing →". Add a one-line preview beneath it that changes based on conditions: "Best time to go out: 9–11 AM today" or "Rain expected after 3 PM — plan accordingly." This transforms the button from a label into a teaser that earns the tap.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">No weather condition icon next to temperature in light mode</span></div>
+    <p class="cb">In dark mode, a large circular weather icon sits prominently beside the temperature. In light mode (right panel of Image 2), the icon appears but with a dark gray circle background that looks wrong on white. The icon treatment is inconsistent across themes.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">In light mode, remove the dark circle background from the weather icon entirely. Render the icon at 56–64px with a light blue or light gray tinted background circle (e.g., #E8F4FF for cloudy, #FFF8E1 for sunny). The icon should feel like part of the card, not a foreign dark element on a white surface.</div></div>
+  </div>
+</div>
+
+<div id="conditions" class="pane">
+  <div class="sl">Conditions screen — new observations</div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · High</span><span class="ct">Hourly Forecast and Air Quality Index sections not collapsed by default</span></div>
+    <p class="cb">Per the spec, the Hourly Forecast and Air Quality Index sections on the Conditions screen should be collapsed by default so the screen opens cleanly showing only the Proactive Insight, 60-Min Precipitation, and Current Conditions. Currently they appear to be expanded or missing entirely — the screenshots show no Air Quality section at all, and Hourly Forecast visibility is unclear.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add collapsible section wrappers to both Hourly Forecast and Air Quality Index. Default state: `collapsed`. Render a section header with a chevron that toggles expand/collapse. Persist the expanded/collapsed state in sessionStorage so a user's preference survives navigation but resets on a fresh app load. The section header should show a one-line summary even when collapsed (e.g., "Air Quality: Good · AQI 42").</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Current Conditions shows temperature again — redundant with Home</span></div>
+    <p class="cb">The Current Conditions card shows "-0.8°C Clear Sky" as the primary metric, which the user already saw on the Home screen. The Conditions page should lead with the metrics that aren't on Home — Humidity, Wind, UV Index, Dew Point, Visibility, Pressure — not repeat the temperature header.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Keep temperature in Current Conditions but reduce its prominence — it's context, not the lead. The 2×2 primary grid should show: Humidity, Wind Speed, UV Index, Visibility. Temperature and Feels Like belong in a secondary row since they're already prominent on Home. This makes the Conditions screen genuinely additive.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">60-Min Precipitation has no visual rain intensity indicator</span></div>
+    <p class="cb">Even when the chart renders correctly, the section only shows "No precipitation expected in the next hour" as text with a flat timeline. There's no visual intensity scale, no color coding for light vs. heavy rain, and no way to see how precipitation might ramp up or down within the hour. The chart needs to communicate intensity, not just presence.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Implement a bar chart with 4 bars (Now, +15m, +30m, +45m). Bar height = precipitation intensity (mm). Color: light blue for light rain (&lt;2mm), medium blue for moderate (2–10mm), dark blue/purple for heavy (&gt;10mm). When no rain: render flat bars at 0 with a muted color and the "No precipitation" label. When rain is coming: the bars should rise and the label should change to "Rain in Xm".</div></div>
+  </div>
+</div>
+
+<div id="chat" class="pane">
+  <div class="sl">AI Chat screen — new observations</div>
+  <div class="card">
+    <div class="ch"><span class="chip bug">Bug · High</span><span class="ct">Quick-action chips still below input bar on mobile</span></div>
+    <p class="cb">The three quick-action chips ("Will it rain tomorrow?", "Dress for a run?", "Weekend outlook?") are positioned below the text input bar at the bottom of the empty state. On mobile they're in the least reachable position on the screen. On the active chat view, chips appear at the bottom but still below the input. They should be above the input bar.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">In the active chat view, position chips in a horizontal scroll row immediately above the input bar. On the empty state, keep chips centered in the screen content area. Chips should not appear below the keyboard/input bar on any screen state.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Chat responses use bullet points inconsistently</span></div>
+    <p class="cb">The "Dress for a run?" response uses formatted bullet points with bold text ("Lightweight, breathable athletic shorts or capris."). This works well. But other responses are dense prose paragraphs with no formatting hierarchy. The response style is inconsistent depending on what was asked, which makes the chat feel unpolished.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Define a response format guide in the system prompt: action/recommendation responses use bullet points; factual/forecast responses use short prose paragraphs; mixed responses use a prose intro + bullets for actions. Enforce this consistently. The AI's voice should be consistent — currently it alternates between a news anchor and a friend.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Chat has no message timestamp visible</span></div>
+    <p class="cb">The Proactive Insight card has a timestamp (10:21) but chat messages have none. When reviewing a conversation later, or when checking if a forecast response is still current, there's no way to know when each message was sent or received.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add a subtle timestamp beneath each message pair (user message + AI response). Format: "10:54 AM" — right-aligned under the message bubble, 11px, muted color. Don't add a timestamp to every individual message — group them in time windows (messages within 5 minutes share one timestamp). This is standard chat UX.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">No way to copy or share an AI response</span></div>
+    <p class="cb">When Atmos gives useful advice — "go for your run before 10 AM, it hits 35°C by 1 PM" — there's no way to copy that text or share it. Long-pressing a message has no contextual menu. This is basic chat functionality that's missing.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add a long-press / right-click contextual menu to AI response bubbles: "Copy text" and "Share." On mobile, use the native share sheet. On desktop, copy to clipboard with a brief "Copied" toast. This is a one-session improvement that makes the AI's answers actually portable.</div></div>
+  </div>
+</div>
+
+<div id="settings" class="pane">
+  <div class="sl">Settings screen — new observations</div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Manage Saved Places exists but no saved places flow is visible</span></div>
+    <p class="cb">"Manage Saved Places" appears in Settings (confirmed in screenshots) but there's no visible flow for adding, reordering, or removing saved places. Tapping it likely goes nowhere or shows an empty state with no add button. This is an incomplete feature that creates a dead end.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Build the Saved Places screen: list of saved locations with reorder handles, swipe-to-delete, and an "+ Add place" button at the top. Each place shows city name, country, and current temperature. Tapping a place navigates to Home with that location's data. This screen is a dependency of the "compare weather" feature.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">Theme toggle shows sun/moon icons but no system option</span></div>
+    <p class="cb">The theme toggle in Settings allows switching between light and dark. There's no "System" option that follows the device's system preference. Most users on iOS and Android expect apps to respect their system theme. Forcing a manual choice is friction users shouldn't need.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add a three-way toggle: System / Light / Dark. Default to System. When System is selected, use `prefers-color-scheme` media query and update in real time if the system theme changes. Store preference in localStorage with key `atmos_theme`. This is a one-line CSS + small JS change with significant UX payoff.</div></div>
+  </div>
+</div>
+
+<div id="new" class="pane">
+  <div class="sl">New improvements not in previous critiques</div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Architecture</span><span class="ct">Migrate all weather data to Open-Meteo exclusively</span></div>
+    <p class="cb">The current app appears to use a mixed or undocumented weather data source. Open-Meteo is free, requires no API key, has excellent global coverage, provides hourly and 15-minute data, includes precipitation probability, UV index, wind, air quality, and supports historical data. It should be the single source of truth for all weather data in the app.</p>
+    <div class="fix"><div class="fl">Implementation plan</div><div class="ft">1. Audit every weather data fetch in the codebase. 2. Create a single `weatherService.ts` module that wraps all Open-Meteo API calls. 3. Map Open-Meteo's field names to the app's internal data model. 4. Key endpoints needed: forecast (hourly + 15min), air quality, geocoding. 5. Base URL: `https://api.open-meteo.com/v1/forecast`. 6. Add `&timezone=auto` to all calls. 7. Remove all other weather API dependencies and their API keys/credits. 8. Test every screen against the new data source before going live.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Feature</span><span class="ct">Weekly Outlook has no 7-day vertical list — still showing old format</span></div>
+    <p class="cb">The critique called for replacing the horizontal day cards with a vertical 7-day comparison list. From the Samsung Galaxy screenshot showing Weekly Outlook, the screen shows "Scattered Clouds" as a large card for Tomorrow but the day-by-day list below isn't fully visible. The vertical list with fixed columns (Day · Icon · Condition · High/Low · Rain %) needs to be verified and confirmed working.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Verify the 7-day vertical list is implemented with: fixed-width columns, high/low as bold/muted pair, rain % with a small colored dot indicator, and the "Tomorrow · Mar 26" date attached to the featured card. Screenshot confirmation required before marking complete.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Feature</span><span class="ct">"Plan your week" AI card on Outlook — great addition, needs polish</span></div>
+    <p class="cb">The Weekly Outlook screen shows a "Plan your week — Ask Atmos about the best days for outdoor activities" card with an ASK button. This is a great new feature that wasn't in the original spec. However, the card feels visually disconnected from the rest of the screen and the ASK button doesn't indicate what will happen when tapped.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">The ASK button should pre-fill the chat with: "Which days this week are best for outdoor activities?" and navigate to the Chat tab. Add a subtle sparkle icon to the card to signal it's AI-powered. Make the card description more specific: "Ask Atmos to compare the week for running, travel, or outdoor events." This feature deserves to be prominent — it's genuinely useful.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">No transition animations between screens</span></div>
+    <p class="cb">Navigating between tabs (Home → Conditions → Outlook → Chat → Settings) appears to be an instant swap with no transition. On mobile, tab navigation should have a subtle slide or fade transition to give the user spatial context about where they are in the app.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Add a 150ms fade transition on tab change: outgoing screen fades to 0 opacity while incoming screen fades in. Do not use slide transitions for tab navigation (slides imply a back/forward hierarchy; tabs are flat). For nested navigation within a screen (e.g., tapping a day in Outlook to get details), use a slide-right transition. Keep all transitions under 200ms to feel responsive, not decorative.</div></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="chip new">Improvement</span><span class="ct">No severe weather alert system visible anywhere</span></div>
+    <p class="cb">None of the screenshots show any severe weather alert UI — no red banner, no alert icon, no emergency state design. For users in regions with extreme weather (heat advisories, storms, flooding), this is a safety gap. The app needs an alert layer that overrides the calm visual language when conditions are genuinely dangerous.</p>
+    <div class="fix"><div class="fl">Fix</div><div class="ft">Design a high-contrast alert banner that appears at the top of the Home screen when Open-Meteo or a supplementary alerts API returns a warning. Red background, white text, warning icon, brief description, and a "View details" CTA. This banner should be the first thing visible on Home — above the temperature — and should not be dismissible until the alert expires. Test with a mock alert before connecting to live data.</div></div>
+  </div>
+</div>
+
+<div id="plan" class="pane">
+  <div class="sl">Priority action plan — current sprint order</div>
+  <div class="pl">
+    <div class="pi"><div class="pn">1</div><div class="pt"><strong>Migrate to Open-Meteo exclusively.</strong> Everything else depends on reliable data. Do this first, test every screen, then proceed. Build a single weatherService module. Remove all other API dependencies.</div></div>
+    <div class="pi"><div class="pn">2</div><div class="pt"><strong>Fix hourly strip time logic.</strong> Cards must start from the next interval after current time, not hardcoded 16/19/22/01. This is a data logic bug affecting the most-viewed UI in the app.</div></div>
+    <div class="pi"><div class="pn">3</div><div class="pt"><strong>Fix 24h/12h toggle.</strong> Create a global formatTime() utility, apply to all time displays, persist preference in localStorage. Affects at least 6 surfaces across the app.</div></div>
+    <div class="pi"><div class="pn">4</div><div class="pt"><strong>Fix refresh icon (rotation, not disappear).</strong> Add spin animation class, never unmount the icon. 30-minute fix with high user-experience impact.</div></div>
+    <div class="pi"><div class="pn">5</div><div class="pt"><strong>Fix ··· menu action handlers.</strong> Wire Clear History with confirmation modal. Verify all other menu items have working handlers.</div></div>
+    <div class="pi"><div class="pn">6</div><div class="pt"><strong>Fix 60-Min Precipitation chart.</strong> Debug rendering, implement intensity-coded bar chart, handle zero-precipitation gracefully. Open-Meteo provides 15-minute precipitation data.</div></div>
+    <div class="pi"><div class="pn">7</div><div class="pt"><strong>Fix blue loading bar artifact in light mode headline.</strong> Audit background-clip:text CSS in light mode at 360px. Confirm gradient accent word renders correctly across all light mode breakpoints.</div></div>
+    <div class="pi"><div class="pn">8</div><div class="pt"><strong>Fix AI narrative ↔ data mismatch.</strong> Ensure temperature and conditions are passed correctly to narrative generation. Add a validation guard. This is a trust/credibility issue.</div></div>
+    <div class="pi"><div class="pn">9</div><div class="pt"><strong>Collapse Hourly Forecast + Air Quality Index by default on Conditions screen.</strong> Add collapsible wrappers, chevron toggles, and summary text visible in collapsed state.</div></div>
+    <div class="pi"><div class="pn">10</div><div class="pt"><strong>Slim down pill nav bar padding.</strong> Target 56px height, 16px horizontal margin, safe area inset padding at bottom. Lean, not prominent.</div></div>
+    <div class="pi"><div class="pn">11</div><div class="pt"><strong>Add 3 more suggestion chips on desktop (total 6).</strong> Contextually dynamic, responsive grid layout. Mobile: 3 chips. Desktop: 6 in a 2×3 grid.</div></div>
+    <div class="pi"><div class="pn">12</div><div class="pt"><strong>Build Saved Places screen + flow.</strong> List, add, reorder, delete. Per-place temperature display. This unblocks the compare weather feature.</div></div>
+    <div class="pi"><div class="pn">13</div><div class="pt"><strong>Add System theme option to Settings.</strong> Three-way toggle: System / Light / Dark. Default: System. Follows prefers-color-scheme in real time.</div></div>
+    <div class="pi"><div class="pn">14</div><div class="pt"><strong>Design severe weather alert banner.</strong> High contrast, above temperature, non-dismissible. Connect to Open-Meteo alerts or supplementary API. Required before any public launch.</div></div>
+    <div class="pi"><div class="pn">15</div><div class="pt"><strong>Add tab transition animations.</strong> 150ms fade on tab switch. Slide-right for nested navigation. No slide on tab bar — flat navigation only.</div></div>
+  </div>
+</div>
+</div>
+<script>
+function sw(id,el){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('on');
+  el.classList.add('active');
+}
+</script>

@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { MapPin, ArrowLeft, Trash2, Plus } from 'lucide-react'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
-import type { Location, CurrentWeatherData } from '@/types/weather'
+import { WeatherIcon } from '@/components/weather/WeatherIcon'
+import { wmoDesc } from '@/lib/weatherUtils'
+import type { Location } from '@/types/weather'
 import { BottomNav } from '@/components/layout/BottomNav'
 
 function LocationWeatherCard({
@@ -20,14 +22,21 @@ function LocationWeatherCard({
   isCurrent: boolean
 }) {
   const { tempUnit } = useSettings()
-  const [weather, setWeather] = useState<CurrentWeatherData | null>(null)
-  
+  const [weather, setWeather] = useState<{ temp: number; code: number; isDay: boolean; description: string } | null>(null)
+
   useEffect(() => {
     async function fetchWeather() {
       try {
-        const res = await fetch(`/api/weather?lat=${loc.lat}&lon=${loc.lon}`)
+        const res = await fetch(`/api/openmeteo?lat=${loc.lat}&lon=${loc.lon}`)
         const data = await res.json()
-        if (data.current) setWeather(data.current)
+        if (data.current) {
+          setWeather({
+            temp: Math.round(data.current.temperature_2m),
+            code: data.current.weather_code,
+            isDay: data.current.is_day === 1,
+            description: wmoDesc(data.current.weather_code),
+          })
+        }
       } catch (e) {
         console.error('Failed to fetch weather for card', e)
       }
@@ -35,9 +44,9 @@ function LocationWeatherCard({
     fetchWeather()
   }, [loc])
 
-  const displayTemp = (k: number) => {
-    if (tempUnit === 'C') return `${Math.round(k - 273.15)}°`
-    return `${Math.round((k - 273.15) * 9/5 + 32)}°`
+  const displayTempVal = (c: number) => {
+    if (tempUnit === 'C') return `${c}°`
+    return `${Math.round(c * 9/5 + 32)}°`
   }
 
   return (
@@ -66,7 +75,7 @@ function LocationWeatherCard({
         {weather && (
           <div className="text-right">
             <span className="font-headline font-black text-4xl text-[var(--text)] tracking-tighter">
-              {displayTemp(weather.temp)}
+              {displayTempVal(weather.temp)}
             </span>
           </div>
         )}
@@ -76,12 +85,7 @@ function LocationWeatherCard({
         <div className="flex items-center gap-2">
           {weather && (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
-                alt={weather.description}
-                className="w-10 h-10"
-              />
+              <WeatherIcon conditionCode={weather.code} isDay={weather.isDay} size={28} />
               <span className="text-sm font-medium capitalize text-[var(--text-muted)]">
                 {weather.description}
               </span>

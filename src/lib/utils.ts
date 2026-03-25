@@ -46,6 +46,7 @@ export function displayWind(kmh: number, unit: 'kmh' | 'mph'): string {
   return `${kmh} km/h`
 }
 
+/** Format a unix timestamp as time string (legacy — prefer formatTimeDisplay) */
 export function formatTime(timestamp: number, timezone?: number): string {
   const date = new Date(timestamp * 1000)
   return date.toLocaleTimeString('en-US', {
@@ -53,6 +54,45 @@ export function formatTime(timestamp: number, timezone?: number): string {
     minute: '2-digit',
     hour12: false,
   })
+}
+
+/**
+ * Format a time value respecting 12h/24h user preference.
+ * Accepts unix timestamp (seconds), Date object, or ISO string.
+ */
+export function formatTimeDisplay(
+  input: number | Date | string,
+  format: '12h' | '24h' = '24h'
+): string {
+  let date: Date
+  if (typeof input === 'number') {
+    date = new Date(input * 1000)
+  } else if (typeof input === 'string') {
+    date = new Date(input)
+  } else {
+    date = input
+  }
+
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: format === '12h',
+  })
+}
+
+/**
+ * Format an ISO time string (e.g. "2024-01-01T15:00") as just the time.
+ * Respects 12h/24h preference.
+ */
+export function formatHourFromISO(iso: string, format: '12h' | '24h' = '24h'): string {
+  const date = new Date(iso)
+  if (format === '12h') {
+    const h = date.getHours()
+    const suffix = h >= 12 ? 'PM' : 'AM'
+    const h12 = h % 12 || 12
+    return `${h12} ${suffix}`
+  }
+  return `${String(date.getHours()).padStart(2, '0')}:00`
 }
 
 export function formatDay(timestamp: number): string {
@@ -64,6 +104,15 @@ export function formatDate(timestamp: number): string {
   const date = new Date(timestamp * 1000)
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+export function formatDateFromISO(iso: string): string {
+  const date = new Date(iso + 'T12:00:00')
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
     month: 'short',
     day: 'numeric',
   })

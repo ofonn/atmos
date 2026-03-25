@@ -12,9 +12,9 @@ import {
   ThumbsUp, ThumbsDown, ArrowRight
 } from 'lucide-react'
 import {
-  wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtUnix, fmtISOTime,
+  wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtISOTime,
   uviColor, uviLabel, aqiColor, aqiLabel,
-  displayKelvin, displayCelsius, displayKelvinDiff,
+  displayCelsius,
 } from '@/lib/weatherUtils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -112,10 +112,6 @@ export default function TechnicalPage() {
   const { content: aiContent } = useAiContent(ctxCurrent, ctxHourly, ctxDaily)
   const { tempUnit } = useSettings()
 
-  const { data: owmRaw } = useSWR(
-    location ? `/api/weather?lat=${location.lat}&lon=${location.lon}` : null,
-    fetcher, { refreshInterval: 300000 }
-  )
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
     fetcher, { refreshInterval: 300000 }
@@ -124,30 +120,24 @@ export default function TechnicalPage() {
     location ? `/api/airpollution?lat=${location.lat}&lon=${location.lon}` : null,
     fetcher, { refreshInterval: 300000 }
   )
-  const { data: forecastRaw } = useSWR(
-    location ? `/api/forecast?lat=${location.lat}&lon=${location.lon}` : null,
-    fetcher, { refreshInterval: 300000 }
-  )
 
-  const owm = owmRaw && !owmRaw.error ? owmRaw : null
-  const forecast = forecastRaw && !forecastRaw.error ? forecastRaw : null
   const mc = meteo?.current
   const mh = meteo?.hourly
+  const md = meteo?.daily
   const air = airData?.list?.[0]
-  const offset: number = owm?.timezone ?? 0
+  const offset: number = meteo?.utc_offset_seconds ?? 0
 
   const nowHourIdx = useMemo(() => {
     if (!mh?.time) return 0
-    const nowUtcMs = Date.now()
-    const localMs = nowUtcMs + offset * 1000
-    const d = new Date(localMs)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    const nowStr = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:00`
-    const idx = mh.time.findIndex((t: string) => t >= nowStr)
-    return idx >= 0 ? idx : 0
-  }, [mh, offset])
-
-  const tempSuffix = tempUnit === 'F' ? '°F' : '°C'
+    const now = Date.now()
+    let closest = 0
+    let minDiff = Infinity
+    for (let i = 0; i < mh.time.length; i++) {
+      const diff = Math.abs(new Date(mh.time[i]).getTime() - now)
+      if (diff < minDiff) { minDiff = diff; closest = i }
+    }
+    return closest
+  }, [mh])
 
   return (
     <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -172,7 +162,7 @@ export default function TechnicalPage() {
             Conditions
           </h2>
           <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            {owm ? `Updated at ${fmtUnix(owm.dt, offset)}` : 'Updating…'}
+            {mc ? `Updated at ${fmtISOTime(mc.time)}` : 'Updating…'}
           </p>
         </div>
 
@@ -190,7 +180,7 @@ export default function TechnicalPage() {
               <h3 className="text-sm font-bold font-headline flex items-center gap-2" style={{ color: 'var(--text)' }}>
                 <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
                 Proactive Insight
-                {owm && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtUnix(owm.dt, offset)}</span>}
+                {mc && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtISOTime(mc.time)}</span>}
               </h3>
               <div className="flex items-center gap-3">
                 <button aria-label="Helpful" className="opacity-40 hover:opacity-100 transition-opacity"><ThumbsUp className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
@@ -215,7 +205,7 @@ export default function TechnicalPage() {
         )}
 
         {/* ── Current Conditions ─────────────────────────────────────── */}
-        {owm ? (
+        {mc ? (
           <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />} collapsible={false}>
             {/* Hero row */}
             <div className="flex items-center gap-4 mb-4 mt-2">
@@ -223,16 +213,16 @@ export default function TechnicalPage() {
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--surface-mid)' }}
               >
-                <span className="text-3xl" role="img" aria-label={owm.weather[0].description}>
-                  {wmoEmoji(owm.weather[0].id)}
+                <span className="text-3xl" role="img" aria-label={wmoDesc(mc.weather_code)}>
+                  {wmoEmoji(mc.weather_code, mc.is_day)}
                 </span>
               </div>
               <div>
                 <p className="text-3xl font-extrabold font-headline leading-none" style={{ color: 'var(--text)' }}>
-                  {displayKelvin(owm.main.temp, tempUnit)}
+                  {displayCelsius(mc.temperature_2m, tempUnit)}
                 </p>
                 <p className="text-xs mt-1 font-label capitalize" style={{ color: 'var(--text-muted)' }}>
-                  {owm.weather[0].description}
+                  {wmoDesc(mc.weather_code)}
                 </p>
               </div>
             </div>
@@ -240,16 +230,16 @@ export default function TechnicalPage() {
             {/* Primary Grid */}
             <SubHead title="Primary Metrics" />
             <DataGrid items={[
-              { label: 'Temperature', value: displayKelvin(owm.main.temp, tempUnit) },
-              { label: 'Feels Like', value: displayKelvin(owm.main.feels_like, tempUnit) },
-              { label: 'Humidity', value: `${owm.main.humidity}%` },
-              { label: 'Wind', value: `${owm.wind.speed.toFixed(1)} m/s` },
+              { label: 'Temperature', value: displayCelsius(mc.temperature_2m, tempUnit) },
+              { label: 'Feels Like', value: displayCelsius(mc.apparent_temperature, tempUnit) },
+              { label: 'Humidity', value: `${mc.relative_humidity_2m}%` },
+              { label: 'Wind', value: `${mc.wind_speed_10m.toFixed(1)} km/h` },
             ]} />
-            
+
             <SubHead title="Secondary Metrics" />
-            <DataRow label="Difference" value={displayKelvinDiff(owm.main.feels_like, owm.main.temp, tempUnit)} />
-            <DataRow label="Daily Low" value={displayKelvin(owm.main.temp_min, tempUnit)} />
-            <DataRow label="Daily High" value={displayKelvin(owm.main.temp_max, tempUnit)} />
+            <DataRow label="Feels Like Diff" value={displayCelsius(mc.apparent_temperature - mc.temperature_2m, tempUnit)} />
+            {md?.temperature_2m_min?.[0] != null && <DataRow label="Daily Low" value={displayCelsius(md.temperature_2m_min[0], tempUnit)} />}
+            {md?.temperature_2m_max?.[0] != null && <DataRow label="Daily High" value={displayCelsius(md.temperature_2m_max[0], tempUnit)} />}
             {mh?.dew_point_2m && (
               <DataRow
                 label="Dew Point"
@@ -257,40 +247,31 @@ export default function TechnicalPage() {
                 tooltip="The temperature at which air becomes saturated and dew forms. Closer to actual temp = more humid it feels."
               />
             )}
-            <DataRow label="Wind Direction" value={`${getWindDir16(owm.wind.deg)} (${owm.wind.deg}°)`} />
-            {owm.wind.gust > 0 && <DataRow label="Wind Gust" value={`${owm.wind.gust.toFixed(1)}`} unit=" m/s" />}
+            <DataRow label="Wind Direction" value={`${getWindDir16(mc.wind_direction_10m)} (${mc.wind_direction_10m}°)`} />
+            {mc.wind_gusts_10m > 0 && <DataRow label="Wind Gust" value={`${mc.wind_gusts_10m.toFixed(1)}`} unit=" km/h" />}
 
             {/* Sky */}
             <SubHead title="Sky" />
-            <DataRow label="Condition" value={`${owm.weather[0].main} — ${owm.weather[0].description}`} />
-            <DataRow label="Cloud Cover" value={`${owm.clouds.all}%`} />
-            <DataRow label="Visibility" value={`${(owm.visibility / 1000).toFixed(1)}`} unit=" km" />
+            <DataRow label="Condition" value={wmoDesc(mc.weather_code)} />
+            <DataRow label="Cloud Cover" value={`${mc.cloud_cover}%`} />
+            {mh?.visibility?.[nowHourIdx] != null && (
+              <DataRow label="Visibility" value={`${(mh.visibility[nowHourIdx] / 1000).toFixed(1)}`} unit=" km" />
+            )}
 
             {/* Atmosphere */}
             <SubHead title="Atmosphere" />
             <DataRow
               label="Pressure (sea level)"
-              value={`${owm.main.pressure}`}
+              value={`${mc.pressure_msl.toFixed(0)}`}
               unit=" hPa"
               tooltip="Atmospheric pressure at sea level. Standard ~1013 hPa. Falling pressure may indicate storms."
             />
-            {owm.main.sea_level && <DataRow label="Sea Level" value={`${owm.main.sea_level}`} unit=" hPa" />}
-            {owm.main.grnd_level && (
-              <DataRow
-                label="Ground Level"
-                value={`${owm.main.grnd_level}`}
-                unit=" hPa"
-                tooltip="Actual pressure at ground level. Lower than sea-level pressure at higher elevations."
-              />
-            )}
-            {mc?.surface_pressure != null && (
-              <DataRow
-                label="Surface Pressure"
-                value={`${mc.surface_pressure.toFixed(1)}`}
-                unit=" hPa"
-                tooltip="Actual pressure at ground level. Lower than sea-level pressure at higher elevations."
-              />
-            )}
+            <DataRow
+              label="Surface Pressure"
+              value={`${mc.surface_pressure.toFixed(1)}`}
+              unit=" hPa"
+              tooltip="Actual pressure at ground level. Lower than sea-level pressure at higher elevations."
+            />
             {mh?.uv_index && mh.uv_index[nowHourIdx] != null && (
               <DataRow
                 label="UV Index"
@@ -329,16 +310,20 @@ export default function TechnicalPage() {
 
             {/* Sun */}
             <SubHead title="Sun" />
-            <DataRow label="Sunrise" value={fmtUnix(owm.sys.sunrise, offset)} />
-            <DataRow label="Sunset" value={fmtUnix(owm.sys.sunset, offset)} />
-            <DataRow label="Day Length" value={secsToHm(owm.sys.sunset - owm.sys.sunrise)} />
-            <DataRow label="Last Updated" value={fmtUnix(owm.dt, offset)} />
+            {md?.sunrise?.[0] && <DataRow label="Sunrise" value={fmtISOTime(md.sunrise[0])} />}
+            {md?.sunset?.[0] && <DataRow label="Sunset" value={fmtISOTime(md.sunset[0])} />}
+            {md?.sunrise?.[0] && md?.sunset?.[0] && (
+              <DataRow label="Day Length" value={secsToHm(
+                (new Date(md.sunset[0]).getTime() - new Date(md.sunrise[0]).getTime()) / 1000
+              )} />
+            )}
+            <DataRow label="Last Updated" value={fmtISOTime(mc.time)} />
 
             {/* Precipitation */}
             <SubHead title="Precipitation" />
-            {mc?.rain > 0 && <DataRow label="Rain" value={`${mc.rain.toFixed(1)}`} unit=" mm" />}
-            {mc?.showers > 0 && <DataRow label="Showers" value={`${mc.showers.toFixed(1)}`} unit=" mm" />}
-            {mc?.snowfall > 0 && <DataRow label="Snowfall" value={`${mc.snowfall.toFixed(1)}`} unit=" cm" />}
+            {mc.rain > 0 && <DataRow label="Rain" value={`${mc.rain.toFixed(1)}`} unit=" mm" />}
+            {mc.showers > 0 && <DataRow label="Showers" value={`${mc.showers.toFixed(1)}`} unit=" mm" />}
+            {mc.snowfall > 0 && <DataRow label="Snowfall" value={`${mc.snowfall.toFixed(1)}`} unit=" cm" />}
             {mh?.evapotranspiration && mh.evapotranspiration[nowHourIdx] > 0 && (
               <DataRow
                 label="Evapotranspiration"
@@ -347,7 +332,7 @@ export default function TechnicalPage() {
                 tooltip="Water lost from soil and plants to atmosphere. 1mm/h = 1 litre per square metre."
               />
             )}
-            {(!mc || (mc.rain === 0 && mc.showers === 0 && mc.snowfall === 0)) && (
+            {(mc.rain === 0 && mc.showers === 0 && mc.snowfall === 0) && (
               <p className="text-xs py-3 text-center" style={{ color: 'var(--text-muted)' }}>No active precipitation</p>
             )}
           </Section>
@@ -382,33 +367,28 @@ export default function TechnicalPage() {
             </div>
             {([
               ['co', 'Carbon Monoxide (CO)'],
-              ['no', 'Nitrogen Monoxide (NO)'],
               ['no2', 'Nitrogen Dioxide (NO₂)'],
               ['o3', 'Ozone (O₃)'],
               ['so2', 'Sulphur Dioxide (SO₂)'],
               ['pm2_5', 'Fine Particles (PM2.5)'],
               ['pm10', 'Coarse Particles (PM10)'],
-              ['nh3', 'Ammonia (NH₃)'],
-            ] as [string, string][]).map(([key, name]) => (
+            ] as [string, string][]).filter(([key]) => air.components[key] != null).map(([key, name]) => (
               <DataRow key={key} label={name} value={(air.components[key] as number).toFixed(2)} unit=" μg/m³" />
             ))}
           </Section>
         )}
 
         {/* ── Location Metadata ─────────────────────────────────────────── */}
-        {owm?.coord && (
+        {location && (
           <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
             <p className="text-[0.65rem] font-label uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
               Location Metadata
             </p>
-            <DataRow label="City" value={`${owm.name}, ${owm.sys.country}`} />
-            <DataRow label="Coordinates" value={`${owm.coord.lat.toFixed(4)}, ${owm.coord.lon.toFixed(4)}`} />
+            <DataRow label="City" value={`${location.name}${location.country ? `, ${location.country}` : ''}`} />
+            <DataRow label="Coordinates" value={`${location.lat.toFixed(4)}, ${location.lon.toFixed(4)}`} />
             <DataRow label="UTC Offset" value={`UTC${offset >= 0 ? '+' : ''}${(offset / 3600).toFixed(0)}h`} />
-            {forecast?.city?.population > 0 && (
-              <DataRow label="Population" value={forecast.city.population.toLocaleString()} />
-            )}
             <p className="text-[0.65rem] font-label mt-3 text-center" style={{ color: 'var(--text-muted)' }}>
-              Data: OpenWeatherMap · Open-Meteo · Air Pollution API
+              Data: Open-Meteo · Air Quality API
             </p>
           </div>
         )}

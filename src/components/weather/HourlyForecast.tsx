@@ -1,7 +1,8 @@
 'use client'
 
 import { WeatherIcon } from './WeatherIcon'
-import { formatTime } from '@/lib/utils'
+import { formatHourFromISO } from '@/lib/utils'
+import { useSettings } from '@/contexts/SettingsContext'
 import type { HourlyData } from '@/types/weather'
 
 interface HourlyForecastProps {
@@ -9,6 +10,8 @@ interface HourlyForecastProps {
 }
 
 export function HourlyForecast({ data }: HourlyForecastProps) {
+  const { timeFormat } = useSettings()
+
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
       {data.map((hour, i) => {
@@ -31,10 +34,10 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
               className="text-[11px] font-label"
               style={{ color: isNow ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)' }}
             >
-              {isNow ? 'Now' : formatTime(hour.dt)}
+              {isNow ? 'Now' : formatHourFromISO(hour.time, timeFormat)}
             </span>
 
-            <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={26} />
+            <WeatherIcon conditionCode={hour.conditionCode} isDay={hour.isDay} size={26} />
 
             <span
               className="font-semibold text-sm font-headline"
