@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ArrowUp, Sparkles, Trash2 } from 'lucide-react'
+import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal } from 'lucide-react'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useChat } from '@/hooks/useChat'
@@ -53,12 +53,9 @@ function renderMarkdown(text: string) {
 }
 
 const quickPrompts = [
-  'Weekend forecast?',
-  'UV Index today',
-  'Air quality alert',
-  'Best time to exercise?',
-  'What to wear today?',
-  'Will it rain today?',
+  'Will it rain tomorrow?',
+  'Dress for a run?',
+  'Weekend outlook?',
 ]
 
 export default function ChatPage() {
@@ -71,6 +68,12 @@ export default function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const autoSentRef = useRef(false)
   const pendingMsgRef = useRef<string | null>(null)
+
+  const [showMenu, setShowMenu] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
+  const [revealedData, setRevealedData] = useState<Record<string, boolean>>({})
+
+  const toggleData = (id: string) => setRevealedData(p => ({ ...p, [id]: !p[id] }))
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -133,8 +136,11 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="relative z-10 flex items-center justify-between px-4 h-14 flex-shrink-0"
-        style={{ background: 'var(--bg)', borderBottom: '0.5px solid var(--outline)' }}
+        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-md w-full max-w-xl mx-auto"
+        style={{
+          background: 'rgba(255,255,255,0.02)',
+          borderBottom: '1px solid var(--outline)'
+        }}
       >
         <div className="flex items-center gap-2">
           <button
@@ -157,18 +163,54 @@ export default function ChatPage() {
             Atmos AI
           </span>
         </div>
-        <button
-          onClick={clearChat}
-          aria-label="Clear conversation"
-          className="p-2 rounded-xl transition-colors active:scale-90"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <Trash2 className="w-4 h-4" aria-hidden="true" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => { setShowMenu(!showMenu); setConfirmClear(false) }}
+            aria-label="More options"
+            className="p-2 rounded-xl transition-colors active:scale-90"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
+          </button>
+          
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-xl border z-50 text-[13px] font-body"
+                style={{ background: 'rgba(11,14,22,0.95)', borderColor: 'var(--outline)' }}
+              >
+                {!confirmClear ? (
+                  <>
+                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Export Chat</button>
+                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Share Answer</button>
+                    <div className="h-px bg-white/5 my-1" />
+                    <button 
+                      onClick={() => setConfirmClear(true)}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Clear History
+                    </button>
+                  </>
+                ) : (
+                  <div className="p-1">
+                    <p className="px-2 pb-2 text-xs text-center text-gray-400">Are you sure?</p>
+                    <div className="flex gap-1">
+                      <button onClick={() => setConfirmClear(false)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">Cancel</button>
+                      <button onClick={() => { clearChat(); setShowMenu(false); setConfirmClear(false) }} className="flex-1 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">Delete</button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} className="relative flex-1 overflow-y-auto px-4 py-4">
+      <main ref={scrollRef} className="relative flex-1 overflow-y-auto px-4 py-4 w-full max-w-xl mx-auto">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
@@ -186,7 +228,7 @@ export default function ChatPage() {
               <Sparkles className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-xl font-bold font-headline mb-2" style={{ color: 'var(--text)' }}>Ask me anything</h2>
+              <h2 className="text-xl font-bold font-headline mb-2" style={{ color: 'var(--text)' }}>Weather answers and planning help</h2>
               <p className="text-sm font-body max-w-xs" style={{ color: 'var(--text-muted)' }}>
                 I can help you plan your day, decide what to wear, or warn you about upcoming weather changes.
               </p>
@@ -214,7 +256,7 @@ export default function ChatPage() {
             {/* Date chip */}
             <div className="flex justify-center">
               <span
-                className="px-4 py-1 rounded-full font-label text-[10px] uppercase tracking-[0.2em]"
+                className="px-4 py-1 rounded-full font-label text-[11px] uppercase tracking-[0.2em]"
                 style={{ background: 'var(--surface)', color: 'var(--text-muted)' }}
               >
                 {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -247,8 +289,8 @@ export default function ChatPage() {
                       <div
                         className="px-6 py-4 text-[0.9rem] leading-relaxed tracking-tight"
                         style={isUser ? {
-                          background: 'rgba(224,226,238,0.05)',
-                          border: '1px solid rgba(224,226,238,0.1)',
+                          background: 'transparent',
+                          border: '1px solid rgba(224,226,238,0.15)',
                           borderRadius: '2rem 2rem 0.5rem 2rem',
                           color: 'var(--text)',
                         } : {
@@ -264,25 +306,40 @@ export default function ChatPage() {
                           : <div className="text-[0.9rem] leading-relaxed">{renderMarkdown(msg.content)}</div>}
                       </div>
 
-                      {/* Contextual inline card — animated in */}
+                      {/* Contextual inline card — animated in via Show Data */}
                       {!isUser && (
-                        <ContextualCard
-                          userMsg={messages[idx - 1]?.content ?? ''}
-                          current={current}
-                          hourly={hourly}
-                          daily={daily}
-                          tempUnit={tempUnit}
-                        />
+                        <div className="mt-3 border-t pt-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                          <button
+                            onClick={() => toggleData(msg.id)}
+                            className="flex items-center text-[10px] uppercase font-bold tracking-widest hover:opacity-80 transition-opacity"
+                            style={{ color: 'var(--primary)' }}
+                          >
+                            {revealedData[msg.id] ? 'Hide Data' : 'Show Data \u2192'}
+                          </button>
+                          {revealedData[msg.id] && (
+                            <div className="mt-3">
+                              <ContextualCard
+                                userMsg={messages[idx - 1]?.content ?? ''}
+                                current={current}
+                                hourly={hourly}
+                                daily={daily}
+                                tempUnit={tempUnit}
+                              />
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                  <time
-                    className={`mt-1.5 font-label text-[10px] ${isUser ? 'mr-2' : 'ml-11'}`}
-                    dateTime={new Date(msg.timestamp).toISOString()}
-                    style={{ color: 'var(--text-muted)', opacity: 0.4 }}
-                  >
-                    {time}
-                  </time>
+                  {!isUser && (
+                    <time
+                      className="mt-1.5 font-label text-[10px] uppercase ml-11 tracking-wider"
+                      dateTime={new Date(msg.timestamp).toISOString()}
+                      style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                    >
+                      Based on hourly forecast • Updated {time}
+                    </time>
+                  )}
                 </div>
               )
             })}
@@ -320,7 +377,7 @@ export default function ChatPage() {
 
       {/* Input area */}
       <div
-        className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4"
+        className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4 w-full max-w-xl mx-auto"
         style={{ background: 'var(--bg)' }}
       >
         {/* Quick prompts — only in empty state (handled above), show inline chips otherwise */}
@@ -331,7 +388,7 @@ export default function ChatPage() {
                 key={p}
                 onClick={() => sendMessage(p)}
                 disabled={loading || !!typingText}
-                className="px-3 py-1.5 rounded-full font-label text-[11px] flex-shrink-0 transition-colors disabled:opacity-40"
+                className="px-4 py-2 rounded-full font-label text-[11px] flex-shrink-0 transition-colors disabled:opacity-40 min-h-[36px] flex items-center"
                 style={{
                   background: 'var(--surface)',
                   color: 'var(--text-muted)',
@@ -361,7 +418,7 @@ export default function ChatPage() {
               type="text"
               value={typingText || input}
               onChange={(e) => { if (!typingText) setInput(e.target.value) }}
-              placeholder="Ask Atmos (e.g., Do I need a hoodie?)"
+              placeholder="Ask about the forecast..."
               aria-label="Message to Atmos AI"
               className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem]"
               style={{ color: typingText ? 'var(--primary)' : 'var(--text)' }}

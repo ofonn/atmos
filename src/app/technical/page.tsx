@@ -8,6 +8,7 @@ import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import {
   ChevronDown, ChevronUp, Wind, Thermometer, Sparkles, Info, Clock,
+  ThumbsUp, ThumbsDown, ArrowRight
 } from 'lucide-react'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtUnix, fmtISOTime,
@@ -19,25 +20,26 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 // ── Shared sub-components ────────────────────────────────────────────────────
 
-function Section({ title, icon, children, defaultOpen = true }: {
-  title: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean
+function Section({ title, icon, children, defaultOpen = true, collapsible = true }: {
+  title: string; icon?: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean; collapsible?: boolean
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="rounded-2xl overflow-hidden mb-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => collapsible && setOpen(v => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        disabled={!collapsible}
+        className={`w-full flex items-center justify-between px-5 py-4 text-left ${!collapsible && 'cursor-default'}`}
         style={{ borderBottom: open ? '0.5px solid var(--outline)' : 'none' }}
       >
         <div className="flex items-center gap-2">
           {icon}
           <span className="font-headline font-bold text-sm tracking-tight" style={{ color: 'var(--text)' }}>{title}</span>
         </div>
-        {open
+        {collapsible && (open
           ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
-          : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />}
+          : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />)}
       </button>
       {open && <div className="px-5 py-4">{children}</div>}
     </div>
@@ -85,9 +87,9 @@ function DataGrid({ items }: { items: { label: string; value: React.ReactNode; a
   return (
     <div className="grid grid-cols-2 gap-2 mb-3">
       {items.map(({ label, value, accent }) => (
-        <div key={label} className="rounded-xl p-3" style={{ background: 'var(--surface-mid)' }}>
-          <p className="text-[0.65rem] font-label uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
-          <p className="text-sm font-bold font-headline" style={{ color: accent ?? 'var(--text)' }}>{value}</p>
+        <div key={label} className="rounded-xl p-3 flex flex-col justify-center" style={{ background: 'var(--surface-mid)' }}>
+          <p className="text-[12px] font-label uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
+          <p className="text-[19px] font-bold font-headline tracking-tight" style={{ color: accent ?? 'var(--text)' }}>{value}</p>
         </div>
       ))}
     </div>
@@ -154,9 +156,11 @@ export default function TechnicalPage() {
         <h1 className="text-2xl font-bold tracking-tighter font-headline" style={{ color: 'var(--primary)' }}>Atmos</h1>
       </header>
 
-      <main className="relative z-10 px-4 pb-32">
-        {/* Title */}
-        <div className="mb-6 px-2">
+      <main className="relative z-10 px-4 pb-32 max-w-5xl mx-auto w-full">
+        <div className="md:grid md:grid-cols-2 md:gap-8 items-start">
+          <div className="md:sticky md:top-24 flex flex-col">
+            {/* Title */}
+            <div className="mb-6 px-2">
           <h2
             className="text-[2.6rem] font-extrabold font-headline leading-none tracking-tight mb-1"
             style={{
@@ -164,10 +168,10 @@ export default function TechnicalPage() {
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}
           >
-            Technical<br />Details
+            Conditions
           </h2>
-          <p className="font-label tracking-widest uppercase text-[0.65rem]" style={{ color: 'var(--text-muted)' }}>
-            Live Atmospheric Precision
+          <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            {owm ? `Updated at ${fmtUnix(owm.dt, offset)}` : 'Updating…'}
           </p>
         </div>
 
@@ -181,21 +185,34 @@ export default function TechnicalPage() {
             style={{ background: 'rgba(199,191,255,0.18)' }}
           />
           <div className="relative z-10">
-            <h3 className="text-sm font-bold font-headline mb-2 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-              <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-              Proactive Insight
-            </h3>
-            <p className="text-sm font-body leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-center justify-between mb-2 mt-1">
+              <h3 className="text-sm font-bold font-headline flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+                Proactive Insight
+                {owm && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtUnix(owm.dt, offset)}</span>}
+              </h3>
+              <div className="flex items-center gap-3">
+                <button aria-label="Helpful" className="opacity-40 hover:opacity-100 transition-opacity"><ThumbsUp className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
+                <button aria-label="Not helpful" className="opacity-40 hover:opacity-100 transition-opacity"><ThumbsDown className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
+              </div>
+            </div>
+            <p className="text-sm font-body leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
               {aiContent?.proactiveInsight ?? 'Analyzing current conditions…'}
             </p>
+            <button className="flex items-center gap-1.5 text-[11px] uppercase font-label font-bold tracking-widest transition-opacity hover:opacity-70" style={{ color: 'var(--primary)' }}>
+              Show data <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
           </div>
         </div>
 
+        </div>
+        
+        <div className="flex flex-col gap-4">
         {/* ── Current Conditions ─────────────────────────────────────── */}
         {owm ? (
-          <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />}>
+          <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />} collapsible={false}>
             {/* Hero row */}
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-4 mt-2">
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--surface-mid)' }}
@@ -206,30 +223,27 @@ export default function TechnicalPage() {
               </div>
               <div>
                 <p className="text-3xl font-extrabold font-headline leading-none" style={{ color: 'var(--text)' }}>
-                  {displayKelvin(owm.main.temp, tempUnit)}{tempUnit === 'F' ? '' : ''}
+                  {displayKelvin(owm.main.temp, tempUnit)}
                 </p>
-                <p className="text-xs mt-0.5 font-label capitalize" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-xs mt-1 font-label capitalize" style={{ color: 'var(--text-muted)' }}>
                   {owm.weather[0].description}
-                  <span
-                    className="ml-2 px-1.5 py-0.5 rounded text-[0.65rem]"
-                    style={{ background: 'var(--surface-mid)', color: 'var(--text-muted)' }}
-                  >
-                    #{owm.weather[0].id}
-                  </span>
                 </p>
               </div>
             </div>
 
-            {/* Temperature & Comfort */}
-            <SubHead title="Temperature & Comfort" />
+            {/* Primary Grid */}
+            <SubHead title="Primary Metrics" />
             <DataGrid items={[
               { label: 'Temperature', value: displayKelvin(owm.main.temp, tempUnit) },
               { label: 'Feels Like', value: displayKelvin(owm.main.feels_like, tempUnit) },
-              { label: 'Difference', value: displayKelvinDiff(owm.main.feels_like, owm.main.temp, tempUnit) },
               { label: 'Humidity', value: `${owm.main.humidity}%` },
-              { label: 'Daily Low', value: displayKelvin(owm.main.temp_min, tempUnit) },
-              { label: 'Daily High', value: displayKelvin(owm.main.temp_max, tempUnit) },
+              { label: 'Wind', value: `${owm.wind.speed.toFixed(1)} m/s` },
             ]} />
+            
+            <SubHead title="Secondary Metrics" />
+            <DataRow label="Difference" value={displayKelvinDiff(owm.main.feels_like, owm.main.temp, tempUnit)} />
+            <DataRow label="Daily Low" value={displayKelvin(owm.main.temp_min, tempUnit)} />
+            <DataRow label="Daily High" value={displayKelvin(owm.main.temp_max, tempUnit)} />
             {mh?.dew_point_2m && (
               <DataRow
                 label="Dew Point"
@@ -237,12 +251,8 @@ export default function TechnicalPage() {
                 tooltip="The temperature at which air becomes saturated and dew forms. Closer to actual temp = more humid it feels."
               />
             )}
-
-            {/* Wind */}
-            <SubHead title="Wind" />
-            <DataRow label="Speed" value={`${owm.wind.speed.toFixed(1)} m/s`} />
-            <DataRow label="Direction" value={`${getWindDir16(owm.wind.deg)} (${owm.wind.deg}°)`} />
-            {owm.wind.gust > 0 && <DataRow label="Gust" value={`${owm.wind.gust.toFixed(1)}`} unit=" m/s" />}
+            <DataRow label="Wind Direction" value={`${getWindDir16(owm.wind.deg)} (${owm.wind.deg}°)`} />
+            {owm.wind.gust > 0 && <DataRow label="Wind Gust" value={`${owm.wind.gust.toFixed(1)}`} unit=" m/s" />}
 
             {/* Sky */}
             <SubHead title="Sky" />
@@ -396,6 +406,9 @@ export default function TechnicalPage() {
             </p>
           </div>
         )}
+        
+        </div> {/* Closes right column */}
+        </div> {/* Closes md:grid */}
       </main>
 
       <BottomNav />

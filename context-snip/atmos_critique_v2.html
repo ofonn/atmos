@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atmos Design Critique v2</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f7;
+    --color-background-tertiary: #eeeeee;
+    --color-background-danger: #fff0f0;
+    --color-background-warning: #fff8ec;
+    --color-background-success: #f0faf4;
+    --color-background-info: #f0f4ff;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #555555;
+    --color-text-tertiary: #999999;
+    --color-text-danger: #cc2222;
+    --color-text-warning: #a05c00;
+    --color-text-success: #1a7a40;
+    --color-text-info: #1a3ecc;
+    --color-border-tertiary: rgba(0,0,0,0.1);
+    --color-border-secondary: rgba(0,0,0,0.2);
+    --color-border-primary: rgba(0,0,0,0.35);
+    --color-border-success: #a3d9b5;
+    --color-border-warning: #f0c060;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1e;
+      --color-background-secondary: #2a2a2a;
+      --color-background-tertiary: #333333;
+      --color-background-danger: #3a1a1a;
+      --color-background-warning: #3a2e00;
+      --color-background-success: #0d2e1a;
+      --color-background-info: #0d1a3a;
+      --color-text-primary: #f0f0f0;
+      --color-text-secondary: #aaaaaa;
+      --color-text-tertiary: #666666;
+      --color-text-danger: #ff7070;
+      --color-text-warning: #ffcc66;
+      --color-text-success: #66cc88;
+      --color-text-info: #7799ff;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.2);
+      --color-border-primary: rgba(255,255,255,0.35);
+      --color-border-success: #1a5c33;
+      --color-border-warning: #7a5000;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-tertiary);
+    color: var(--color-text-primary);
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
+  .wrap { padding: 1rem 0; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+  .tab { padding: 5px 13px; font-size: 12px; border: 0.5px solid var(--color-border-secondary); border-radius: 20px; cursor: pointer; background: transparent; color: var(--color-text-secondary); transition: all .15s; font-family: var(--font-sans); }
+  .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+  .pane { display: none; } .pane.on { display: block; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+  .c-high { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .c-med { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .c-low { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .c-new { background: var(--color-background-info); color: var(--color-text-info); }
+  .c-ok { background: var(--color-background-success); color: var(--color-text-success); }
+  .card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.1rem; margin-bottom: .9rem; background: var(--color-background-primary); }
+  .card-head { display: flex; align-items: flex-start; gap: 9px; margin-bottom: .65rem; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; flex: 1; }
+  .card-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.65; margin-bottom: .7rem; }
+  .fix { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .7rem .9rem; }
+  .fix-lbl { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; }
+  .fix-txt { font-size: 13px; color: var(--color-text-primary); line-height: 1.6; }
+  .source { font-size: 11px; color: var(--color-text-tertiary); margin-top: .4rem; font-style: italic; }
+  .ok-box { border: 0.5px solid var(--color-border-success); border-radius: var(--border-radius-lg); padding: .9rem 1.1rem; margin-bottom: 1rem; background: var(--color-background-success); }
+  .ok-lbl { font-size: 11px; font-weight: 500; color: var(--color-text-success); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
+  .ok-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .scores { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1.25rem; }
+  .sc { flex: 1; min-width: 90px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .7rem; text-align: center; }
+  .sc-n { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .sc-l { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .pl-item { display: flex; gap: 10px; align-items: flex-start; padding: .7rem 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .pl-item:last-child { border-bottom: none; }
+  .pl-num { width: 22px; height: 22px; border-radius: 50%; background: var(--color-background-secondary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 1px; }
+  .pl-txt { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .pl-txt strong { color: var(--color-text-primary); font-weight: 500; }
+  .feat-card { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: .9rem 1.1rem; margin-bottom: .8rem; background: var(--color-background-primary); }
+  .feat-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: .4rem; }
+  .feat-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .lm-warn { border-left: 2px solid var(--color-border-warning); padding-left: .8rem; margin-bottom: .8rem; }
+  .lm-warn p { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .lm-warn strong { color: var(--color-text-primary); }
+  .section-lbl { font-size: 11px; font-weight: 500; letter-spacing: .06em; color: var(--color-text-tertiary); text-transform: uppercase; margin-bottom: .9rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Atmos — Design Critique v2</h1>
+  <p class="subtitle">Integrated critique · Dark + Light mode · Codex + original review</p>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab active" onclick="sw('overview',this)">Overview</button>
+      <button class="tab" onclick="sw('lightmode',this)">Light Mode ✦</button>
+      <button class="tab" onclick="sw('home',this)">Home</button>
+      <button class="tab" onclick="sw('details',this)">Details</button>
+      <button class="tab" onclick="sw('outlook',this)">Outlook</button>
+      <button class="tab" onclick="sw('chat',this)">AI Chat</button>
+      <button class="tab" onclick="sw('settings',this)">Settings</button>
+      <button class="tab" onclick="sw('features',this)">New Features</button>
+      <button class="tab" onclick="sw('plan',this)">Action Plan</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="overview" class="pane on">
+      <div class="scores">
+        <div class="sc"><div class="sc-n">8/10</div><div class="sc-l">Visual identity</div></div>
+        <div class="sc"><div class="sc-n">6/10</div><div class="sc-l">Usability</div></div>
+        <div class="sc"><div class="sc-n">5/10</div><div class="sc-l">Accessibility</div></div>
+        <div class="sc"><div class="sc-n">7/10</div><div class="sc-l">AI integration</div></div>
+        <div class="sc"><div class="sc-n">5/10</div><div class="sc-l">Theme parity</div></div>
+        <div class="sc"><div class="sc-n">0/10</div><div class="sc-l">System states</div></div>
+      </div>
+      <div class="ok-box">
+        <div class="ok-lbl">What's genuinely working</div>
+        <p class="ok-body"><strong style="color:var(--color-text-primary)">1. Editorial identity.</strong> "Nice 26 degrees, a few clouds hanging around" is a real product differentiator. Most weather apps show data. Atmos narrates. That voice is the brand — protect it at all costs.</p>
+        <br>
+        <p class="ok-body"><strong style="color:var(--color-text-primary)">2. Progressive disclosure structure.</strong> Home → mood, Details → numbers, Outlook → horizon. The three-level information architecture is fundamentally sound and matches how people actually think about weather.</p>
+        <br>
+        <p class="ok-body"><strong style="color:var(--color-text-primary)">3. AI feels native, not bolted on.</strong> Ask Atmos, Proactive Insight, and AI Refresh all feel like the app was designed around AI — not retrofitted with it. That's rare and worth maintaining.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">Critical</span><span class="card-title">Zero system states designed</span></div>
+        <p class="card-body">No loading skeletons, no offline banner, no GPS-denied empty state, no severe weather alert override. For an AI-powered weather app, these aren't edge cases — they're daily occurrences. A loading AI response with no indicator reads as a crash.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Skeleton loaders for all forecast cards and AI insight cards. A three-dot typing indicator in chat. An offline toast banner. A high-contrast red alert strip for severe weather that overrides the calm visual language. These must be designed before public launch.</div></div>
+        <p class="source">Raised by both critiques independently</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">Critical</span><span class="card-title">Nav labels only on active tab</span></div>
+        <p class="card-body">Icon-only navigation violates recognition-over-recall. Users shouldn't have to memorize what a bar chart icon or calendar icon means. This affects every screen in the app simultaneously and increases cognitive load on every navigation action.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add persistent 11px text labels below all five icons. Strengthen the active state: filled icon + brighter label + subtle background pill. Minimum tap target per icon: 44×44pt. High impact, low effort — one afternoon of work.</div></div>
+      </div>
+    </div>
+
+    <!-- LIGHT MODE -->
+    <div id="lightmode" class="pane">
+      <div class="section-lbl">Light mode — specific observations from the new screenshots</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Dark bottom nav bar is jarring in light mode</span></div>
+        <p class="card-body">The bottom navigation remains dark navy in light mode while the rest of the UI is white and light-gray. This creates a jarring two-tone split at the bottom of every screen. It looks like a component from a different app was pasted in. The dark nav made sense in dark mode as a continuous surface — in light mode it's a foreign element.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">In light mode, the nav bar should use a white or light-gray background with a subtle top border (0.5px) and a soft shadow. Icon and label colors shift to the dark system palette. The nav should feel like it's part of the screen, not a panel grafted onto it.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Gradient headline text is harder to read on white</span></div>
+        <p class="card-body">In dark mode, the white editorial headline reads cleanly against the navy background. In light mode, the headline uses a blue-to-purple gradient text treatment. Gradient text on a white background has lower effective contrast — especially mid-gradient where the purple lightens significantly. This is a WCAG 1.4.3 risk.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">In light mode, either use solid dark text for the headline or darken the gradient stops so neither end falls below a 4.5:1 contrast ratio against white. Test with a contrast checker across the full gradient. The brand voice comes from the words, not the color — don't trade legibility for aesthetics.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Light mode cards lose the depth hierarchy</span></div>
+        <p class="card-body">In dark mode, the layering of background → surface → card creates clear visual depth. In light mode, white cards on a white-ish background flatten out. The Technical Details screen especially suffers — Proactive Insight and Current Conditions cards blend together with very little separation.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">In light mode, use a 3-level gray system: page background #F5F5F7, card surface #FFFFFF, inner card/input #F0F0F3. Add a 0.5px border to cards. This recreates depth through contrast, not shadow. Avoid pure white on pure white.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Purple accent on white needs re-testing for contrast</span></div>
+        <p class="card-body">The purple used for active states and selected unit pills works in dark mode where it pops against a dark surface. In light mode on white, the same purple may not meet 3:1 contrast for UI components (WCAG 1.4.11). The segmented control active state looks particularly borderline.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Run every purple UI element through a contrast checker in light mode. If any fall below 3:1 for components or 4.5:1 for text, darken the purple for the light theme variant. Maintain one consistent purple token per theme.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Weather icon circle reads as a button in light mode</span></div>
+        <p class="card-body">The dark gray circle background behind the weather icon made sense in dark mode as a card surface. In light mode, the same dark gray circle is now an explicit shape sitting on white — it looks like a button or badge rather than an ambient weather indicator.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">In light mode, give the weather icon a light-themed circular background (light blue or light gray) or remove the circle entirely and render the icon at a larger size. The icon treatment needs its own light-mode variant, not a direct color inversion.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-low">Low</span><span class="card-title">Hourly strip readability gets worse in light mode</span></div>
+        <p class="card-body">The hourly forecast strip shows small weather icons on a light card surface. The low contrast between icons and background makes the already-small icons even harder to distinguish. Outdoors in sunlight this becomes nearly unusable.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Increase icon size from ~16px to 24px. Ensure icon stroke weights are at least 1.5px. Consider filled icon variants in light mode where outline icons lose legibility. Test in a simulated sunlight glare condition.</div></div>
+      </div>
+      <div class="lm-warn">
+        <p><strong>Theme parity gap.</strong> The dark mode version feels more considered and finished than the light mode. Light mode appears to have been applied as a color inversion rather than designed as a first-class theme. If Atmos ships with both themes, both need the same level of design intentionality. Right now the gap is wide enough that they feel like different apps.</p>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="pane">
+      <div class="section-lbl">Screen 1 — Home</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Mood leads, utility follows — hierarchy is inverted</span></div>
+        <p class="card-body">The editorial narrative headline dominates the screen with ~48px display type. The temperature and actual conditions are smaller and secondary. When a user opens a weather app, their first question is "what's happening right now?" That answer is buried below the emotional layer.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Scale the headline down to 36–40px, cap at 2–3 lines. Add a compact stats row directly below the temperature: High/Low · Rain % · Wind · Humidity. Keep the narrative — it's the soul of the app — but rank it second, not first.</div></div>
+        <p class="source">Confirmed by both critiques</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Hourly strip is too small to touch or read</span></div>
+        <p class="card-body">Each time slot is about 50px wide with a ~16px icon. Touch targets are well below the 44pt minimum. Precipitation % is unreadable. In light mode this gets worse — icon contrast drops further.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Make the strip a scrollable horizontal section, ~80px tall, each slot at least 70px wide. Show: time, 24px icon, temperature, and a colored rain dot if precipitation exceeds 10%. Tapping a slot should expand details. Minimum tap target: 44×44pt.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">"AI REFRESH" label is ambiguous</span></div>
+        <p class="card-body">Does it refresh the weather data, regenerate the narrative, or both? The label is unclear and the action consequence is invisible — there's no animation or feedback when tapped.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Rename to "Refresh insight." On tap: fade the headline text out and back in with the new narrative. This makes the action's effect visible and satisfying rather than mysterious.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Location header has no tap affordance</span></div>
+        <p class="card-body">"Eket, NG" gives no visual cue it's tappable. Users who want to check another city must navigate to Settings → Enter City — an unnecessary two-step detour.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add a chevron (›) next to the location name. On tap, slide up a location search bottom sheet. Remove the round-trip to Settings for this common action.</div></div>
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div id="details" class="pane">
+      <div class="section-lbl">Screen 2 — Technical Details</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">"Technical Details" is developer language</span></div>
+        <p class="card-body">This label creates a psychological barrier. Real users don't think of weather as "technical." The subtitle "LIVE ATMOSPHERIC PRECISION" compounds the problem. The all-caps micro-label style hurts legibility at small sizes.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Rename to "Conditions." Replace the subtitle with a freshness signal: "Updated just now" or "As of 10:54 AM." Replace all-caps section labels with sentence case — more legible and still clean.</div></div>
+        <p class="source">Confirmed by both critiques</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Metrics grid has flat hierarchy — all data looks equal</span></div>
+        <p class="card-body">Temperature, Feels Like, Difference, Humidity share the same visual weight. Difference (+0.0°) is secondary data but sits at the same level as Temperature. Users can't instantly identify what matters most.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Default view: 2×2 summary grid with Temperature, Feels Like, Humidity, Wind at 18–20px values and 12–13px labels. Push Difference and Daily High/Low into a "More data" collapsible. Primary data should be scannable in under one second.</div></div>
+        <p class="source">Confirmed by Codex, expanded here</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Proactive Insight has no freshness or feedback signal</span></div>
+        <p class="card-body">The AI insight card shows generated text with no timestamp and no way for users to signal when it's wrong. A stale AI insight presented as current is a trust problem. There's no "Show data" link to verify what the AI is basing the insight on.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add: "Generated at 10:50 AM" timestamp, a thumbs up/down reaction, and a "Show data →" link that reveals the underlying forecast values. Every AI response should be attributable and verifiable.</div></div>
+        <p class="source">Codex: "source attribution, Show data action"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-low">Low</span><span class="card-title">Collapse toggle on the only data section serves no purpose</span></div>
+        <p class="card-body">Current Conditions has a collapse toggle, but it's the only section with real data. Collapsing it leaves a near-empty screen. Progressive disclosure is valuable — but only when you have too much content competing for space.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Remove the collapse toggle for now. Re-introduce it when more data sections (UV, air quality, pollen, pressure) are added and space actually needs managing.</div></div>
+      </div>
+    </div>
+
+    <!-- OUTLOOK -->
+    <div id="outlook" class="pane">
+      <div class="section-lbl">Screen 3 — Weekly Outlook</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Lower day cards are weak for cross-day comparison</span></div>
+        <p class="card-body">Horizontal cards for future days are visually attractive but slow to compare. Rain percentages shown as progress bars are nearly identical in width for very different values. Users can't quickly answer "which day is better for outdoor plans?"</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Keep the large "Tomorrow" featured card (reduce height ~20%). Replace lower horizontal cards with a vertical 6-day list using fixed columns: Day · Icon · Condition · High/Low · Rain %. Vertical lists are dramatically faster to scan and compare.</div></div>
+        <p class="source">Codex: "replace horizontal cards with vertical comparison list"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">No date anchor — "Tomorrow" is ambiguous</span></div>
+        <p class="card-body">The Tomorrow card has no date. A user opening the app on Saturday doesn't know if "Tomorrow" is Sunday. Combined with the Fri/Sat date labels below, the timeline is confusing.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add the date to the Tomorrow card header: "Tomorrow · Fri Mar 28." Add a compact "Today" summary row at the top of the day list as a reference anchor.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-low">Low</span><span class="card-title">"Atmospheric Narrative" eyebrow is redundant noise</span></div>
+        <p class="card-body">The tiny all-caps "ATMOSPHERIC NARRATIVE" above the screen title repeats the brand concept without adding information.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Replace with a contextual freshness line: "7-day synthesis · Updated 11 AM." Same brand feel, adds real information. Or remove entirely — "Weekly Outlook" is self-explanatory.</div></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat" class="pane">
+      <div class="section-lbl">Screen 4 — Atmos AI Chat</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">AI scope is too wide — brand risk</span></div>
+        <p class="card-body">The chat shows party planning questions and romantic messages. The AI handles these well in response, but users shouldn't be discovering the scope boundary through trial and error. An unconstrained assistant in a utility app erodes trust in the core function.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Scope the assistant explicitly: weather, clothing, health, travel, outdoor activity, event planning (weather-adjacent). Add a small subheader below "Atmos AI": "Weather answers and planning help." Reject off-domain prompts gracefully with a redirection to contextual chips.</div></div>
+        <p class="source">Codex: "constrain assistant persona, add weather-first subheader"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">AI responses have no source attribution</span></div>
+        <p class="card-body">"There will be rain around 12:00 o'clock on Thursday with a 77% chance of rain." This is specific and useful — but where does it come from? Users can't evaluate whether to trust it without a grounding signal.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add a compact footer to every AI weather response: "Based on hourly forecast · Updated 10:50 AM" with a "Show data →" link. This single addition dramatically increases perceived trustworthiness.</div></div>
+        <p class="source">Codex: "source attribution on every response"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">No typing indicator while AI generates</span></div>
+        <p class="card-body">When a message is sent, nothing happens visually until the full response appears. For responses that take 1–3 seconds, this silence reads as a broken app.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add a typing bubble with three animated dots (···) in the Atmos message position immediately after the user sends. Fade it out when the real response streams in. 1–2 hours of implementation, massive perceived performance improvement.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-high">High</span><span class="card-title">Weather context strip blends into chat messages</span></div>
+        <p class="card-body">The top weather strip sits directly above chat bubbles with no visual separation. Users may read it as an Atmos message rather than ambient data context.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Treat the strip as a sticky pinned header with a clear divider or background shift. Label it "Current context." In light mode, use a light blue/gray surface to distinguish it from the white chat area.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Quick-action chips are positioned below the input</span></div>
+        <p class="card-body">"Weekend forecast?", "UV Index today", "Air quality alert" are the fastest path to value in the AI tab but they're the last thing the eye finds — positioned below the keyboard input bar.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Move chips above the input bar. Height: 36px minimum. Make them contextually dynamic — rotate based on time of day, current conditions, or last query. "Rain likely tomorrow — reschedule?" is better than a static list.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Trash icon is a one-tap destructive action</span></div>
+        <p class="card-body">A single mistouch on the delete icon clears the entire conversation history with no confirmation. Destructive actions should never be one tap from execution.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Replace with a "···" menu containing: Clear conversation, Share, Export. Confirmation bottom sheet before clearing: "Clear conversation? This can't be undone." — Cancel / Clear.</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="pane">
+      <div class="section-lbl">Screen 5 — Settings</div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Raw GPS coordinates exposed to the user</span></div>
+        <p class="card-body">"4.65, 7.94" is shown under "Eket, NG." Users don't need or want raw coordinates — it exposes implementation details and makes the interface feel technical.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Remove the coordinates. Replace with precision signal: "Accurate to your neighborhood" or last sync time: "Synced 10:54 AM." If coordinates are needed for debugging, hide behind a long-press.</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Segmented controls rely on color alone for selected state</span></div>
+        <p class="card-body">°C/°F, km/h/mph, 24h/12h selectors use fill color as the only active state signal. At small sizes in light mode, the purple fill on white can fall below WCAG 3:1 for UI components.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Increase control height to 40–44pt. Add a secondary active signal: checkmark, bolder weight, or underline. Never use color as the sole differentiator for a selected state (WCAG 1.4.1).</div></div>
+        <p class="source">Codex: "increase controls to 40–44pt height"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-med">Medium</span><span class="card-title">Enter City is a small pill — should be a proper search row</span></div>
+        <p class="card-body">For an action that changes the entire app's data source, a small pill button next to Sync GPS is undersized and easy to miss.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Replace with a full-width search row that opens a city search bottom sheet with a text field, recent locations, and geolocation option. Show GPS permission state and last sync time inline.</div></div>
+        <p class="source">Codex: "replace pill with proper search flow"</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="chip c-low">Low</span><span class="card-title">No feedback channel in Settings</span></div>
+        <p class="card-body">Settings is where users go when something is wrong. There's no "Report an issue," "Rate Atmos," or "Send feedback on AI responses" option.</p>
+        <div class="fix"><div class="fix-lbl">Fix</div><div class="fix-txt">Add a FEEDBACK section: Rate Atmos · Report an issue · Send AI feedback. These create a quality feedback loop that makes v1.1 meaningfully better.</div></div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div id="features" class="pane">
+      <div class="section-lbl">Suggested new screens — in order of impact</div>
+      <div class="feat-card">
+        <div class="feat-title">1 · Daily Briefing screen</div>
+        <p class="feat-body">A morning/evening brief that converts weather into action: what to wear, best time to go outside, commute risk, UV exposure, air quality, outdoor/laundry score. This is Atmos's editorial AI voice applied to the most practical daily question. Fits the brand perfectly and no other major weather app does this well.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-title">2 · Radar and rain timeline</div>
+        <p class="feat-body">A map/radar screen with a 60-minute rain timeline, storm movement, and a scrubber for playback. This is the feature weather power users open a second app for. Bringing it in-house, designed in the Atmos visual language, closes the biggest utility gap the app currently has.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-title">3 · Saved places / compare weather</div>
+        <p class="feat-body">Let users compare Home, Work, and a travel destination in the same editorial card system. "It's raining in Lagos but clear in Abuja — pack accordingly." A natural extension of the AI narrative voice applied across locations.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-title">4 · Contextual weather mood shifts</div>
+        <p class="feat-body">The calm, cinematic mood is one of Atmos's best qualities — but it's too uniform. A thunderstorm, a heat advisory, and a clear spring morning should each feel different. Dynamic color temperature, urgency shifts in typography weight, and a red alert strip for severe conditions would make the app feel alive.</p>
+      </div>
+    </div>
+
+    <!-- PLAN -->
+    <div id="plan" class="pane">
+      <div class="section-lbl">Priority action plan — impact × effort, most actionable first</div>
+      <div class="pl-item"><div class="pl-num">1</div><div class="pl-txt"><strong>Add nav labels and fix touch targets.</strong> Persistent labels on all tabs, 44pt targets. One afternoon. Fixes navigation on every screen simultaneously. Highest ratio of impact to effort in the entire app.</div></div>
+      <div class="pl-item"><div class="pl-num">2</div><div class="pl-txt"><strong>Design system states.</strong> Skeleton loaders, typing indicator, offline banner, GPS-denied empty state, severe weather alert strip. These must exist before public launch — they're not polish, they're the app functioning correctly under real conditions.</div></div>
+      <div class="pl-item"><div class="pl-num">3</div><div class="pl-txt"><strong>Rebalance Home hierarchy.</strong> Temperature leads, stats row second, editorial headline third. Keep the voice — change the reading order. Fixes the most-opened screen in the app.</div></div>
+      <div class="pl-item"><div class="pl-num">4</div><div class="pl-txt"><strong>Fix the light mode theme.</strong> Dark nav bar on light screens, gradient headline contrast, flat card depth, icon treatment — all need light-mode-specific design decisions. Light mode should feel as intentional as dark mode, not like an inversion.</div></div>
+      <div class="pl-item"><div class="pl-num">5</div><div class="pl-txt"><strong>Ground the AI with source attribution.</strong> "Based on hourly forecast · Updated 10:50 AM" + "Show data →" on every AI response. Scope the assistant to weather-adjacent domains. Add typing indicator. These three changes transform AI from ornamental to trustworthy.</div></div>
+      <div class="pl-item"><div class="pl-num">6</div><div class="pl-txt"><strong>Fix weekly outlook comparison layout.</strong> Vertical day list with fixed columns replaces horizontal cards. Users can finally compare days at a glance. High impact on a heavily-used screen.</div></div>
+      <div class="pl-item"><div class="pl-num">7</div><div class="pl-txt"><strong>Raise minimum type and contrast across the board.</strong> Body text floor at 14px, metadata at 12px, WCAG AA contrast on all small text. Remove pure color as the sole selection differentiator in segmented controls.</div></div>
+      <div class="pl-item"><div class="pl-num">8</div><div class="pl-txt"><strong>Rename "Technical Details" → "Conditions," redesign metric grid.</strong> 2×2 summary grid with 18–20px values for the four most important metrics. Language and hierarchy changes that cost almost nothing but make the screen dramatically more approachable.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function sw(id, el) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('on');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

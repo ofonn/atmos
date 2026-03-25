@@ -18,7 +18,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
         return (
           <div
             key={hour.dt}
-            className={`flex flex-col items-center gap-1 min-w-[56px] flex-1 py-2.5 px-1.5 rounded-2xl ${
+            className={`flex flex-col items-center gap-1.5 min-w-[64px] flex-1 py-3 px-1.5 rounded-2xl ${
               isNow ? 'bg-hero-gradient text-white shadow-glass' : ''
             }`}
             style={
@@ -28,13 +28,13 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
             }
           >
             <span
-              className="text-[10px] font-label"
+              className="text-[11px] font-label"
               style={{ color: isNow ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)' }}
             >
               {isNow ? 'Now' : formatTime(hour.dt)}
             </span>
 
-            <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={22} />
+            <WeatherIcon conditionCode={hour.conditionCode} iconCode={hour.icon} size={26} />
 
             <span
               className="font-semibold text-sm font-headline"
@@ -45,11 +45,11 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
 
             {/* Precipitation probability */}
             <span
-              className="text-[9px] font-label leading-none"
+              className="text-[11px] font-label leading-none"
               style={{
                 color: isNow
                   ? (hasRain ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)')
-                  : (hasRain ? '#60a5fa' : 'var(--text-muted)'),
+                  : (hasRain ? 'var(--secondary)' : 'var(--text-muted)'),
                 opacity: hasRain ? 1 : 0.5,
               }}
             >

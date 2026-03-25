@@ -4,18 +4,27 @@
 
 @layer base {
   :root {
-    --bg: #f0f2f8;
-    --surface: #ffffff;
-    --surface-mid: #e8eaf2;
+    --bg: #F0F0F3;
+    --surface: #FFFFFF;
+    --surface-mid: #F5F5F7;
     --text: #10131c;
-    --text-muted: #5a5d6e;
+    --text-muted: #4a4d5e;
     --primary: #5b47d1;
     --secondary: #2563EB;
-    --outline: #c8c5d4;
+    --outline: #d9d9e3;
 
     /* RGB channels for adaptive glass backgrounds */
-    --glass-rgb: 220, 222, 235;
-    --glass-border-rgb: 100, 100, 130;
+    --glass-rgb: 255, 255, 255;
+    --glass-border-rgb: 0, 0, 0;
+    
+    /* Nav variables */
+    --nav-bg: rgba(250, 250, 253, 0.88);
+    --nav-border: rgba(0, 0, 0, 0.08);
+    --nav-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+
+    /* Gradient Text variables */
+    --gradient-text-from: #5b47d1;
+    --gradient-text-to: #2563EB;
   }
   .dark {
     --bg: #10131c;
@@ -29,6 +38,15 @@
 
     --glass-rgb: 39, 42, 51;
     --glass-border-rgb: 71, 69, 84;
+
+    /* Nav variables */
+    --nav-bg: rgba(16, 19, 28, 0.88);
+    --nav-border: rgba(255, 255, 255, 0.06);
+    --nav-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+
+    /* Gradient Text variables */
+    --gradient-text-from: #c7bfff;
+    --gradient-text-to: #acc7ff;
   }
 
   body {
@@ -72,19 +90,19 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%);
+    background: linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* Nav glass — stays dark by design (pill floats above content) */
+  /* Nav glass — adapts to light/dark via variables (#038) */
   .nav-glass {
-    background: rgba(16, 19, 28, 0.88);
+    background: var(--nav-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    border: 0.5px solid rgba(255, 255, 255, 0.06);
+    box-shadow: var(--nav-shadow);
+    border: 0.5px solid var(--nav-border);
   }
 
   .weather-metric-card {
@@ -99,6 +117,17 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .safe-p {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

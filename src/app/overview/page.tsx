@@ -113,14 +113,16 @@ export default function OverviewPage() {
     return Object.entries(groups) as [string, any[]][]
   }, [forecast])
 
+  const today = daily?.[0] ?? null     // Today
   const featured = daily?.[1] ?? null  // Tomorrow
   const rest = daily?.slice(2) ?? []   // Day after tomorrow onward
+  const listDays = [today, ...rest].filter(Boolean) as any[]
 
   return (
     <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 backdrop-blur-xl w-full max-w-4xl mx-auto">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
           <span className="font-headline font-extrabold tracking-tight text-2xl" style={{ color: 'var(--primary)' }}>
@@ -129,10 +131,10 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      <main className="relative z-10 pb-32 px-4">
-        <div className="px-2 mb-6">
-          <p className="font-label text-xs tracking-widest uppercase mb-2" style={{ color: 'var(--primary)' }}>
-            Atmospheric Narrative
+      <main className="relative z-10 pb-32 px-4 w-full max-w-4xl mx-auto">
+        <div className="px-2 mb-6 mt-2">
+          <p className="font-label text-[11px] uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+            {today ? `Updated at ${fmtUnix(today.dt, offset)}` : 'Updating…'}
           </p>
           <h1 className="font-headline text-5xl font-extrabold tracking-tighter mb-3 leading-none" style={{ color: 'var(--text)' }}>
             Weekly<br />Outlook
@@ -157,12 +159,13 @@ export default function OverviewPage() {
             </div>
           </div>
         ) : (
-          <>
+          <div className="md:grid md:grid-cols-2 md:gap-8 md:items-start">
+            <div className="flex flex-col gap-0 md:sticky md:top-24">
             {/* Featured Day — Tomorrow */}
             {featured && (
               <section className="px-2 mb-6">
                 <div
-                  className="rounded-[2rem] p-7 relative overflow-hidden flex items-center gap-6"
+                  className="rounded-[2rem] p-5 relative overflow-hidden flex items-center gap-4"
                   style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
                 >
                   <div
@@ -171,109 +174,40 @@ export default function OverviewPage() {
                   />
                   <div className="relative z-10 flex-1">
                     <span
-                      className="font-label text-[10px] px-3 py-1 rounded-full mb-4 inline-block uppercase tracking-widest"
+                      className="font-label text-[11px] px-3 py-1 rounded-full mb-3 inline-block uppercase tracking-widest"
                       style={{ background: 'rgba(199,191,255,0.1)', color: 'var(--primary)' }}
                     >
-                      Tomorrow
+                      Tomorrow • {new Date(featured.dt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
                     </span>
-                    <h2 className="font-headline text-3xl font-bold mb-2 capitalize" style={{ color: 'var(--text)' }}>
+                    <h2 className="font-headline text-2xl font-bold mb-2 capitalize" style={{ color: 'var(--text)' }}>
                       {featured.description}
                     </h2>
-                    <p className="text-sm mb-5 font-label" style={{ color: 'var(--text-muted)' }}>
-                      {featured.pop > 0 ? `${featured.pop}% chance of precipitation.` : 'Clear skies expected.'}
+                    <p className="text-sm mb-4 font-label" style={{ color: 'var(--text-muted)' }}>
+                      {featured.pop > 0 ? `${featured.pop}% precipitation.` : 'Clear skies expected.'}
                     </p>
-                    <div className="flex items-end gap-4">
-                      <span className="font-headline text-6xl font-extrabold tracking-tighter" style={{ color: 'var(--text)' }}>
+                    <div className="flex items-end gap-3">
+                      <span className="font-headline text-5xl font-extrabold tracking-tighter leading-none" style={{ color: 'var(--text)' }}>
                         {displayTempShort(featured.tempMax, tempUnit)}
                       </span>
-                      <div className="pb-1">
+                      <div className="pb-0.5">
                         <span className="block font-label uppercase text-[10px] tracking-widest" style={{ color: 'var(--text-muted)' }}>Low</span>
-                        <span className="font-headline text-2xl font-bold" style={{ color: 'var(--text-muted)' }}>
+                        <span className="font-headline text-xl font-bold leading-none" style={{ color: 'var(--text-muted)' }}>
                           {displayTempShort(featured.tempMin, tempUnit)}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="relative z-10 flex-shrink-0">
-                    <div className="w-28 h-28 flex items-center justify-center">
-                      <WeatherIcon conditionCode={featured.conditionCode} iconCode={featured.icon} size={80} />
+                    <div className="w-20 h-20 flex items-center justify-center">
+                      <WeatherIcon conditionCode={featured.conditionCode} iconCode={featured.icon} size={64} />
                     </div>
                   </div>
                 </div>
               </section>
             )}
 
-            {/* Day grid — starts at Day+2, not Today */}
-            {rest.length > 0 && (
-              <section className="px-2 grid grid-cols-2 gap-4 mb-6">
-                {rest.map((day) => (
-                  <div
-                    key={day.dt}
-                    className="rounded-[1.5rem] p-5"
-                    style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p
-                          className="font-label uppercase text-[10px] tracking-widest mb-0.5"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          {formatDay(day.dt)}
-                        </p>
-                        <h3 className="font-headline text-lg font-bold" style={{ color: 'var(--text)' }}>
-                          {new Date(day.dt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </h3>
-                      </div>
-                      <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
-                    </div>
-
-                    {/* Precipitation probability bar */}
-                    {day.pop > 0 && (
-                      <div className="mb-3">
-                        <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--surface-mid)' }}>
-                          <div
-                            className="h-1 rounded-full transition-all"
-                            style={{
-                              width: `${day.pop}%`,
-                              background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
-                            }}
-                          />
-                        </div>
-                        <p className="text-[10px] font-label mt-1" style={{ color: '#60a5fa' }}>
-                          {day.pop}% rain
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <span className="font-headline text-2xl font-bold" style={{ color: 'var(--text)' }}>
-                        {displayTempShort(day.tempMax, tempUnit)}
-                      </span>
-                      <span className="font-label text-sm" style={{ color: 'var(--text-muted)' }}>
-                        / {displayTempShort(day.tempMin, tempUnit)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </section>
-            )}
-
-            {/* 5-Day / 3-Hour Forecast */}
-            {forecast ? (
-              <ForecastSection forecastByDay={forecastByDay} offset={offset} tempUnit={tempUnit} />
-            ) : (
-              <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-            )}
-
-            {/* 16-Day Daily */}
-            {md ? (
-              <DailyMeteoSection md={md} tempUnit={tempUnit} />
-            ) : (
-              <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
-            )}
-
             {/* Plan Your Week AI Card */}
-            <section className="mb-4">
+            <section className="px-2 mb-6 md:mb-0">
               <div
                 className="rounded-2xl p-5 flex items-center gap-4"
                 style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
@@ -301,7 +235,79 @@ export default function OverviewPage() {
                 </button>
               </div>
             </section>
-          </>
+            </div>
+
+            <div className="flex flex-col gap-0 md:gap-4 mt-6 md:mt-0">
+            {/* Vertical Day List — starting with Today */}
+            {listDays.length > 0 && (
+              <section className="px-2 flex flex-col gap-3 mb-6">
+                {listDays.map((day) => {
+                  const isToday = day.dt === today?.dt;
+                  return (
+                    <div
+                      key={day.dt}
+                      className="rounded-2xl p-4 flex items-center justify-between"
+                      style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+                    >
+                      {/* Left: Date */}
+                      <div className="w-2/5 pr-2">
+                        <h3 className="font-headline text-base font-bold" style={{ color: 'var(--text)' }}>
+                          {isToday ? 'Today' : formatDay(day.dt)}
+                        </h3>
+                        {!isToday && (
+                          <p className="font-label text-[11px] tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                            {new Date(day.dt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                          </p>
+                        )}
+                        {isToday && (
+                          <p className="font-label text-[11px] tracking-wider capitalize" style={{ color: 'var(--text-muted)' }}>
+                            {day.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Middle: Condition & Rain Status */}
+                      <div className="flex-1 flex flex-col items-center justify-center">
+                        <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
+                        {day.pop > 0 && (
+                          <div className="flex items-center justify-center gap-1.5 mt-1 relative w-full left-1">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#60a5fa' }} />
+                            <span className="text-[10px] font-label font-bold" style={{ color: '#60a5fa' }}>{day.pop}%</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Truncated vertical Stack for Temps */}
+                      <div className="w-1/4 flex flex-col items-end pl-2">
+                        <span className="font-headline text-[1.15rem] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
+                          {displayTempShort(day.tempMax, tempUnit)}
+                        </span>
+                        <span className="font-label text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                          {displayTempShort(day.tempMin, tempUnit)}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </section>
+            )}
+
+            {/* 5-Day / 3-Hour Forecast */}
+            {forecast ? (
+              <ForecastSection forecastByDay={forecastByDay} offset={offset} tempUnit={tempUnit} />
+            ) : (
+              <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+            )}
+
+            {/* 16-Day Daily */}
+            {md ? (
+              <DailyMeteoSection md={md} tempUnit={tempUnit} />
+            ) : (
+              <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
+            )}
+
+            </div>
+          </div>
         )}
       </main>
 

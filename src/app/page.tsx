@@ -9,16 +9,16 @@ import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
-import { displayTemp } from '@/lib/utils'
-import { MapPin, Search, Sparkles, X, RefreshCw } from 'lucide-react'
+import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
+import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown } from 'lucide-react'
 
-function get3DIconStyle(code: number) {
-  if (code >= 200 && code < 300) return { from: '#8B5CF6', via: '#6D28D9', to: '#4C1D95', glow: 'rgba(139,92,246,0.5)' }
-  if (code >= 500 && code < 600) return { from: '#60A5FA', via: '#3B82F6', to: '#1D4ED8', glow: 'rgba(96,165,250,0.5)' }
-  if (code >= 600 && code < 700) return { from: '#E0E7FF', via: '#C7D2FE', to: '#A5B4FC', glow: 'rgba(165,180,252,0.5)' }
-  if (code === 800) return { from: '#FFF7CC', via: '#FFB800', to: '#FF8C00', glow: 'rgba(255,184,0,0.7)' }
-  if (code <= 804 && code > 800) return { from: '#94A3B8', via: '#64748B', to: '#475569', glow: 'rgba(148,163,184,0.3)' }
-  return { from: '#94A3B8', via: '#64748B', to: '#475569', glow: 'rgba(148,163,184,0.3)' }
+function get3DIconStyle(code: number, isDark: boolean = true) {
+  if (code >= 200 && code < 300) return { from: '#8B5CF6', via: '#6D28D9', to: isDark ? '#4C1D95' : '#8B5CF6', glow: 'rgba(139,92,246,0.5)' }
+  if (code >= 500 && code < 600) return { from: '#60A5FA', via: '#3B82F6', to: isDark ? '#1D4ED8' : '#60A5FA', glow: 'rgba(96,165,250,0.5)' }
+  if (code >= 600 && code < 700) return { from: '#E0E7FF', via: '#C7D2FE', to: isDark ? '#A5B4FC' : '#E0E7FF', glow: 'rgba(165,180,252,0.5)' }
+  if (code === 800) return { from: '#FFD359', via: '#FFB800', to: isDark ? '#FF8C00' : '#FFB800', glow: 'rgba(255,184,0,0.5)' }
+  if (code <= 804 && code > 800) return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
+  return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
 }
 
 function getFallbackHeadline(temp: number, code: number): { headline: string; advice: string } {
@@ -41,7 +41,7 @@ function getFallbackHeadline(temp: number, code: number): { headline: string; ad
 export default function Home() {
   const router = useRouter()
   const { theme } = useTheme()
-  const { tempUnit } = useSettings()
+  const { tempUnit, windUnit } = useSettings()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -61,7 +61,7 @@ export default function Home() {
     if (query.trim()) { searchCity(query.trim()); setQuery(''); setSearchOpen(false) }
   }
 
-  const icon = current ? get3DIconStyle(current.conditionCode) : null
+  const icon = current ? get3DIconStyle(current.conditionCode, isDark) : null
   const displayed = aiContent ?? (current ? getFallbackHeadline(current.temp, current.conditionCode) : null)
 
   const splitHeadline = (text: string) => {
@@ -75,12 +75,13 @@ export default function Home() {
    * Container-relative font sizing: uses cqw/cqh so the headline
    * scales to fit its own bounding box, not the viewport.
    * The headline container has `container-type: size`.
+   * Adjusted for #008 to be a subtitle scale rather than massive.
    */
   const getHeadlineFontSize = (text: string) => {
     const words = text.split(' ').filter(Boolean).length
-    if (words <= 3) return 'clamp(2rem, min(16cqw, 28cqh), 5rem)'
-    if (words <= 5) return 'clamp(1.8rem, min(13cqw, 20cqh), 4.5rem)'
-    return 'clamp(1.5rem, min(11cqw, 15cqh), 3.8rem)'
+    if (words <= 3) return 'clamp(1.5rem, min(8cqw, 12cqh), 2.5rem)'
+    if (words <= 5) return 'clamp(1.3rem, min(7cqw, 10cqh), 2.2rem)'
+    return 'clamp(1.2rem, min(6cqw, 8cqh), 2rem)'
   }
 
   const buildHeadlineLines = (plain: string, gradient: string): string[] => {
@@ -109,19 +110,20 @@ export default function Home() {
           CONTAINER 1 — HEADER
           Fixed-height bounding box: location + search toggle
           ═══════════════════════════════════════════════════════════ */}
-      <header className="relative flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-1">
+      <header className="relative flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-1 w-full max-w-xl mx-auto">
         <button
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label={searchOpen ? 'Close city search' : 'Open city search'}
           aria-expanded={searchOpen}
           className="flex items-center gap-2 active:opacity-70 transition-opacity"
         >
-          <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-          <span className="font-headline text-sm font-medium tracking-tight" style={{ color: 'var(--primary)' }}>
+          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+          <span className="font-headline text-sm font-medium tracking-tight truncate max-w-[200px]" style={{ color: 'var(--primary)' }}>
             {locLoading ? 'Locating…' : location
               ? `${location.name}${location.country ? `, ${location.country}` : ''}`
               : 'Set location'}
           </span>
+          <ChevronDown className="w-4 h-4 flex-shrink-0 opacity-70" style={{ color: 'var(--primary)' }} aria-hidden="true" />
         </button>
         <button
           onClick={() => setSearchOpen(!searchOpen)}
@@ -136,7 +138,7 @@ export default function Home() {
 
       {/* Search overlay — borrows space from headline container when open */}
       {searchOpen && (
-        <div className="relative flex-shrink-0 px-5 pt-2 pb-1">
+        <div className="relative flex-shrink-0 px-5 pt-2 pb-1 w-full max-w-xl mx-auto">
           <form onSubmit={handleSearch}>
             <div className="flex items-center gap-3 rounded-2xl px-4 py-2.5 glass-input">
               <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
@@ -158,7 +160,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           MAIN CONTENT AREA — flex-1, distributes space to children
           ═══════════════════════════════════════════════════════════ */}
-      <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden">
+      <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden w-full max-w-xl mx-auto">
         {loading ? (
           /* Loading skeleton — same container proportions */
           <div className="flex-1 flex flex-col px-5">
@@ -207,13 +209,24 @@ export default function Home() {
               <div>
                 <p
                   className="font-headline font-bold leading-none tracking-tighter"
-                  style={{ fontSize: 'clamp(2.2rem, 8vw, 3.5rem)', color: 'var(--text)' }}
+                  style={{ fontSize: 'clamp(3.5rem, 15vw, 6rem)', color: 'var(--text)' }}
                 >
                   {displayTemp(current.temp, tempUnit)}
                 </p>
-                <p className="font-label text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                <p className="font-label text-[11px] mt-1 mb-2" style={{ color: 'var(--text-muted)' }}>
                   Feels like {displayTemp(current.feelsLike, tempUnit)}
                 </p>
+                
+                {/* Stats Row (#012) */}
+                <div className="flex items-center gap-3 text-[11px] font-label tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                  <span>
+                    H:{displayTempShort(daily?.[0]?.tempMax ?? current.tempMax, tempUnit)}
+                    &nbsp;&nbsp;
+                    L:{displayTempShort(daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}
+                  </span>
+                  <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
+                  <span>{displayWind(current.windSpeed, windUnit)}</span>
+                </div>
               </div>
             </section>
 
@@ -276,11 +289,11 @@ export default function Home() {
                   onClick={handleRefresh}
                   disabled={aiLoading}
                   aria-label="Refresh AI summary"
-                  className="mt-1 flex items-center gap-1.5 text-[10px] font-label uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-30"
-                  style={{ color: isDark ? 'rgba(199,191,255,0.5)' : 'rgba(91,71,209,0.5)' }}
+                  className="mt-2 flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-transform active:scale-95 disabled:opacity-30"
+                  style={{ color: isDark ? 'rgba(199,191,255,0.7)' : 'rgba(91,71,209,0.7)' }}
                 >
                   <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                  AI refresh
+                  Update insight
                 </button>
               </section>
             )}

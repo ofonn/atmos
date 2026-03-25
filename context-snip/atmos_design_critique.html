@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atmos Design Critique v1</title>
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f7;
+    --color-background-tertiary: #eeeeee;
+    --color-background-danger: #fff0f0;
+    --color-background-warning: #fff8ec;
+    --color-background-success: #f0faf4;
+    --color-background-info: #f0f4ff;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #555555;
+    --color-text-tertiary: #999999;
+    --color-text-danger: #cc2222;
+    --color-text-warning: #a05c00;
+    --color-text-success: #1a7a40;
+    --color-text-info: #1a3ecc;
+    --color-border-tertiary: rgba(0,0,0,0.1);
+    --color-border-secondary: rgba(0,0,0,0.2);
+    --color-border-primary: rgba(0,0,0,0.35);
+    --color-border-success: #a3d9b5;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1e1e1e;
+      --color-background-secondary: #2a2a2a;
+      --color-background-tertiary: #333333;
+      --color-background-danger: #3a1a1a;
+      --color-background-warning: #3a2e00;
+      --color-background-success: #0d2e1a;
+      --color-background-info: #0d1a3a;
+      --color-text-primary: #f0f0f0;
+      --color-text-secondary: #aaaaaa;
+      --color-text-tertiary: #666666;
+      --color-text-danger: #ff7070;
+      --color-text-warning: #ffcc66;
+      --color-text-success: #66cc88;
+      --color-text-info: #7799ff;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.2);
+      --color-border-primary: rgba(255,255,255,0.35);
+      --color-border-success: #1a5c33;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-tertiary);
+    color: var(--color-text-primary);
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: var(--color-text-tertiary); margin-bottom: 24px; }
+  .wrap { padding: 1rem 0; }
+  .section-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+  .tab { padding: 6px 14px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: 20px; cursor: pointer; background: transparent; color: var(--color-text-secondary); transition: all .15s; font-family: var(--font-sans); }
+  .tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); font-weight: 500; }
+  .screen-section { display: none; }
+  .screen-section.visible { display: block; }
+  .screen-label { font-size: 11px; font-weight: 500; letter-spacing: .06em; color: var(--color-text-tertiary); text-transform: uppercase; margin-bottom: 1rem; }
+  .strengths { border: 0.5px solid var(--color-border-success); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.25rem; background: var(--color-background-success); }
+  .strengths-label { font-size: 12px; color: var(--color-text-success); font-weight: 500; margin-bottom: .5rem; }
+  .strengths p { font-size: 14px; color: var(--color-text-secondary); line-height: 1.6; }
+  .issue { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem; background: var(--color-background-primary); }
+  .issue-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: .75rem; }
+  .badge { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .high { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .med { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .low { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .issue-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+  .issue-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.65; margin-bottom: .75rem; }
+  .fix-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .75rem 1rem; }
+  .fix-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .3rem; }
+  .fix-text { font-size: 13px; color: var(--color-text-primary); line-height: 1.6; }
+  .priority-section { margin-top: 1.5rem; }
+  .priority-item { display: flex; gap: 12px; align-items: flex-start; padding: .75rem 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .priority-item:last-child { border-bottom: none; }
+  .num { width: 24px; height: 24px; border-radius: 50%; background: var(--color-background-secondary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--color-text-secondary); flex-shrink: 0; }
+  .priority-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .priority-text strong { color: var(--color-text-primary); font-weight: 500; }
+  .score-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
+  .score-card { flex: 1; min-width: 100px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: .75rem; text-align: center; }
+  .score-num { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .score-lbl { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Atmos — Design Critique v1</h1>
+  <p class="subtitle">First-pass critique across all five screens · Dark mode</p>
+
+  <div class="wrap">
+    <div class="section-nav">
+      <button class="tab active" onclick="show('overview', this)">Overview</button>
+      <button class="tab" onclick="show('home', this)">Home</button>
+      <button class="tab" onclick="show('details', this)">Details</button>
+      <button class="tab" onclick="show('outlook', this)">Outlook</button>
+      <button class="tab" onclick="show('chat', this)">AI Chat</button>
+      <button class="tab" onclick="show('settings', this)">Settings</button>
+      <button class="tab" onclick="show('priority', this)">Action Plan</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="overview" class="screen-section visible">
+      <div class="score-row">
+        <div class="score-card"><div class="score-num">8/10</div><div class="score-lbl">Visual identity</div></div>
+        <div class="score-card"><div class="score-num">6/10</div><div class="score-lbl">Usability</div></div>
+        <div class="score-card"><div class="score-num">5/10</div><div class="score-lbl">Accessibility</div></div>
+        <div class="score-card"><div class="score-num">7/10</div><div class="score-lbl">AI integration</div></div>
+        <div class="score-card"><div class="score-num">6/10</div><div class="score-lbl">Consistency</div></div>
+      </div>
+      <div class="strengths">
+        <div class="strengths-label">What's working</div>
+        <p><strong style="color:var(--color-text-primary)">1. Editorial personality.</strong> The big bold headline on the home screen ("Feeling cool and a little breezy tonight") is a genuine differentiator. Most weather apps just show numbers. Atmos narrates. That's the product's soul — protect it.</p>
+        <br>
+        <p><strong style="color:var(--color-text-primary)">2. Dark depth system.</strong> Cards layered on cards on a near-black background creates real visual depth. The hierarchy between background, surface, and card levels feels intentional and premium.</p>
+        <br>
+        <p><strong style="color:var(--color-text-primary)">3. AI feels native, not bolted on.</strong> The "Ask Atmos" prompt bar, quick-action chips, and AI Refresh all feel like they belong in the app. The AI doesn't feel like a feature — it feels like the interface.</p>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">Critical</span><span class="issue-title">Bottom nav has no labels on inactive tabs</span></div>
+        <p class="issue-body">Icon-only navigation is a well-documented usability failure on mobile. Users can't identify what bar chart, calendar, chat bubble, and gear icons do without labels. Only the active tab shows its name ("Home"). This affects every single screen in the app.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add persistent text labels below all five nav icons. Keep them at 10–11px. Reduce icon size slightly if space is tight. This alone will reduce navigation confusion significantly.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">Critical</span><span class="issue-title">No loading, error, or empty states visible</span></div>
+        <p class="issue-body">For an AI-powered app, loading states aren't optional. When Atmos AI is generating a response, when the weather data is refreshing, when GPS fails — what does the user see? Right now the answer appears to be nothing, which means any delay feels like a crash.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Design skeleton loaders for the home card and hourly strip. Add a typing indicator (three dots) to the chat while Atmos AI responds. Add a subtle spinner to the AI Refresh button. Add an error state for GPS failure in Settings.</div></div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div id="home" class="screen-section">
+      <div class="screen-label">Screen 1 — Home</div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">Temperature and headline compete for priority</span></div>
+        <p class="issue-body">27°C is the most critical data on this screen — the first thing a user needs when they open a weather app. But the editorial headline "Feeling cool and a little breezy tonight" is larger in visual footprint and draws the eye first. The data hierarchy is inverted.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Make the temperature numeral the dominant element — increase to ~80–90px with a weather icon inline. Move the editorial headline below it as the emotional layer. Users should read: temperature → condition → story. Currently they get: story → temperature.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">Hourly strip is too small to use</span></div>
+        <p class="issue-body">The hourly forecast row has roughly 5 time slots each occupying about 50px wide. The weather icons in each slot are barely 16px and indistinguishable. The precipitation percentage (showing 0%) is unreadable at this scale. Touch targets are well below the minimum 44px Apple/Google recommend.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Make the hourly strip its own scrollable section — about 80px tall, each time slot ~70px wide. Show: time, icon (24px), temperature, and a small rain % dot if &gt;10%. Users should be able to tap a slot to expand details. This is high-value real estate being wasted.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">"AI REFRESH" is a confusing label</span></div>
+        <p class="issue-body">The small button beneath the editorial text reads "AI REFRESH" with a sparkle icon. This label is ambiguous — does it refresh the weather data, regenerate the AI narrative, or both? Users shouldn't have to guess what a core action does.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Rename to "Refresh insight" and make it a subtle ghost button, not an underlined label. On tap, show a brief animation on the headline text (fade out → fade in with new text). The narrative should feel alive, not mechanically refreshed.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge low">Low</span><span class="issue-title">Location header lacks quick-change affordance</span></div>
+        <p class="issue-body">"Eket, NG" at the top has a pin icon but no visual cue that it's tappable to change location. The search icon next to it is easy to overlook.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Give the location text a subtle chevron (›) to signal it's tappable. On tap, slide up a location picker. This removes a step versus navigating to Settings to change location.</div></div>
+      </div>
+    </div>
+
+    <!-- DETAILS -->
+    <div id="details" class="screen-section">
+      <div class="screen-label">Screen 2 — Technical Details</div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">"Technical Details" is developer language</span></div>
+        <p class="issue-body">Real users don't think of weather data as "technical." This label creates a psychological barrier — it signals that this screen is for power users, not everyone. The subtitle "LIVE ATMOSPHERIC PRECISION" doubles down on this problem.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Rename the screen "Conditions" or "Weather Data." Replace the subtitle with something human: "Updated just now" or "As of 10:54 AM." The data is already detailed — the label shouldn't make it feel harder to approach.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">Data grid has no visual hierarchy between values</span></div>
+        <p class="issue-body">Temperature, Feels Like, Difference, Humidity all sit in the same grid at the same visual weight. The most important values (Temperature and Feels Like) should lead. "Difference +2.7°" is interesting but secondary. The grid treats all data as equally important.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Elevate Temperature and Feels Like — larger numerals, more space. Compress Difference and Humidity into a secondary row with smaller type. Use a faint divider between primary and secondary data. Users should grasp the headline figures in under a second.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">Collapsible "Current Conditions" creates unnecessary friction</span></div>
+        <p class="issue-body">The conditions section has a collapse toggle. But this is the only section with real data on the screen — collapsing it leaves an almost empty page. The collapse serves no purpose here and adds a tap to access core content.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Remove the collapse toggle on this screen. Instead, use the collapsed pattern on a future screen where multiple data sections (UV, air quality, pollen, etc.) compete for space. Save progressive disclosure for when you actually have too much content.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge low">Low</span><span class="issue-title">Proactive Insight card has no freshness signal</span></div>
+        <p class="issue-body">The AI insight card doesn't indicate when it was generated or how confident the AI is. A stale insight presented as current is worse than no insight.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add a subtle timestamp: "Generated at 10:50 AM" below the insight text. Add a small thumbs-up/down reaction below so users can signal when the insight missed the mark — this data is also valuable for improving the model.</div></div>
+      </div>
+    </div>
+
+    <!-- OUTLOOK -->
+    <div id="outlook" class="screen-section">
+      <div class="screen-label">Screen 3 — Weekly Outlook</div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">Day cards below the featured tomorrow card are too small</span></div>
+        <p class="issue-body">Thursday Mar 26 and Friday Mar 27 appear as compact horizontal rows with rain % bars and high/low temps crammed into a small space. The rain bar for Thursday (86%) and Friday (34%) are visually similar — the color difference is too subtle to distinguish at a glance. Temperature numbers are small and close together.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Give each day card at least 80px of height. Use a color-coded dot (blue for rain, yellow for sun) rather than a progress bar for precipitation. Show high/low in a clear vertical stack: 30° bold / 27° muted. The distinction between the featured tomorrow card and other days is good — just make the other days more readable.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">No anchor to "today" in the weekly view</span></div>
+        <p class="issue-body">The weekly view shows "Tomorrow" then jumps to Thu Mar 26 and Fri Mar 27. There's no today context. A user who opens this on a Thursday is immediately confused — is "Tomorrow" Friday? There's no date on the "Tomorrow" card.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add today's date to the "Tomorrow" card header — e.g., "Tomorrow · Wed Mar 26." Show today as the first item in the day list (even if compact) so users have a reference point.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge low">Low</span><span class="issue-title">"Atmospheric Narrative" label is redundant</span></div>
+        <p class="issue-body">The eyebrow text "ATMOSPHERIC NARRATIVE" above "Weekly Outlook" explains what the section is, but the section title already does that. It's visual noise that slows reading without adding information.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Replace with a short contextual summary: "7-day synthesis · Updated 11 AM." This gives the same branding feel but adds useful information (freshness, scope). Alternatively, remove it entirely — "Weekly Outlook" is self-explanatory.</div></div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="chat" class="screen-section">
+      <div class="screen-label">Screen 4 — Atmos AI Chat</div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">Weather context strip and chat have no visual separation</span></div>
+        <p class="issue-body">The top of the chat screen shows a quick weather summary and then immediately transitions into chat bubbles with no divider. The weather data feels like it's part of the conversation rather than a persistent context panel. This creates layout confusion — is that a message from Atmos, or ambient data?</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Treat the weather strip as a fixed sticky header, separated from the chat with a clear divider or subtle background shift. Label it "Current context" or simply keep it pinned above the chat list with enough visual separation that users understand it's not a message — it's data Atmos is working from.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge high">High</span><span class="issue-title">No AI typing indicator</span></div>
+        <p class="issue-body">When the user sends a message and Atmos AI is generating a response, there's no visual feedback shown. For AI responses that may take 1–3 seconds, this silence reads as a broken app.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add a typing bubble with three animated dots (···) in the Atmos message position as soon as the user sends a message. Fade it out when the real response arrives. This is a 1-hour implementation with massive perceived performance impact.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">Off-topic message handling has no visual treatment</span></div>
+        <p class="issue-body">The chat shows a user sending a romantic message and Atmos correctly redirects. But the AI response bubble is the same visual style as a weather answer. There's no signal to the user that this was an out-of-scope request.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add a subtle "out of scope" visual treatment — a slightly different bubble border or a small icon indicating the AI is redirecting. More importantly, add gentle humor: "I'm better with clouds than crushes ☁️ — here's what I can help with:" followed by the quick-action chips.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">Quick-action chips are too small and too low</span></div>
+        <p class="issue-body">"Weekend forecast?", "UV Index today", "Air quality alert" — these chips are at the very bottom of the screen, below the input bar. They're the fastest way to get value from the AI but they're easy to miss and have small tap targets.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Move the chips above the input bar, not below it. Increase their height to at least 36px. Show 3 contextually relevant chips that rotate based on time of day, weather conditions, or what the user just asked.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge low">Low</span><span class="issue-title">Delete icon in the chat header is dangerous without confirmation</span></div>
+        <p class="issue-body">A trash icon in the top-right of the chat with no confirmation dialog means a single mistouch clears the entire conversation history.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add a confirmation bottom sheet: "Clear conversation? This will delete all messages." with Cancel / Clear buttons. Or replace the trash icon with a "•••" menu that houses Clear, Share, and future options.</div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="screen-section">
+      <div class="screen-label">Screen 5 — Settings</div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">GPS coordinates shown to the user serve no purpose</span></div>
+        <p class="issue-body">The Settings location section shows "Eket, NG" with raw coordinates "4.65, 7.94" beneath it. Users don't need or want raw GPS coordinates. It makes the interface feel technical and exposes internal implementation details.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Remove the coordinates. Replace with a human-readable precision signal: "Accurate to your neighborhood" or a small GPS signal icon. If debugging is needed, hide coords behind a long-press gesture for power users only.</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge med">Medium</span><span class="issue-title">Unit selector active states could be clearer</span></div>
+        <p class="issue-body">The °C/°F, km/h/mph, 24h/12h pill selectors show the selected state with a filled pill. But at small sizes and on a dark background, the difference between selected and unselected is subtle. A user skimming quickly may not know which unit is active.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Increase contrast between selected and unselected states. Selected: white text on the purple/blue gradient fill, slightly larger. Unselected: muted text, no fill. Add a checkmark or underline to the selected state as a secondary signal. Don't rely on color alone to convey selection state (WCAG 1.4.1).</div></div>
+      </div>
+      <div class="issue">
+        <div class="issue-header"><span class="badge low">Low</span><span class="issue-title">Settings has no app version or feedback link</span></div>
+        <p class="issue-body">The bottom of the screen shows "AI Weather Assistant · v1.0.0" in very small text. This is a missed opportunity — settings is where users go when something is wrong, and there's no feedback channel, no support link, no "Report a bug" option.</p>
+        <div class="fix-box"><div class="fix-label">Fix</div><div class="fix-text">Add a FEEDBACK section with: "Rate Atmos," "Report an issue," and "Send feedback on AI responses." These are cheap to add and create a quality feedback loop. User bug reports and AI quality signals are how v1.1 gets better than v1.0.</div></div>
+      </div>
+    </div>
+
+    <!-- ACTION PLAN -->
+    <div id="priority" class="screen-section">
+      <div class="screen-label">Priority action plan — ordered by impact × effort</div>
+      <div class="priority-section">
+        <div class="priority-item">
+          <div class="num">1</div>
+          <div class="priority-text"><strong>Add text labels to all bottom nav tabs.</strong> One afternoon of work. Fixes navigation confusion on every screen in the app. This is the single highest-impact, lowest-effort change available.</div>
+        </div>
+        <div class="priority-item">
+          <div class="num">2</div>
+          <div class="priority-text"><strong>Fix the home screen hierarchy.</strong> Temperature needs to dominate. Move the editorial headline below the temperature block. This corrects the fundamental information architecture of the app's most-used screen.</div>
+        </div>
+        <div class="priority-item">
+          <div class="num">3</div>
+          <div class="priority-text"><strong>Add loading and typing states.</strong> Skeleton loaders on home, typing indicator in chat. This eliminates the most common "is it broken?" moments users will have with AI-powered features.</div>
+        </div>
+        <div class="priority-item">
+          <div class="num">4</div>
+          <div class="priority-text"><strong>Enlarge and redesign the hourly strip.</strong> Make it scrollable and touch-friendly with 44px minimum tap targets. This is the most-used data in any weather app and is currently the hardest to interact with.</div>
+        </div>
+        <div class="priority-item">
+          <div class="num">5</div>
+          <div class="priority-text"><strong>Separate AI chat context from the conversation visually.</strong> The weather strip at the top of the chat should be clearly distinct from message bubbles. Add a divider, sticky header, or background shift.</div>
+        </div>
+        <div class="priority-item">
+          <div class="num">6</div>
+          <div class="priority-text"><strong>Rename "Technical Details" and move chips above the input.</strong> Language and affordance improvements that cost almost nothing to implement but meaningfully improve how approachable each screen feels.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id, el) {
+  document.querySelectorAll('.screen-section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('visible');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

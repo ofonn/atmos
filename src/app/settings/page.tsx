@@ -15,7 +15,12 @@ import {
   LocateFixed,
   Search,
   X,
+  ChevronRight,
+  Star,
+  MessageSquareWarning,
+  Sparkles,
 } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 function SettingRow({
   icon: Icon,
@@ -62,11 +67,16 @@ function SegmentedControl({
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            className={`px-4 py-2.5 rounded-lg text-xs transition-all min-h-[40px] ${
+              active ? 'font-bold' : 'font-medium'
+            }`}
             style={{
               background: active ? 'var(--primary)' : 'transparent',
               color: active ? 'var(--bg)' : 'var(--text-muted)',
+              /* Secondary active signal: subtle ring on active (#007) */
+              boxShadow: active ? '0 0 0 1px rgba(199,191,255,0.3)' : 'none',
             }}
+            aria-pressed={active}
           >
             {opt.label}
           </button>
@@ -118,10 +128,12 @@ export default function SettingsPage() {
         </p>
       </header>
 
-      <main className="relative z-10 flex-1 px-6 pt-6 pb-32 space-y-3">
+      <main className="relative z-10 flex-1 px-6 pt-6 pb-32 w-full max-w-4xl mx-auto">
+        <div className="md:grid md:grid-cols-2 md:gap-12 items-start">
+          <div className="space-y-3">
         {/* Appearance section */}
         <p
-          className="text-[10px] font-label uppercase tracking-widest px-1 mb-1"
+          className="text-[11px] font-label uppercase tracking-widest px-1 mb-1"
           style={{ color: 'var(--text-muted)' }}
         >
           Appearance
@@ -158,7 +170,7 @@ export default function SettingsPage() {
         {/* Units section */}
         <div className="pt-4">
           <p
-            className="text-[10px] font-label uppercase tracking-widest px-1 mb-1"
+            className="text-[11px] font-label uppercase tracking-widest px-1 mb-1"
             style={{ color: 'var(--text-muted)' }}
           >
             Units
@@ -198,10 +210,13 @@ export default function SettingsPage() {
           />
         </SettingRow>
 
+          </div>
+
+          <div className="space-y-3 mt-8 md:mt-0">
         {/* Location section */}
-        <div className="pt-4">
+        <div>
           <p
-            className="text-[10px] font-label uppercase tracking-widest px-1 mb-1"
+            className="text-[11px] font-label uppercase tracking-widest px-1 mb-1"
             style={{ color: 'var(--text-muted)' }}
           >
             Location
@@ -219,60 +234,78 @@ export default function SettingsPage() {
               <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
                 {location
                   ? `${location.name}${location.country ? `, ${location.country}` : ''}`
-                  : 'Not set'}
+                  : 'Location not set'}
               </p>
-              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              <p
+                className="text-[11px]"
+                onDoubleClick={() => {
+                  if (location) alert(`Raw Coordinates: ${location.lat}, ${location.lon}`)
+                }}
+                style={{ color: 'var(--text-muted)' }}
+                title="Double tap for precise coordinates"
+              >
                 {location
-                  ? `${location.lat.toFixed(2)}, ${location.lon.toFixed(2)}`
-                  : 'No location set'}
+                  ? `Precise location active • Synced recently`
+                  : 'Search for a city or sync GPS'}
               </p>
             </div>
           </div>
 
-          {/* City search input */}
-          {cityEditOpen && (
-            <form onSubmit={handleCitySubmit} className="mb-3">
-              <div
-                className="flex items-center gap-2 rounded-xl px-3 py-2"
-                style={{ background: 'var(--surface-mid)', border: '0.5px solid var(--outline)' }}
-              >
-                <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} />
-                <input
-                  autoFocus
-                  type="text"
-                  value={cityInput}
-                  onChange={e => setCityInput(e.target.value)}
-                  placeholder="Type a city name…"
-                  className="flex-1 bg-transparent border-none outline-none text-sm"
-                  style={{ color: 'var(--text)' }}
-                />
-                <button type="button" onClick={() => setCityEditOpen(false)}>
-                  <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                </button>
-              </div>
-            </form>
-          )}
-
           {/* Action buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <button
+              onClick={() => setCityEditOpen(true)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors active:scale-95"
+              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+            >
+              <div className="flex items-center gap-3">
+                <Search className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                <span className="text-sm font-medium">Search for a city...</span>
+              </div>
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            </button>
             <button
               onClick={() => syncLocation()}
               disabled={locLoading}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50"
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors active:scale-95 disabled:opacity-50"
               style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
             >
-              <LocateFixed className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
-              {locLoading ? 'Syncing…' : 'Sync GPS'}
-            </button>
-            <button
-              onClick={() => setCityEditOpen(v => !v)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-colors"
-              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
-            >
-              <Search className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
-              Enter City
+              <div className="flex items-center gap-3">
+                <LocateFixed className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                <span className="text-sm font-medium">{locLoading ? 'Syncing...' : 'Use current location'}</span>
+              </div>
             </button>
           </div>
+        </div>
+
+        {/* Feedback section */}
+        <div className="pt-4">
+          <p
+            className="text-[11px] font-label uppercase tracking-widest px-1 mb-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Feedback
+          </p>
+        </div>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)' }}>
+          {[
+            { label: 'Rate Atmos', icon: Star },
+            { label: 'Report issue', icon: MessageSquareWarning },
+            { label: 'Send AI feedback', icon: Sparkles },
+          ].map((item, i) => (
+            <button
+              key={item.label}
+              className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-white/5 active:bg-white/10"
+              style={{ borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' }}
+              onClick={() => {}}
+            >
+              <div className="flex items-center gap-3">
+                <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
+              </div>
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            </button>
+          ))}
         </div>
 
         {/* About section */}
@@ -299,9 +332,60 @@ export default function SettingsPage() {
             Powered by OpenWeather &amp; Google Gemini. Built with Next.js.
           </p>
         </div>
+          </div>
+        </div>
       </main>
 
       <BottomNav />
+
+      {/* Slide-out Bottom Sheet for Enter City (#035) */}
+      <AnimatePresence>
+        {cityEditOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setCityEditOpen(false)}
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl p-6 pb-12"
+              style={{ background: 'var(--surface)', borderTop: '0.5px solid var(--outline)' }}
+            >
+              <div className="w-12 h-1.5 rounded-full mx-auto mb-6" style={{ background: 'var(--text-muted)', opacity: 0.3 }} />
+              <h3 className="text-lg font-bold font-headline mb-4 tracking-tight" style={{ color: 'var(--text)' }}>Search Location</h3>
+              <form onSubmit={handleCitySubmit} className="mb-2">
+                <div
+                  className="flex items-center gap-3 rounded-2xl px-4 py-4"
+                  style={{ background: 'var(--bg)', border: '0.5px solid var(--outline)' }}
+                >
+                  <Search className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--primary)' }} />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={cityInput}
+                    onChange={e => setCityInput(e.target.value)}
+                    placeholder="Enter city name..."
+                    className="flex-1 bg-transparent border-none outline-none text-[15px] font-body"
+                    style={{ color: 'var(--text)' }}
+                  />
+                  {cityInput && (
+                    <button type="button" onClick={() => setCityInput('')}>
+                      <X className="w-5 h-5 p-1" style={{ color: 'var(--text-muted)' }} />
+                    </button>
+                  )}
+                </div>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
