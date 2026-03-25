@@ -24,7 +24,7 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
       }
       aria-label="Main navigation"
     >
-      <div className="flex items-end gap-1 px-3 py-2 rounded-full nav-glass">
+      <div className="flex items-end gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full nav-glass">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = pathname === href
           return (
@@ -33,31 +33,36 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
               href={href}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-col items-center gap-0.5 px-1 py-1 rounded-full transition-all duration-300 active:scale-90 ${
-                active ? '' : 'opacity-40 hover:opacity-70'
+              className={`relative flex flex-col items-center gap-0.5 px-1 py-0.5 sm:py-1 rounded-full transition-all duration-300 active:scale-90 ${
+                active ? '' : 'hover:opacity-80'
               }`}
             >
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${
+                className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all duration-300 ${
                   active
                     ? 'bg-hero-gradient shadow-[0_0_20px_rgba(128,110,248,0.35)]'
                     : ''
                 }`}
               >
                 <Icon
-                  className={`w-[18px] h-[18px] transition-colors ${
-                    active ? 'text-white' : 'text-[#e0e2ee]'
-                  }`}
+                  className="w-4 h-4 sm:w-[18px] sm:h-[18px] transition-colors"
+                  style={{
+                    color: active ? '#ffffff' : 'var(--text-muted)',
+                    opacity: active ? 1 : 0.5,
+                  }}
                 />
               </div>
-              {active && (
-                <span
-                  className="font-label text-[9px] leading-none tracking-wide"
-                  style={{ color: 'var(--primary)' }}
-                >
-                  {label}
-                </span>
-              )}
+              <span
+                className={`font-label text-[9px] sm:text-[10px] leading-none tracking-wide transition-colors ${
+                  active ? 'font-semibold' : 'font-normal'
+                }`}
+                style={{
+                  color: active ? 'var(--primary)' : 'var(--text-muted)',
+                  opacity: active ? 1 : 0.5,
+                }}
+              >
+                {label}
+              </span>
             </Link>
           )
         })}
