@@ -117,7 +117,7 @@ export default function OverviewPage() {
       <main className="relative z-10 pb-32 px-4 w-full max-w-4xl mx-auto">
         <div className="px-2 mb-6 mt-2">
           <p className="font-label text-[11px] uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
-            {today ? `Updated at ${today.date}` : 'Updating…'}
+            {today ? `${new Date(today.date + 'T12:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}` : 'Updating…'}
           </p>
           <h1 className="font-headline text-5xl font-extrabold tracking-tighter mb-3 leading-none" style={{ color: 'var(--text)' }}>
             Weekly<br />Outlook
@@ -242,18 +242,16 @@ export default function OverviewPage() {
                             {day.date ? new Date(day.date + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }) : ''}
                           </p>
                         )}
-                        {isToday && (
-                          <p className="font-label text-[11px] tracking-wider capitalize" style={{ color: 'var(--text-muted)' }}>
-                            {day.description}
-                          </p>
-                        )}
+                        <p className="font-label text-[11px] tracking-wider capitalize" style={{ color: 'var(--text-muted)' }}>
+                          {isToday ? day.description : ''}
+                        </p>
                       </div>
 
                       {/* Middle: Condition & Rain Status */}
                       <div className="flex-1 flex flex-col items-center justify-center">
                         <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
                         {day.pop > 0 && (
-                          <div className="flex items-center justify-center gap-1.5 mt-1 relative w-full left-1">
+                          <div className="flex items-center justify-center gap-1.5 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#60a5fa' }} />
                             <span className="text-[10px] font-label font-bold" style={{ color: '#60a5fa' }}>{day.pop}%</span>
                           </div>

@@ -110,7 +110,8 @@ function SubHead({ title }: { title: string }) {
 export default function TechnicalPage() {
   const { location, current: ctxCurrent, hourly: ctxHourly, daily: ctxDaily } = useWeatherContext()
   const { content: aiContent } = useAiContent(ctxCurrent, ctxHourly, ctxDaily)
-  const { tempUnit } = useSettings()
+  const { tempUnit, windUnit } = useSettings()
+  const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
 
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
@@ -152,61 +153,65 @@ export default function TechnicalPage() {
           <div className="md:sticky md:top-24 flex flex-col">
             {/* Title */}
             <div className="mb-6 px-2">
-          <h2
-            className="text-[2.6rem] font-extrabold font-headline leading-none tracking-tight mb-1"
-            style={{
-              background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}
-          >
-            Conditions
-          </h2>
-          <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            {mc ? `Updated at ${fmtISOTime(mc.time)}` : 'Updating…'}
-          </p>
-        </div>
+              <h2
+                className="text-[2.6rem] font-extrabold font-headline leading-none tracking-tight mb-1"
+                style={{
+                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}
+              >
+                Conditions
+              </h2>
+              <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                {mc ? `Updated at ${fmtISOTime(mc.time)}` : 'Updating…'}
+              </p>
+            </div>
 
-        {/* AI Proactive Insight */}
-        <div
-          className="rounded-2xl p-5 mb-4 relative overflow-hidden"
-          style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-        >
-          <div
-            className="absolute -right-12 -top-12 w-44 h-44 blur-[70px] rounded-full pointer-events-none"
-            style={{ background: 'rgba(199,191,255,0.18)' }}
-          />
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-2 mt-1">
-              <h3 className="text-sm font-bold font-headline flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-                Proactive Insight
-                {mc && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtISOTime(mc.time)}</span>}
-              </h3>
-              <div className="flex items-center gap-3">
-                <button aria-label="Helpful" className="opacity-40 hover:opacity-100 transition-opacity"><ThumbsUp className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
-                <button aria-label="Not helpful" className="opacity-40 hover:opacity-100 transition-opacity"><ThumbsDown className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
+            {/* AI Proactive Insight */}
+            <div
+              className="rounded-2xl p-5 mb-4 relative overflow-hidden"
+              style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+            >
+              <div
+                className="absolute -right-12 -top-12 w-44 h-44 blur-[70px] rounded-full pointer-events-none"
+                style={{ background: 'rgba(199,191,255,0.18)' }}
+              />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-2 mt-1">
+                  <h3 className="text-sm font-bold font-headline flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                    <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+                    Proactive Insight
+                    {mc && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtISOTime(mc.time)}</span>}
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <button aria-label="Helpful" className="p-1.5 opacity-40 hover:opacity-100 transition-opacity"><ThumbsUp className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
+                    <button aria-label="Not helpful" className="p-1.5 opacity-40 hover:opacity-100 transition-opacity"><ThumbsDown className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
+                  </div>
+                </div>
+                <p className="text-sm font-body leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
+                  {aiContent?.proactiveInsight ?? 'Analyzing current conditions…'}
+                </p>
+                <button
+                  onClick={() => document.getElementById('conditions-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center gap-1.5 text-[11px] uppercase font-label font-bold tracking-widest transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--primary)' }}
+                >
+                  Show data <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
               </div>
             </div>
-            <p className="text-sm font-body leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-              {aiContent?.proactiveInsight ?? 'Analyzing current conditions…'}
-            </p>
-            <button className="flex items-center gap-1.5 text-[11px] uppercase font-label font-bold tracking-widest transition-opacity hover:opacity-70" style={{ color: 'var(--primary)' }}>
-              Show data <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </button>
           </div>
-        </div>
 
-        </div>
-        
-        <div className="flex flex-col gap-4 mt-6 md:mt-0">
+          <div className="flex flex-col gap-4 mt-6 md:mt-0">
         
         {location && (
           <RainTimeline lat={location.lat} lon={location.lon} />
         )}
 
         {/* ── Current Conditions ─────────────────────────────────────── */}
+        <div id="conditions-section" />
         {mc ? (
-          <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />} collapsible={false}>
+          <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />}>
             {/* Hero row */}
             <div className="flex items-center gap-4 mb-4 mt-2">
               <div
@@ -233,7 +238,7 @@ export default function TechnicalPage() {
               { label: 'Temperature', value: displayCelsius(mc.temperature_2m, tempUnit) },
               { label: 'Feels Like', value: displayCelsius(mc.apparent_temperature, tempUnit) },
               { label: 'Humidity', value: `${mc.relative_humidity_2m}%` },
-              { label: 'Wind', value: `${mc.wind_speed_10m.toFixed(1)} km/h` },
+              { label: 'Wind', value: fmtWind(mc.wind_speed_10m) },
             ]} />
 
             <SubHead title="Secondary Metrics" />
@@ -248,7 +253,7 @@ export default function TechnicalPage() {
               />
             )}
             <DataRow label="Wind Direction" value={`${getWindDir16(mc.wind_direction_10m)} (${mc.wind_direction_10m}°)`} />
-            {mc.wind_gusts_10m > 0 && <DataRow label="Wind Gust" value={`${mc.wind_gusts_10m.toFixed(1)}`} unit=" km/h" />}
+            {mc.wind_gusts_10m > 0 && <DataRow label="Wind Gust" value={fmtWind(mc.wind_gusts_10m)} />}
 
             {/* Sky */}
             <SubHead title="Sky" />
