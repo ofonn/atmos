@@ -61,16 +61,16 @@
   /* Layered atmospheric glow — top glow plus subtle side ambients */
   .bg-atmospheric-glow {
     background:
-      radial-gradient(ellipse at 50% -10%, rgba(67, 41, 184, 0.75) 0%, transparent 55%),
-      radial-gradient(ellipse at -15% 75%, rgba(88, 150, 253, 0.12) 0%, transparent 40%),
-      radial-gradient(ellipse at 115% 65%, rgba(128, 110, 248, 0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% -10%, var(--glow-top, rgba(67, 41, 184, 0.75)) 0%, transparent 55%),
+      radial-gradient(ellipse at -15% 75%, var(--glow-bl, rgba(88, 150, 253, 0.12)) 0%, transparent 40%),
+      radial-gradient(ellipse at 115% 65%, var(--glow-br, rgba(128, 110, 248, 0.08)) 0%, transparent 40%),
       var(--bg);
   }
   :root .bg-atmospheric-glow {
     background:
-      radial-gradient(ellipse at 50% -10%, rgba(130, 100, 230, 0.25) 0%, transparent 55%),
-      radial-gradient(ellipse at -15% 75%, rgba(88, 150, 253, 0.06) 0%, transparent 40%),
-      radial-gradient(ellipse at 115% 65%, rgba(128, 110, 248, 0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% -10%, var(--glow-top, rgba(130, 100, 230, 0.25)) 0%, transparent 55%),
+      radial-gradient(ellipse at -15% 75%, var(--glow-bl, rgba(88, 150, 253, 0.06)) 0%, transparent 40%),
+      radial-gradient(ellipse at 115% 65%, var(--glow-br, rgba(128, 110, 248, 0.04)) 0%, transparent 40%),
       var(--bg);
   }
 

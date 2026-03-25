@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes'
 import { WeatherProvider } from '@/contexts/WeatherContext'
 import { SettingsProvider } from '@/contexts/SettingsContext'
 import { OfflineBanner } from '@/components/layout/OfflineBanner'
+import { WeatherMoodProvider } from '@/components/WeatherMoodProvider'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SettingsProvider>
             <WeatherProvider>
+              <WeatherMoodProvider />
               <div className="w-full min-h-[100dvh] lg:max-w-[1200px] lg:mx-auto lg:shadow-[0_0_100px_rgba(0,0,0,0.1)] lg:dark:shadow-[0_0_100px_rgba(0,0,0,0.8)] relative bg-background flex flex-col safe-p overflow-x-hidden">
                 <OfflineBanner />
                 {children}

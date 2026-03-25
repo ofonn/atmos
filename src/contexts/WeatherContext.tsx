@@ -7,9 +7,13 @@ import type { CurrentWeatherData, HourlyData, DailyData, MetricsData, SunData, L
 
 interface WeatherContextValue {
   location: Location | null
+  savedLocations: Location[]
   locLoading: boolean
   searchCity: (city: string) => Promise<void>
   syncLocation: () => void
+  saveLocation: (loc: Location) => void
+  removeLocation: (loc: Location) => void
+  setAsCurrentLocation: (loc: Location) => void
   current: CurrentWeatherData | null
   hourly: HourlyData[] | null
   daily: DailyData[] | null
@@ -23,7 +27,7 @@ interface WeatherContextValue {
 const WeatherContext = createContext<WeatherContextValue | null>(null)
 
 export function WeatherProvider({ children }: { children: ReactNode }) {
-  const { location, loading: locLoading, searchCity, syncLocation } = useLocation()
+  const { location, savedLocations, loading: locLoading, searchCity, syncLocation, saveLocation, removeLocation, setAsCurrentLocation } = useLocation()
   const { current, hourly, daily, metrics, sun, refresh, loading, error } = useWeather(
     location?.lat ?? null,
     location?.lon ?? null
@@ -31,7 +35,7 @@ export function WeatherProvider({ children }: { children: ReactNode }) {
 
   return (
     <WeatherContext.Provider value={{
-      location, locLoading, searchCity, syncLocation,
+      location, savedLocations, locLoading, searchCity, syncLocation, saveLocation, removeLocation, setAsCurrentLocation,
       current, hourly, daily, metrics, sun, refresh, loading, error,
     }}>
       {children}

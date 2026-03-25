@@ -254,6 +254,17 @@ export default function SettingsPage() {
           {/* Action buttons */}
           <div className="flex flex-col gap-2 mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
             <button
+              onClick={() => router.push('/locations')}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors active:scale-95"
+              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+            >
+              <div className="flex items-center gap-3">
+                <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                <span className="text-sm font-medium">Manage Saved Places</span>
+              </div>
+              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            </button>
+            <button
               onClick={() => setCityEditOpen(true)}
               className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors active:scale-95"
               style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}

@@ -258,7 +258,7 @@ export default function Home() {
                     const gradientStyle = {
                       background: isDark
                         ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
-                        : 'linear-gradient(135deg, #5b47d1 0%, #2563EB 100%)',
+                        : 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)',
                       WebkitBackgroundClip: 'text' as const,
                       WebkitTextFillColor: 'transparent' as const,
                       backgroundClip: 'text' as const,
@@ -324,7 +324,7 @@ export default function Home() {
                   className="px-5 py-2 rounded-full font-bold text-xs tracking-wide text-white flex-shrink-0"
                   aria-label="Open AI chat"
                   style={{
-                    background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)',
+                    background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)',
                     animation: 'askGlow 2.5s ease-in-out infinite',
                   }}
                 >

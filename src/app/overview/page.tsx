@@ -229,7 +229,7 @@ export default function OverviewPage() {
                     router.push('/chat')
                   }}
                   className="px-5 py-2 rounded-full font-label text-xs uppercase tracking-widest font-bold text-white active:scale-95 transition-transform flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)' }}
                 >
                   Ask
                 </button>

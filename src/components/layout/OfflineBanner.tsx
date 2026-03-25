@@ -40,7 +40,7 @@ export function OfflineBanner() {
       >
         <WifiOff className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
         <span className="font-label text-[11px] font-bold tracking-wide text-amber-500">
-          You're offline — showing cached data
+          You&apos;re offline — showing cached data
         </span>
       </div>
     </div>

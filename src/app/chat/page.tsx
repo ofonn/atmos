@@ -154,7 +154,7 @@ export default function ChatPage() {
           <span
             className="text-lg font-bold font-headline tracking-tight"
             style={{
-              background: 'linear-gradient(90deg, #806EF8 0%, #5896FD 100%)',
+              background: 'linear-gradient(90deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -223,7 +223,7 @@ export default function ChatPage() {
             </div>
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}
+              style={{ background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)' }}
             >
               <Sparkles className="w-8 h-8 text-white" aria-hidden="true" />
             </div>
@@ -430,7 +430,7 @@ export default function ChatPage() {
               disabled={!input.trim() || loading}
               aria-label="Send message"
               className="w-11 h-11 flex items-center justify-center rounded-full text-white shadow-lg active:scale-90 transition-all disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #806EF8 0%, #5896FD 100%)' }}
+              style={{ background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)' }}
             >
               <ArrowUp className="w-5 h-5" aria-hidden="true" />
             </button>

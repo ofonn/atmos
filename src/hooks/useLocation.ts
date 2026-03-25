@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Location } from '@/types/weather'
 
 const CACHE_KEY = 'atmos_location'
+const SAVED_KEY = 'atmos_saved_locations'
 
 function getCached(): Location | null {
   if (typeof window === 'undefined') return null
@@ -15,15 +16,32 @@ function getCached(): Location | null {
   }
 }
 
+function getSavedCached(): Location[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(SAVED_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 function setCache(loc: Location) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(loc))
   } catch {}
 }
 
+function setSavedCache(locs: Location[]) {
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(locs))
+  } catch {}
+}
+
 export function useLocation() {
   // Start with null to match server render, then hydrate from localStorage
   const [location, setLocation] = useState<Location | null>(null)
+  const [savedLocations, setSavedLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,6 +52,8 @@ export function useLocation() {
       setLocation(cached)
       setLoading(false)
     }
+    
+    setSavedLocations(getSavedCached())
 
     // Always try to refresh location in the background
     if (!navigator.geolocation) {
@@ -93,6 +113,12 @@ export function useLocation() {
         }
         setCache(loc)
         setLocation(loc)
+        setSavedLocations(prev => {
+          if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
+          const next = [...prev, loc]
+          setSavedCache(next)
+          return next
+        })
       } else {
         setError('City not found')
       }
@@ -119,6 +145,12 @@ export function useLocation() {
           }
           setCache(loc)
           setLocation(loc)
+          setSavedLocations(prev => {
+            if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
+            const next = [...prev, loc]
+            setSavedCache(next)
+            return next
+          })
         } catch {
           const loc: Location = { lat: latitude, lon: longitude, name: 'Current Location', country: '' }
           setCache(loc)
@@ -130,5 +162,28 @@ export function useLocation() {
     )
   }, [])
 
-  return { location, loading, error, searchCity, syncLocation }
+  const saveLocation = useCallback((loc: Location) => {
+    setSavedLocations(prev => {
+      // prevent duplicates based on lat/lon
+      if (prev.some(p => p.lat === loc.lat && p.lon === loc.lon)) return prev
+      const next = [...prev, loc]
+      setSavedCache(next)
+      return next
+    })
+  }, [])
+
+  const removeLocation = useCallback((loc: Location) => {
+    setSavedLocations(prev => {
+      const next = prev.filter(p => p.lat !== loc.lat || p.lon !== loc.lon)
+      setSavedCache(next)
+      return next
+    })
+  }, [])
+
+  const setAsCurrentLocation = useCallback((loc: Location) => {
+    setCache(loc)
+    setLocation(loc)
+  }, [])
+
+  return { location, savedLocations, loading, error, searchCity, syncLocation, saveLocation, removeLocation, setAsCurrentLocation }
 }
