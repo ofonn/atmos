@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { RainTimeline } from '@/components/weather/RainTimeline'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -207,7 +208,12 @@ export default function TechnicalPage() {
 
         </div>
         
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mt-6 md:mt-0">
+        
+        {location && (
+          <RainTimeline lat={location.lat} lon={location.lon} />
+        )}
+
         {/* ── Current Conditions ─────────────────────────────────────── */}
         {owm ? (
           <Section title="Current Conditions" icon={<Thermometer className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />} collapsible={false}>

@@ -387,6 +387,7 @@ function ForecastSlot({
         <span className="text-xs font-label font-bold w-10 flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
           {fmtUnix(item.dt, offset)}
         </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`https://openweathermap.org/img/wn/${item.weather[0].icon}.png`}
           alt={item.weather[0].description}

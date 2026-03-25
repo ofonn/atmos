@@ -1,6 +1,7 @@
 'use client'
 
 import { useTheme } from 'next-themes'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -87,6 +88,7 @@ function SegmentedControl({
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const { tempUnit, windUnit, timeFormat, updateSetting } = useSettings()
   const { location, locLoading, searchCity, syncLocation } = useWeatherContext()

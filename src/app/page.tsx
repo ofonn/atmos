@@ -10,7 +10,7 @@ import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
-import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown } from 'lucide-react'
+import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react'
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
   if (code >= 200 && code < 300) return { from: '#8B5CF6', via: '#6D28D9', to: isDark ? '#4C1D95' : '#8B5CF6', glow: 'rgba(139,92,246,0.5)' }
@@ -280,21 +280,31 @@ export default function Home() {
             {displayed && !aiLoading && (
               <section className="relative flex-shrink-0 px-5 pb-1">
                 <p
-                  className="font-body text-sm max-w-[90%] leading-relaxed"
+                  className="font-body text-[15px] font-medium max-w-[90%] leading-relaxed mb-3"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {displayed.advice}
                 </p>
-                <button
-                  onClick={handleRefresh}
-                  disabled={aiLoading}
-                  aria-label="Refresh AI summary"
-                  className="mt-2 flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-transform active:scale-95 disabled:opacity-30"
-                  style={{ color: isDark ? 'rgba(199,191,255,0.7)' : 'rgba(91,71,209,0.7)' }}
-                >
-                  <RefreshCw className={`w-3 h-3 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                  Update insight
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => router.push('/insight')}
+                    className="flex justify-between items-center px-4 py-2 rounded-full border border-dashed transition-colors active:scale-95"
+                    style={{ background: 'var(--surface-mid)', borderColor: 'var(--outline)', color: 'var(--text)' }}
+                  >
+                    <span className="text-[11px] font-label font-bold tracking-widest uppercase flex items-center gap-1.5" style={{ color: 'var(--primary)' }}>
+                      Daily Briefing <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={aiLoading}
+                    aria-label="Refresh AI summary"
+                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 disabled:opacity-30 p-2"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                  </button>
+                </div>
               </section>
             )}
 

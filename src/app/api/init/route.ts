@@ -42,7 +42,9 @@ Return ONLY this JSON (no markdown, no extra text):
   "headline": "5-7 casual words about right now, like a friend texting you",
   "advice": "10-15 words practical tip starting with action word: Grab/Wear/You'll/Don't/Stay",
   "proactiveInsight": "2 sentences about current conditions and what to do about it, casual tone",
-  "weekSummary": "3-4 sentences planning the week: which days are best for outdoor activities, when to expect rain, what to prepare for. Be specific about days."
+  "weekSummary": "3-4 sentences planning the week: which days are best for outdoor activities, when to expect rain, what to prepare for. Be specific about days.",
+  "outfit": "1-2 sentences suggesting what to wear today based on the temperature and weather.",
+  "activity": "1 short sentence suggesting the best time to go outside today."
 }`
 
     const raw = await geminiGenerateWithRotation(prompt, apiKey)
@@ -54,6 +56,8 @@ Return ONLY this JSON (no markdown, no extra text):
       advice: parsed.advice,
       proactiveInsight: parsed.proactiveInsight,
       weekSummary: parsed.weekSummary,
+      outfit: parsed.outfit || 'Dress comfortably for the current conditions.',
+      activity: parsed.activity || 'Take it easy today.',
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

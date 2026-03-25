@@ -76,6 +76,7 @@ function LocationWeatherCard({
         <div className="flex items-center gap-2">
           {weather && (
             <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://openweathermap.org/img/wn/${weather.icon}.png`}
                 alt={weather.description}

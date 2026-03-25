@@ -11,6 +11,8 @@ export interface AiContent {
   advice: string
   proactiveInsight: string
   weekSummary: string
+  outfit: string
+  activity: string
   fetchedAt: number
 }
 
@@ -60,6 +62,8 @@ export function useAiContent(
           advice: data.advice,
           proactiveInsight: data.proactiveInsight,
           weekSummary: data.weekSummary,
+          outfit: data.outfit,
+          activity: data.activity,
           fetchedAt: Date.now(),
         }
         setContent(newContent)
