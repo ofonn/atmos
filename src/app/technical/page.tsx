@@ -347,7 +347,7 @@ export default function TechnicalPage() {
 
         {/* ── Hourly Forecast (Open-Meteo) ────────────────────────────── */}
         {mh ? (
-          <HourlyMeteoSection mh={mh} startIdx={nowHourIdx} tempUnit={tempUnit} />
+          <HourlyMeteoSection mh={mh} startIdx={nowHourIdx} tempUnit={tempUnit} windUnit={windUnit} />
         ) : (
           <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
         )}
@@ -409,7 +409,8 @@ export default function TechnicalPage() {
 
 // ── Hourly Section (Open-Meteo) ─────────────────────────────────────────────
 
-function HourlyMeteoSection({ mh, startIdx, tempUnit }: { mh: any; startIdx: number; tempUnit: 'C' | 'F' }) {
+function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit }: { mh: any; startIdx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+  const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const [showFull, setShowFull] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
   const count = showFull ? 48 : 24
@@ -484,8 +485,8 @@ function HourlyMeteoSection({ mh, startIdx, tempUnit }: { mh: any; startIdx: num
                     ['Humidity', mh.relative_humidity_2m?.[idx] != null ? `${mh.relative_humidity_2m[idx]}%` : null],
                     ['Pressure', mh.pressure_msl?.[idx] != null ? `${mh.pressure_msl[idx].toFixed(0)} hPa` : null],
                     ['Surface P.', mh.surface_pressure?.[idx] != null ? `${mh.surface_pressure[idx].toFixed(0)} hPa` : null],
-                    ['Wind', mh.wind_speed_10m?.[idx] != null ? `${mh.wind_speed_10m[idx].toFixed(1)} km/h ${getWindDir16(mh.wind_direction_10m?.[idx] ?? 0)}` : null],
-                    ['Gust', mh.wind_gusts_10m?.[idx] > 0 ? `${mh.wind_gusts_10m[idx].toFixed(1)} km/h` : null],
+                    ['Wind', mh.wind_speed_10m?.[idx] != null ? `${fmtWind(mh.wind_speed_10m[idx])} ${getWindDir16(mh.wind_direction_10m?.[idx] ?? 0)}` : null],
+                    ['Gust', mh.wind_gusts_10m?.[idx] > 0 ? fmtWind(mh.wind_gusts_10m[idx]) : null],
                     ['Clouds', mh.cloud_cover?.[idx] != null ? `${mh.cloud_cover[idx]}%` : null],
                     ['Low Clouds', mh.cloud_cover_low?.[idx] != null ? `${mh.cloud_cover_low[idx]}%` : null],
                     ['Mid Clouds', mh.cloud_cover_mid?.[idx] != null ? `${mh.cloud_cover_mid[idx]}%` : null],

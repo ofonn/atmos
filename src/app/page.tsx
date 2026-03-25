@@ -281,7 +281,7 @@ export default function Home() {
             {/* ═══ CONTAINER 3.5 — ADVICE + AI REFRESH ═══
                 Fixed-height, always sits directly above the hourly cards.
                 Detached from headline so it never gets swallowed. */}
-            {displayed && !aiLoading && (
+            {displayed && (
               <section className="relative flex-shrink-0 px-5 pb-1">
                 <p
                   className="font-body text-[15px] font-medium max-w-[90%] leading-relaxed mb-3"

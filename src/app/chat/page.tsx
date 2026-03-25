@@ -61,7 +61,8 @@ const quickPrompts = [
 export default function ChatPage() {
   const router = useRouter()
   const { location, current, hourly, daily } = useWeatherContext()
-  const { tempUnit } = useSettings()
+  const { tempUnit, windUnit } = useSettings()
+  const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const { messages, loading, sendMessage, clearChat } = useChat({ current, hourly, daily })
   const [input, setInput] = useState('')
   const [typingText, setTypingText] = useState('')
@@ -324,6 +325,7 @@ export default function ChatPage() {
                                 hourly={hourly}
                                 daily={daily}
                                 tempUnit={tempUnit}
+                                windUnit={windUnit}
                               />
                             </div>
                           )}
@@ -449,13 +451,16 @@ function ContextualCard({
   hourly,
   daily,
   tempUnit,
+  windUnit,
 }: {
   userMsg: string;
   current: any;
   hourly: any;
   daily: any;
   tempUnit: 'C' | 'F';
+  windUnit: 'kmh' | 'mph';
 }) {
+  const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const q = userMsg.toLowerCase()
 
   const isWeekQuery = /week|weekend|days|plan|forecast|monday|tuesday|wednesday|thursday|friday|saturday|sunday/.test(q)
@@ -513,7 +518,7 @@ function ContextualCard({
           {[
             { label: 'Feels Like', value: displayTempShort(current.feelsLike, tempUnit) },
             { label: 'Humidity', value: `${current.humidity}%` },
-            { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
+            { label: 'Wind', value: fmtWind(current.windSpeed) },
             { label: 'Rain chance', value: `${hourly?.[0]?.pop ?? 0}%` },
           ].map(({ label, value }) => (
             <div key={label} className="rounded-xl p-2.5" style={{ background: 'var(--surface-mid)' }}>
@@ -535,7 +540,7 @@ function ContextualCard({
           {[
             { label: 'Humidity', value: `${current.humidity}%` },
             { label: 'Pressure', value: `${current.pressure} hPa` },
-            { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
+            { label: 'Wind', value: fmtWind(current.windSpeed) },
             { label: 'Visibility', value: `${Math.round((current.visibility ?? 0) / 1000)} km` },
           ].map(({ label, value }) => (
             <div key={label} className="rounded-xl p-2.5" style={{ background: 'var(--surface-mid)' }}>

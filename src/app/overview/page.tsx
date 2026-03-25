@@ -87,7 +87,7 @@ function DataRow({ label, value, unit, tooltip }: {
 export default function OverviewPage() {
   const router = useRouter()
   const { location, current, daily, loading, error } = useWeatherContext()
-  const { tempUnit } = useSettings()
+  const { tempUnit, windUnit } = useSettings()
 
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
@@ -275,7 +275,7 @@ export default function OverviewPage() {
 
             {/* 16-Day Daily */}
             {md ? (
-              <DailyMeteoSection md={md} tempUnit={tempUnit} />
+              <DailyMeteoSection md={md} tempUnit={tempUnit} windUnit={windUnit} />
             ) : (
               <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             )}
@@ -292,7 +292,7 @@ export default function OverviewPage() {
 
 // ── 16-Day Daily Forecast ────────────────────────────────────────────────────
 
-function DailyMeteoSection({ md, tempUnit }: { md: any; tempUnit: 'C' | 'F' }) {
+function DailyMeteoSection({ md, tempUnit, windUnit }: { md: any; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
   return (
     <Section
       title="16-Day Forecast"
@@ -300,13 +300,14 @@ function DailyMeteoSection({ md, tempUnit }: { md: any; tempUnit: 'C' | 'F' }) {
       defaultOpen={false}
     >
       {(md.time as string[]).map((_, i) => (
-        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} />
+        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} windUnit={windUnit} />
       ))}
     </Section>
   )
 }
 
-function DailyMeteoRow({ md, idx, tempUnit }: { md: any; idx: number; tempUnit: 'C' | 'F' }) {
+function DailyMeteoRow({ md, idx, tempUnit, windUnit }: { md: any; idx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+  const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const [open, setOpen] = useState(false)
   const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : fmtISODate(md.time[idx])
   const wmo: number = md.weather_code?.[idx] ?? 0
@@ -391,8 +392,8 @@ function DailyMeteoRow({ md, idx, tempUnit }: { md: any; idx: number; tempUnit: 
             {md.rain_sum?.[idx] > 0 && <DataRow label="Rain Total" value={`${md.rain_sum[idx].toFixed(1)}`} unit=" mm" />}
             {md.snowfall_sum?.[idx] > 0 && <DataRow label="Snowfall" value={`${md.snowfall_sum[idx].toFixed(1)}`} unit=" cm" />}
             {md.precipitation_hours?.[idx] > 0 && <DataRow label="Precip Hours" value={`${md.precipitation_hours[idx]}h`} />}
-            {md.wind_speed_10m_max?.[idx] != null && <DataRow label="Max Wind" value={`${md.wind_speed_10m_max[idx].toFixed(1)}`} unit=" km/h" />}
-            {md.wind_gusts_10m_max?.[idx] > 0 && <DataRow label="Max Gust" value={`${md.wind_gusts_10m_max[idx].toFixed(1)}`} unit=" km/h" />}
+            {md.wind_speed_10m_max?.[idx] != null && <DataRow label="Max Wind" value={fmtWind(md.wind_speed_10m_max[idx])} />}
+            {md.wind_gusts_10m_max?.[idx] > 0 && <DataRow label="Max Gust" value={fmtWind(md.wind_gusts_10m_max[idx])} />}
             {md.wind_direction_10m_dominant?.[idx] != null && (
               <DataRow label="Dominant Wind" value={`${getWindDir16(md.wind_direction_10m_dominant[idx])} (${md.wind_direction_10m_dominant[idx]}°)`} />
             )}
