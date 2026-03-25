@@ -163,9 +163,13 @@ export default function LocationsPage() {
               
               <button
                 onClick={() => router.push('/settings')}
-                className="w-full py-5 rounded-3xl border border-dashed border-[var(--outline)] text-[var(--text-muted)] font-headline font-bold flex items-center justify-center gap-2 hover:bg-[var(--surface-mid)] transition-colors active:scale-[0.98] mt-2"
+                className="w-full py-5 rounded-3xl border border-solid shadow-sm text-[var(--text-muted)] font-headline font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] mt-2 shadow-sm"
+                style={{
+                  background: 'var(--surface)',
+                  borderColor: 'rgba(128, 110, 248, 0.1)'
+                }}
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-5 h-5 text-[var(--primary)]" />
                 Add Another Place
               </button>
             </>

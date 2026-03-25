@@ -288,10 +288,14 @@ export default function Home() {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => router.push('/insight')}
-                    className="flex justify-between items-center px-4 py-2 rounded-full border border-dashed transition-colors active:scale-95"
-                    style={{ background: 'var(--surface-mid)', borderColor: 'var(--outline)', color: 'var(--text)' }}
+                    className="flex justify-between items-center px-5 py-2.5 rounded-full border border-solid shadow-sm transition-all active:scale-[0.97]"
+                    style={{ 
+                      background: 'var(--surface)', 
+                      borderColor: 'rgba(128, 110, 248, 0.2)', 
+                      color: 'var(--text)' 
+                    }}
                   >
-                    <span className="text-[11px] font-label font-bold tracking-widest uppercase flex items-center gap-1.5" style={{ color: 'var(--primary)' }}>
+                    <span className="text-[11px] font-label font-black tracking-[0.05em] uppercase flex items-center gap-1.5" style={{ color: 'var(--primary)' }}>
                       Daily Briefing <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </button>
