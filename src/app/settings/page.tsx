@@ -111,8 +111,6 @@ export default function SettingsPage() {
     }
   }
 
-  const isDark = theme === 'dark'
-
   return (
     <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
@@ -141,32 +139,16 @@ export default function SettingsPage() {
           Appearance
         </p>
 
-        <SettingRow icon={isDark ? Moon : Sun} label="Theme">
-          <button
-            onClick={() => setTheme(isDark ? 'light' : 'dark')}
-            className="relative flex items-center w-14 h-7 rounded-full transition-colors duration-300 flex-shrink-0"
-            style={{
-              background: isDark
-                ? 'rgba(199,191,255,0.15)'
-                : 'rgba(255,184,0,0.2)',
-              border: isDark
-                ? '1px solid rgba(199,191,255,0.2)'
-                : '1px solid rgba(255,184,0,0.3)',
-            }}
-            aria-label="Toggle theme"
-          >
-            <Moon className="absolute left-1.5 w-3.5 h-3.5 text-[#c7bfff]" />
-            <Sun className="absolute right-1.5 w-3.5 h-3.5 text-amber-400" />
-            <span
-              className="absolute w-5 h-5 rounded-full shadow-sm transition-all duration-300"
-              style={{
-                left: isDark ? '2px' : 'calc(100% - 22px)',
-                background: isDark
-                  ? 'linear-gradient(135deg, #c7bfff, #806EF8)'
-                  : 'linear-gradient(135deg, #FFB800, #FF8C00)',
-              }}
-            />
-          </button>
+        <SettingRow icon={theme === 'dark' ? Moon : Sun} label="Theme">
+          <SegmentedControl
+            options={[
+              { value: 'light', label: 'Light' },
+              { value: 'dark', label: 'Dark' },
+              { value: 'system', label: 'System' },
+            ]}
+            value={theme ?? 'system'}
+            onChange={(v) => setTheme(v)}
+          />
         </SettingRow>
 
         {/* Units section */}
@@ -342,7 +324,7 @@ export default function SettingsPage() {
             AI Weather Assistant &middot; v1.0.0
           </p>
           <p className="text-[11px] mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-            Powered by OpenWeather &amp; Google Gemini. Built with Next.js.
+            Powered by Open-Meteo &amp; Google Gemini. Built with Next.js.
           </p>
         </div>
           </div>
