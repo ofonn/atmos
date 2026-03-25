@@ -204,7 +204,7 @@ export default function Home() {
                   <div className="absolute top-1.5 left-2.5 w-4 h-2 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
                   <WeatherIcon
                     conditionCode={current.conditionCode}
-                    iconCode={current.icon}
+                    isDay={current.isDay}
                     size={26}
                     className="relative z-10 opacity-90 drop-shadow-sm"
                   />
@@ -307,10 +307,11 @@ export default function Home() {
                     onClick={handleRefresh}
                     disabled={aiLoading}
                     aria-label="Refresh AI summary"
-                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 disabled:opacity-30 p-2"
+                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 disabled:opacity-30 px-3 py-2"
                     style={{ color: 'var(--text-muted)' }}
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                    {aiLoading ? 'Updating…' : 'Refresh'}
                   </button>
                 </div>
               </section>
