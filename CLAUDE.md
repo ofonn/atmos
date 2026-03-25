@@ -21,33 +21,31 @@ No test suite is configured.
 
 Required in `.env.local`:
 ```
-OPENWEATHER_API_KEY=   # Free tier: current weather + 5-day/3-hour forecast
 GEMINI_API_KEY=        # Use gemini-2.5-flash (NOT 2.0-flash — it has 0 quota)
 ```
 
-Both keys are validated at the route handler level — missing/placeholder keys return a 500 with a clear error.
+No weather API key needed — Open-Meteo is free and keyless.
 
 ## Architecture
 
 ### Data Flow
 
 ```
-Browser → useLocation (geolocation / city search)
+Browser → useLocation (geolocation / city search via Open-Meteo geocoding + Nominatim reverse)
         → useWeather (SWR, 5-min refresh)
-             → /api/weather  → OpenWeatherMap /weather
-             → /api/forecast → OpenWeatherMap /forecast (3-hour, 5-day)
+             → /api/openmeteo → Open-Meteo (current, hourly, daily, minutely_15)
         → useChat (localStorage persistence)
              → /api/chat → Gemini gemini-2.5-flash
 ```
 
-All API keys live server-side only — the four API routes in `src/app/api/` act as proxies.
+Weather data is transformed via `src/lib/weatherService.ts` from Open-Meteo's raw format into the app's internal types.
 
 ### Key Decisions
 
-- **OpenWeatherMap free tier**: Returns Kelvin temperatures — always convert via `kelvinToCelsius` / `mpsToKmh` from `src/lib/utils.ts`. The free forecast endpoint gives 3-hour intervals; daily data is derived by grouping in `useWeather.ts` (not from a separate API call).
+- **Open-Meteo**: Returns Celsius temperatures and km/h wind speeds natively. Uses WMO weather codes (0-99). The API provides hourly data for 7 days and daily data for 16 days in a single call. No API key required.
 - **Gemini chat context**: `src/lib/gemini.ts` builds a system prompt injecting current conditions, hourly, and daily data. The `/api/chat` route bootstraps chat history with a fake user/model exchange to set the system role (Gemini doesn't have a native `system` role in `startChat`).
 - **Location hydration**: `useLocation` starts with `null` to match SSR, then immediately populates from `localStorage`, then refreshes via geolocation in the background. This prevents hydration mismatches.
-- **`useWeather` guard**: Always check `weatherData?.main` (not just `weatherData`) before parsing — the SWR fetcher returns error objects as resolved JSON, not thrown errors.
+- **`useWeather` guard**: The SWR fetcher returns error objects as resolved JSON, not thrown errors — always check data exists before parsing.
 
 ### Routes
 
@@ -55,8 +53,11 @@ All API keys live server-side only — the four API routes in `src/app/api/` act
 |---|---|
 | `/` | Home — hero weather, AI ask bar, quick nav |
 | `/technical` | Bento grid of metrics (humidity, pressure, wind, visibility) + hourly timeline |
-| `/overview` | Weekly outlook — featured tomorrow card + 7-day grid |
+| `/overview` | Weekly outlook — featured tomorrow card + 16-day forecast |
 | `/chat` | Full-screen AI chat with quick-prompt chips |
+| `/settings` | Theme (light/dark/system), units, location management |
+| `/locations` | Saved places with live weather cards |
+| `/insight` | AI-generated daily briefing |
 
 ### Design System
 
