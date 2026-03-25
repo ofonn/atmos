@@ -138,7 +138,7 @@ export default function ChatPage() {
       <header
         className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-md w-full max-w-xl mx-auto"
         style={{
-          background: 'rgba(255,255,255,0.02)',
+          background: 'var(--bg)',
           borderBottom: '1px solid var(--outline)'
         }}
       >
@@ -180,13 +180,13 @@ export default function ChatPage() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
                 className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-xl border z-50 text-[13px] font-body"
-                style={{ background: 'rgba(11,14,22,0.95)', borderColor: 'var(--outline)' }}
+                style={{ background: 'var(--surface)', borderColor: 'var(--outline)' }}
               >
                 {!confirmClear ? (
                   <>
-                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Export Chat</button>
-                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">Share Answer</button>
-                    <div className="h-px bg-white/5 my-1" />
+                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:opacity-80 transition-colors" style={{ color: 'var(--text)' }}>Export Chat</button>
+                    <button onClick={() => setShowMenu(false)} className="w-full text-left px-3 py-2 rounded-lg hover:opacity-80 transition-colors" style={{ color: 'var(--text)' }}>Share Answer</button>
+                    <div className="h-px my-1" style={{ background: 'var(--outline)' }} />
                     <button 
                       onClick={() => setConfirmClear(true)}
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/10 text-red-400 transition-colors flex items-center gap-2"
@@ -196,9 +196,9 @@ export default function ChatPage() {
                   </>
                 ) : (
                   <div className="p-1">
-                    <p className="px-2 pb-2 text-xs text-center text-gray-400">Are you sure?</p>
+                    <p className="px-2 pb-2 text-xs text-center" style={{ color: 'var(--text-muted)' }}>Are you sure?</p>
                     <div className="flex gap-1">
-                      <button onClick={() => setConfirmClear(false)} className="flex-1 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">Cancel</button>
+                      <button onClick={() => setConfirmClear(false)} className="flex-1 py-1.5 rounded-lg transition-colors" style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}>Cancel</button>
                       <button onClick={() => { clearChat(); setShowMenu(false); setConfirmClear(false) }} className="flex-1 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors">Delete</button>
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function ChatPage() {
                         className="px-6 py-4 text-[0.9rem] leading-relaxed tracking-tight"
                         style={isUser ? {
                           background: 'transparent',
-                          border: '1px solid rgba(224,226,238,0.15)',
+                          border: '1px solid var(--outline)',
                           borderRadius: '2rem 2rem 0.5rem 2rem',
                           color: 'var(--text)',
                         } : {
@@ -308,7 +308,7 @@ export default function ChatPage() {
 
                       {/* Contextual inline card — animated in via Show Data */}
                       {!isUser && (
-                        <div className="mt-3 border-t pt-2" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                        <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--outline)' }}>
                           <button
                             onClick={() => toggleData(msg.id)}
                             className="flex items-center text-[10px] uppercase font-bold tracking-widest hover:opacity-80 transition-opacity"
@@ -465,10 +465,8 @@ function ContextualCard({
   const isHourlyQuery = /hour|today|now|later|afternoon|morning|evening|tonight/.test(q)
 
   const cardStyle: React.CSSProperties = {
-    background: 'rgba(11,14,22,0.4)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderTop: '1px solid rgba(255,255,255,0.05)',
+    background: 'var(--surface)',
+    border: '0.5px solid var(--outline)',
   }
 
   const cardVariants = {
@@ -518,7 +516,7 @@ function ContextualCard({
             { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
             { label: 'Rain chance', value: `${hourly?.[0]?.pop ?? 0}%` },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl p-2.5" style={{ background: 'rgba(39,42,51,0.5)' }}>
+            <div key={label} className="rounded-xl p-2.5" style={{ background: 'var(--surface-mid)' }}>
               <p className="text-[0.65rem] font-label uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
               <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>{value}</p>
             </div>
@@ -540,7 +538,7 @@ function ContextualCard({
             { label: 'Wind', value: `${Math.round(current.windSpeed)} km/h` },
             { label: 'Visibility', value: `${Math.round((current.visibility ?? 0) / 1000)} km` },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-xl p-2.5" style={{ background: 'rgba(39,42,51,0.5)' }}>
+            <div key={label} className="rounded-xl p-2.5" style={{ background: 'var(--surface-mid)' }}>
               <p className="text-[0.65rem] font-label uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
               <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>{value}</p>
             </div>
@@ -560,7 +558,7 @@ function ContextualCard({
             <div
               key={hour.dt}
               className="flex flex-col items-center gap-1 p-2 rounded-xl"
-              style={{ background: hour.pop > 50 ? 'rgba(96,165,250,0.15)' : 'rgba(39,42,51,0.4)' }}
+              style={{ background: hour.pop > 50 ? 'rgba(96,165,250,0.15)' : 'var(--surface-mid)' }}
             >
               <span className="font-label text-[10px]" style={{ color: 'var(--text-muted)' }}>
                 {hi === 0 ? 'Now' : formatTime(hour.dt)}

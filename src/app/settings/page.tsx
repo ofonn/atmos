@@ -236,7 +236,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-col gap-2 mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t" style={{ borderColor: 'var(--outline)' }}>
             <button
               onClick={() => router.push('/locations')}
               className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors active:scale-95"
@@ -290,7 +290,7 @@ export default function SettingsPage() {
           ].map((item, i) => (
             <button
               key={item.label}
-              className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-white/5 active:bg-white/10"
+              className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
               style={{ borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' }}
               onClick={() => {}}
             >
