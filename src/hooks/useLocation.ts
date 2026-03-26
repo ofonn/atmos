@@ -46,6 +46,19 @@ async function reverseGeocode(lat: number, lon: number): Promise<Location> {
   return { lat, lon, name: 'Current Location', country: '' }
 }
 
+/** Get approximate location from IP address */
+async function getIpLocation(): Promise<Location | null> {
+  try {
+    const res = await fetch('/api/ip-location')
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.lat && data.lon) {
+      return { lat: data.lat, lon: data.lon, name: data.name, country: data.country }
+    }
+  } catch {}
+  return null
+}
+
 export function useLocation() {
   const [location, setLocation] = useState<Location | null>(null)
   const [savedLocations, setSavedLocations] = useState<Location[]>([])
@@ -54,15 +67,42 @@ export function useLocation() {
 
   useEffect(() => {
     const cached = getCached()
+    setSavedLocations(getSavedCached())
+
+    // If we have a cached location, use it immediately
     if (cached) {
       setLocation(cached)
       setLoading(false)
+      // Still try to refresh via geolocation in the background
+      refreshFromGeolocation(false)
+      return
     }
 
-    setSavedLocations(getSavedCached())
+    // First-time visitor: no cache — use IP location as instant fallback,
+    // then ask for precise geolocation in background
+    initFirstVisit()
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** For first-time visitors: get IP location immediately, then try geolocation */
+  async function initFirstVisit() {
+    // Step 1: Get approximate location from IP right away
+    const ipLoc = await getIpLocation()
+    if (ipLoc) {
+      setLocation(ipLoc)
+      setCache(ipLoc)
+      setLoading(false)
+    }
+
+    // Step 2: Try browser geolocation — if user accepts, upgrade to precise location
+    refreshFromGeolocation(!ipLoc)
+  }
+
+  /** Try to get precise location from browser geolocation */
+  function refreshFromGeolocation(setLoadingOnFail: boolean) {
     if (!navigator.geolocation) {
-      if (!cached) {
+      if (setLoadingOnFail) {
         setError('Geolocation is not supported')
         setLoading(false)
       }
@@ -78,11 +118,14 @@ export function useLocation() {
         setLoading(false)
       },
       () => {
-        if (!cached) setError('Location access denied')
-        setLoading(false)
+        // User denied — keep IP-based location (or show error if we have nothing)
+        if (setLoadingOnFail) {
+          setError('Location access denied')
+          setLoading(false)
+        }
       }
     )
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const searchCity = useCallback(async (city: string) => {
     setLoading(true)
