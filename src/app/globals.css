@@ -111,11 +111,12 @@
     @apply rounded-2xl p-4 flex flex-col items-center gap-2;
   }
 
-  .scrollbar-hide {
+  /* Hide scrollbars globally and on specific elements */
+  html, body, .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
+  html::-webkit-scrollbar, body::-webkit-scrollbar, .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
 

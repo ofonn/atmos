@@ -211,7 +211,7 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} className="relative flex-1 overflow-y-auto px-4 py-4 w-full max-w-xl mx-auto">
+      <main ref={scrollRef} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
