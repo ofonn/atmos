@@ -14,7 +14,7 @@ import { useSettings } from '@/contexts/SettingsContext'
 import { useRouter } from 'next/navigation'
 import {
   ChevronDown, ChevronUp, Wind, Thermometer, Sparkles, Info, Clock,
-  ThumbsUp, ThumbsDown, ArrowRight, Radio
+  ThumbsUp, ThumbsDown, ArrowRight, Radio, Droplets, Eye, Gauge
 } from 'lucide-react'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtISOTime, fmtISOTimeFmt,
@@ -89,14 +89,24 @@ function DataRow({ label, value, unit, tooltip }: {
   )
 }
 
-function DataGrid({ items }: { items: { label: string; value: React.ReactNode; accent?: string }[] }) {
+function DataGrid({ items }: { items: { label: string; value: React.ReactNode; accent?: string; icon?: React.ReactNode; sub?: string }[] }) {
   return (
     <div className="grid grid-cols-2 gap-2 mb-3">
-      {items.map(({ label, value, accent }) => (
-        <div key={label} className="rounded-xl p-3 flex flex-col justify-center" style={{ background: 'var(--surface-mid)' }}>
-          <p className="text-[12px] font-label uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
-          <p className="text-[19px] font-bold font-headline tracking-tight" style={{ color: accent ?? 'var(--text)' }}>{value}</p>
-        </div>
+      {items.map(({ label, value, accent, icon, sub }) => (
+        <motion.div
+          key={label}
+          className="rounded-xl p-3 flex flex-col"
+          style={{ background: 'var(--surface-mid)' }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        >
+          <div className="flex items-center gap-1.5 mb-1.5">
+            {icon && <span className="opacity-60 flex-shrink-0">{icon}</span>}
+            <p className="text-[10px] font-label uppercase tracking-widest leading-none" style={{ color: 'var(--text-muted)' }}>{label}</p>
+          </div>
+          <p className="text-[19px] font-bold font-headline tracking-tight leading-none" style={{ color: accent ?? 'var(--text)' }}>{value}</p>
+          {sub && <p className="text-[10px] font-label mt-1 leading-tight" style={{ color: 'var(--text-muted)' }}>{sub}</p>}
+        </motion.div>
       ))}
     </div>
   )
@@ -318,10 +328,31 @@ export default function TechnicalPage() {
             {/* Primary Grid */}
             <SubHead title="Primary Metrics" />
             <DataGrid items={[
-              { label: 'Temperature', value: displayCelsius(mc.temperature_2m, tempUnit) },
-              { label: 'Feels Like', value: displayCelsius(mc.apparent_temperature, tempUnit) },
-              { label: 'Humidity', value: `${mc.relative_humidity_2m}%` },
-              { label: 'Wind', value: fmtWind(mc.wind_speed_10m) },
+              {
+                label: 'Temperature',
+                value: displayCelsius(mc.temperature_2m, tempUnit),
+                icon: <Thermometer className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />,
+              },
+              {
+                label: 'Feels Like',
+                value: displayCelsius(mc.apparent_temperature, tempUnit),
+                accent: mc.apparent_temperature - mc.temperature_2m >= 4 ? '#f97316'
+                  : mc.apparent_temperature - mc.temperature_2m <= -4 ? '#60a5fa' : undefined,
+                icon: <Thermometer className="w-3.5 h-3.5" style={{ color: '#f97316' }} />,
+              },
+              {
+                label: 'Humidity',
+                value: `${mc.relative_humidity_2m}%`,
+                accent: mc.relative_humidity_2m >= 85 ? '#60a5fa' : undefined,
+                icon: <Droplets className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />,
+                sub: mc.relative_humidity_2m >= 85 ? 'Very humid' : mc.relative_humidity_2m <= 30 ? 'Very dry' : undefined,
+              },
+              {
+                label: 'Wind',
+                value: fmtWind(mc.wind_speed_10m),
+                icon: <Wind className="w-3.5 h-3.5" style={{ color: 'var(--secondary)' }} />,
+                sub: mc.wind_gusts_10m > mc.wind_speed_10m + 8 ? `Gusts ${fmtWind(mc.wind_gusts_10m)}` : undefined,
+              },
             ]} />
 
             <SubHead title="Secondary Metrics" />
@@ -380,15 +411,35 @@ export default function TechnicalPage() {
               tooltip="Actual pressure at ground level. Lower than sea-level pressure at higher elevations."
             />
             {mh?.uv_index && mh.uv_index[nowHourIdx] != null && (
-              <DataRow
-                label="UV Index"
-                value={
-                  <span style={{ color: uviColor(mh.uv_index[nowHourIdx]) }}>
-                    {mh.uv_index[nowHourIdx].toFixed(1)} — {uviLabel(mh.uv_index[nowHourIdx])}
+              <div className="py-2.5" style={{ borderBottom: '0.5px solid var(--outline)' }}>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Eye className="w-3.5 h-3.5 opacity-50" style={{ color: 'var(--text-muted)' }} />
+                  <span className="text-xs font-label" style={{ color: 'var(--text-muted)' }}>UV Index</span>
+                </div>
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-2xl font-bold font-headline leading-none" style={{ color: uviColor(mh.uv_index[nowHourIdx]) }}>
+                    {mh.uv_index[nowHourIdx].toFixed(0)}
                   </span>
-                }
-                tooltip="Solar UV radiation intensity. 0-2: Low, 3-5: Moderate, 6-7: High, 8-10: Very High, 11+: Extreme."
-              />
+                  <span className="text-sm font-semibold font-headline" style={{ color: uviColor(mh.uv_index[nowHourIdx]) }}>
+                    {uviLabel(mh.uv_index[nowHourIdx])}
+                  </span>
+                </div>
+                {/* UV colour scale bar */}
+                <div className="relative h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #22c55e 0%, #84cc16 20%, #eab308 35%, #f97316 55%, #ef4444 70%, #a855f7 85%, #7c3aed 100%)' }}>
+                  <div
+                    className="absolute top-0 bottom-0 w-2.5 -translate-x-1/2 rounded-full border-2 border-white"
+                    style={{
+                      left: `${Math.min(100, (mh.uv_index[nowHourIdx] / 13) * 100)}%`,
+                      background: uviColor(mh.uv_index[nowHourIdx]),
+                      boxShadow: `0 0 4px ${uviColor(mh.uv_index[nowHourIdx])}`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[9px] font-label" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>0</span>
+                  <span className="text-[9px] font-label" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>11+</span>
+                </div>
+              </div>
             )}
             {mh?.cape && mh.cape[nowHourIdx] > 0 && (
               <DataRow

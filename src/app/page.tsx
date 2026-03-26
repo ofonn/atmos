@@ -15,7 +15,7 @@ import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useHaptic } from '@/hooks/useHaptic'
-import { displayTemp, displayTempShort, displayWind, timeAgo } from '@/lib/utils'
+import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
 import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
 import { MapPin, Search, X, RefreshCw, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
 
@@ -136,15 +136,6 @@ export default function Home() {
     return null
   }
   const skyTint = getSkyTint()
-
-  // Sunrise/sunset progress (0-1)
-  const dayProgress = (() => {
-    if (!sun || !current?.isDay) return null
-    const now = Date.now() / 1000
-    const { sunrise, sunset } = sun
-    if (now < sunrise || now > sunset) return null
-    return Math.min(1, Math.max(0, (now - sunrise) / (sunset - sunrise)))
-  })()
 
   const handleRefresh = () => {
     refreshWeather()
@@ -330,7 +321,7 @@ export default function Home() {
                     format={n => `${Math.round(n)}°${tempUnit}`}
                     duration={600}
                     className="font-headline font-bold leading-none tracking-tighter block"
-                    style={{ fontSize: 'clamp(3.4rem, 15vw, 5.5rem)', color: 'var(--text)' }}
+                    style={{ fontSize: 'clamp(3.4rem, 15vw, 5.5rem)', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}
                   />
                   <p className="font-label text-[11px] mt-1 mb-1.5">
                     <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
