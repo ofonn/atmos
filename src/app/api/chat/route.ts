@@ -3,9 +3,8 @@ import { createGeminiClient, buildSystemPrompt } from '@/lib/gemini'
 
 const MODEL_ROTATION = [
   'gemini-2.5-flash',
-  'gemini-2.0-flash-lite',
   'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-2.0-flash-lite',
 ]
 
 function isRateLimit(error: any): boolean {

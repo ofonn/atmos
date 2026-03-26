@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal, Mic, MicOff } from 'lucide-react'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useChat } from '@/hooks/useChat'
@@ -56,6 +56,10 @@ const quickPrompts = [
   'Will it rain tomorrow?',
   'Dress for a run?',
   'Weekend outlook?',
+  'Best time to go outside?',
+  'Is it safe to drive today?',
+  'What should I wear tonight?',
+  'How hot will it get today?',
 ]
 
 export default function ChatPage() {
@@ -72,9 +76,36 @@ export default function ChatPage() {
 
   const [showMenu, setShowMenu] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
-  const [revealedData, setRevealedData] = useState<Record<string, boolean>>({})
+  // Default expanded: undefined = expanded, false = collapsed
+  const [collapsedData, setCollapsedData] = useState<Record<string, boolean>>({})
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
 
-  const toggleData = (id: string) => setRevealedData(p => ({ ...p, [id]: !p[id] }))
+  const toggleData = (id: string) => setCollapsedData(p => ({ ...p, [id]: !p[id] }))
+  const isDataVisible = (id: string) => collapsedData[id] !== true
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    recognition.onstart = () => setIsListening(true)
+    recognition.onresult = (e: any) => {
+      const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join('')
+      setInput(transcript)
+    }
+    recognition.onend = () => setIsListening(false)
+    recognition.onerror = () => setIsListening(false)
+    recognitionRef.current = recognition
+    recognition.start()
+  }, [])
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop()
+    setIsListening(false)
+  }, [])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -307,7 +338,7 @@ export default function ChatPage() {
                           : <div className="text-[0.9rem] leading-relaxed">{renderMarkdown(msg.content)}</div>}
                       </div>
 
-                      {/* Contextual inline card — animated in via Show Data */}
+                      {/* Contextual inline card — expanded by default */}
                       {!isUser && (
                         <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--outline)' }}>
                           <button
@@ -315,9 +346,9 @@ export default function ChatPage() {
                             className="flex items-center text-[10px] uppercase font-bold tracking-widest hover:opacity-80 transition-opacity"
                             style={{ color: 'var(--primary)' }}
                           >
-                            {revealedData[msg.id] ? 'Hide Data' : 'Show Data \u2192'}
+                            {isDataVisible(msg.id) ? 'Hide Data' : 'Show Data \u2192'}
                           </button>
-                          {revealedData[msg.id] && (
+                          {isDataVisible(msg.id) && (
                             <div className="mt-3">
                               <ContextualCard
                                 userMsg={messages[idx - 1]?.content ?? ''}
@@ -420,13 +451,33 @@ export default function ChatPage() {
               type="text"
               value={typingText || input}
               onChange={(e) => { if (!typingText) setInput(e.target.value) }}
-              placeholder="Ask about the forecast..."
+              placeholder={isListening ? 'Listening…' : 'Ask about the forecast...'}
               aria-label="Message to Atmos AI"
               className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem]"
-              style={{ color: typingText ? 'var(--primary)' : 'var(--text)' }}
+              style={{ color: isListening ? 'var(--primary)' : typingText ? 'var(--primary)' : 'var(--text)' }}
               disabled={loading || !!typingText}
               readOnly={!!typingText}
             />
+            {/* Mic button */}
+            <button
+              type="button"
+              onClick={isListening ? stopListening : startListening}
+              disabled={loading || !!typingText}
+              aria-label={isListening ? 'Stop recording' : 'Voice input'}
+              className="w-9 h-9 flex items-center justify-center rounded-full mr-1 transition-all active:scale-90 disabled:opacity-30 relative"
+              style={{ color: isListening ? 'var(--primary)' : 'var(--text-muted)' }}
+            >
+              {isListening && (
+                <>
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(199,191,255,0.3)' }} />
+                  <span className="absolute inset-1 rounded-full animate-pulse" style={{ background: 'rgba(199,191,255,0.15)' }} />
+                </>
+              )}
+              {isListening
+                ? <MicOff className="w-4 h-4 relative z-10" aria-hidden="true" />
+                : <Mic className="w-4 h-4 relative z-10" aria-hidden="true" />
+              }
+            </button>
             <button
               type="submit"
               disabled={!input.trim() || loading}

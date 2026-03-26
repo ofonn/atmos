@@ -1,7 +1,7 @@
 'use client'
 
-import { WeatherIcon } from './WeatherIcon'
 import { formatHourFromISO } from '@/lib/utils'
+import { wmoEmoji } from '@/lib/weatherUtils'
 import { useSettings } from '@/contexts/SettingsContext'
 import type { HourlyData } from '@/types/weather'
 
@@ -37,7 +37,9 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
               {isNow ? 'Now' : formatHourFromISO(hour.time, timeFormat)}
             </span>
 
-            <WeatherIcon conditionCode={hour.conditionCode} isDay={hour.isDay} size={26} />
+            <span className="text-2xl leading-none" role="img" aria-label={hour.description}>
+              {wmoEmoji(hour.conditionCode, hour.isDay ? 1 : 0)}
+            </span>
 
             <span
               className="font-semibold text-sm font-headline"

@@ -5,11 +5,11 @@ import { useState } from 'react'
 import { useTheme } from 'next-themes'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { HourlyForecast } from '@/components/weather/HourlyForecast'
-import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
+import { wmoEmoji } from '@/lib/weatherUtils'
 import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react'
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
@@ -202,12 +202,9 @@ export default function Home() {
                   }}
                 >
                   <div className="absolute top-1.5 left-2.5 w-4 h-2 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
-                  <WeatherIcon
-                    conditionCode={current.conditionCode}
-                    isDay={current.isDay}
-                    size={26}
-                    className="relative z-10 opacity-90 drop-shadow-sm"
-                  />
+                  <span className="relative z-10 text-2xl leading-none" role="img" aria-label={current.description}>
+                    {wmoEmoji(current.conditionCode, current.isDay ? 1 : 0)}
+                  </span>
                 </div>
               </div>
               <div>

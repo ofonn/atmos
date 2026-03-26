@@ -353,35 +353,47 @@ export default function TechnicalPage() {
         )}
 
         {/* ── Air Quality ──────────────────────────────────────────────── */}
-        {air && (
-          <Section title="Air Quality" icon={<Wind className="w-4 h-4" style={{ color: 'var(--secondary)' }} aria-hidden="true" />}>
-            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: 'var(--surface-mid)' }}>
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                style={{ background: aqiColor(air.main.aqi) }}
-                aria-label={`AQI ${air.main.aqi}: ${aqiLabel(air.main.aqi)}`}
-              >
-                {air.main.aqi}
-              </div>
-              <div>
-                <p className="font-bold text-sm font-headline" style={{ color: 'var(--text)' }}>{aqiLabel(air.main.aqi)}</p>
-                <p className="text-xs font-label" style={{ color: 'var(--text-muted)' }}>
-                  Air Quality Index (1 = Good, 5 = Very Poor)
-                </p>
-              </div>
+        <Section title="Air Quality" icon={<Wind className="w-4 h-4" style={{ color: 'var(--secondary)' }} aria-hidden="true" />}>
+          {!airData ? (
+            <div className="flex flex-col gap-2 py-2">
+              <div className="h-14 rounded-xl animate-pulse" style={{ background: 'var(--surface-mid)' }} />
+              <div className="h-8 rounded animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
+              <div className="h-8 rounded animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             </div>
-            {([
-              ['co', 'Carbon Monoxide (CO)'],
-              ['no2', 'Nitrogen Dioxide (NO₂)'],
-              ['o3', 'Ozone (O₃)'],
-              ['so2', 'Sulphur Dioxide (SO₂)'],
-              ['pm2_5', 'Fine Particles (PM2.5)'],
-              ['pm10', 'Coarse Particles (PM10)'],
-            ] as [string, string][]).filter(([key]) => air.components[key] != null).map(([key, name]) => (
-              <DataRow key={key} label={name} value={(air.components[key] as number).toFixed(2)} unit=" μg/m³" />
-            ))}
-          </Section>
-        )}
+          ) : !air ? (
+            <p className="text-xs py-3 text-center" style={{ color: 'var(--text-muted)' }}>
+              Air quality data unavailable for this location
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: 'var(--surface-mid)' }}>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                  style={{ background: aqiColor(air.main.aqi) }}
+                  aria-label={`AQI ${air.main.aqi}: ${aqiLabel(air.main.aqi)}`}
+                >
+                  {air.main.aqi}
+                </div>
+                <div>
+                  <p className="font-bold text-sm font-headline" style={{ color: 'var(--text)' }}>{aqiLabel(air.main.aqi)}</p>
+                  <p className="text-xs font-label" style={{ color: 'var(--text-muted)' }}>
+                    Air Quality Index (1 = Good, 5 = Very Poor)
+                  </p>
+                </div>
+              </div>
+              {([
+                ['co', 'Carbon Monoxide (CO)'],
+                ['no2', 'Nitrogen Dioxide (NO₂)'],
+                ['o3', 'Ozone (O₃)'],
+                ['so2', 'Sulphur Dioxide (SO₂)'],
+                ['pm2_5', 'Fine Particles (PM2.5)'],
+                ['pm10', 'Coarse Particles (PM10)'],
+              ] as [string, string][]).filter(([key]) => air.components[key] != null).map(([key, name]) => (
+                <DataRow key={key} label={name} value={(air.components[key] as number).toFixed(2)} unit=" μg/m³" />
+              ))}
+            </>
+          )}
+        </Section>
 
         {/* ── Location Metadata ─────────────────────────────────────────── */}
         {location && (

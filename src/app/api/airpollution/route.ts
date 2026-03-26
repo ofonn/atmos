@@ -14,35 +14,50 @@ export async function GET(req: NextRequest) {
       `&timezone=auto`,
       { next: { revalidate: 300 } }
     )
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => 'unknown error')
+      console.error('Air Quality API error:', res.status, errText)
+      return NextResponse.json({ error: `Air Quality API error: ${res.status}` }, { status: res.status })
+    }
+
     const data = await res.json()
-    if (!res.ok) return NextResponse.json({ error: 'Air Quality API error' }, { status: res.status })
+
+    if (data.error) {
+      return NextResponse.json({ error: data.error }, { status: 400 })
+    }
 
     // Transform to a shape compatible with what the technical page expects
     const current = data.current
-    const aqi = current?.european_aqi ?? current?.us_aqi ?? 0
+    if (!current) {
+      return NextResponse.json({ error: 'No current air quality data returned' }, { status: 422 })
+    }
 
-    // Map to 1-5 scale matching the existing aqiLabel/aqiColor utilities
+    const aqi = current.european_aqi ?? current.us_aqi ?? 0
+
+    // Map Open-Meteo European AQI (0-500+) to 1-5 scale
     let aqiLevel = 1
-    if (aqi > 100) aqiLevel = 5
-    else if (aqi > 75) aqiLevel = 4
-    else if (aqi > 50) aqiLevel = 3
-    else if (aqi > 25) aqiLevel = 2
+    if (aqi > 80) aqiLevel = 5
+    else if (aqi > 60) aqiLevel = 4
+    else if (aqi > 40) aqiLevel = 3
+    else if (aqi > 20) aqiLevel = 2
     else aqiLevel = 1
 
     return NextResponse.json({
       list: [{
         main: { aqi: aqiLevel },
         components: {
-          co: current?.carbon_monoxide ?? 0,
-          no2: current?.nitrogen_dioxide ?? 0,
-          o3: current?.ozone ?? 0,
-          so2: current?.sulphur_dioxide ?? 0,
-          pm2_5: current?.pm2_5 ?? 0,
-          pm10: current?.pm10 ?? 0,
+          co: current.carbon_monoxide ?? null,
+          no2: current.nitrogen_dioxide ?? null,
+          o3: current.ozone ?? null,
+          so2: current.sulphur_dioxide ?? null,
+          pm2_5: current.pm2_5 ?? null,
+          pm10: current.pm10 ?? null,
         },
       }],
     })
   } catch (e: any) {
+    console.error('Air quality fetch failed:', e.message)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
