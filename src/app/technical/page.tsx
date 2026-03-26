@@ -1,9 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { RainTimeline } from '@/components/weather/RainTimeline'
+import { WindCompass } from '@/components/weather/WindCompass'
+import { MoonPhase } from '@/components/weather/MoonPhase'
+import { PressureSparkline } from '@/components/weather/PressureSparkline'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -162,9 +166,20 @@ export default function TechnicalPage() {
               >
                 Conditions
               </h2>
-              <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                {mc ? `Updated at ${fmtISOTimeFmt(mc.time, timeFormat)}` : 'Updating…'}
-              </p>
+              <div className="flex items-center gap-2">
+                {mc && (
+                  <motion.div
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: '#22c55e' }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                    aria-hidden="true"
+                  />
+                )}
+                <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  {mc ? `Updated at ${fmtISOTimeFmt(mc.time, timeFormat)}` : 'Updating…'}
+                </p>
+              </div>
             </div>
 
             {/* AI Proactive Insight */}
@@ -284,6 +299,15 @@ export default function TechnicalPage() {
             <DataRow label="Wind Direction" value={`${getWindDir16(mc.wind_direction_10m)} (${mc.wind_direction_10m}°)`} />
             {mc.wind_gusts_10m > 0 && <DataRow label="Wind Gust" value={fmtWind(mc.wind_gusts_10m)} />}
 
+            {/* Animated wind compass */}
+            <div className="flex justify-center py-3">
+              <WindCompass
+                degrees={mc.wind_direction_10m}
+                speed={parseFloat(fmtWind(mc.wind_speed_10m).split(' ')[0])}
+                unit={windUnit === 'mph' ? 'mph' : 'km/h'}
+              />
+            </div>
+
             {/* Sky */}
             <SubHead title="Sky" />
             <DataRow label="Condition" value={wmoDesc(mc.weather_code)} />
@@ -300,6 +324,16 @@ export default function TechnicalPage() {
               unit=" hPa"
               tooltip="Atmospheric pressure at sea level. Standard ~1013 hPa. Falling pressure may indicate storms."
             />
+            {/* Pressure trend sparkline */}
+            {mh?.pressure_msl && (
+              <div className="py-2">
+                <PressureSparkline
+                  data={mh.pressure_msl.slice(Math.max(0, nowHourIdx - 11), nowHourIdx + 1)}
+                  height={36}
+                  width={110}
+                />
+              </div>
+            )}
             <DataRow
               label="Surface Pressure"
               value={`${mc.surface_pressure.toFixed(1)}`}
@@ -343,7 +377,7 @@ export default function TechnicalPage() {
             )}
 
             {/* Sun */}
-            <SubHead title="Sun" />
+            <SubHead title="Sun & Moon" />
             {md?.sunrise?.[0] && <DataRow label="Sunrise" value={fmtISOTimeFmt(md.sunrise[0], timeFormat)} />}
             {md?.sunset?.[0] && <DataRow label="Sunset" value={fmtISOTimeFmt(md.sunset[0], timeFormat)} />}
             {md?.sunrise?.[0] && md?.sunset?.[0] && (
@@ -352,6 +386,9 @@ export default function TechnicalPage() {
               )} />
             )}
             <DataRow label="Last Updated" value={fmtISOTimeFmt(mc.time, timeFormat)} />
+            <div className="py-3">
+              <MoonPhase size={36} />
+            </div>
 
             {/* Precipitation */}
             <SubHead title="Precipitation" />

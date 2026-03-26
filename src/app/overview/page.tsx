@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { MapPin, Sparkles, ChevronDown, Sun, Info } from 'lucide-react'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -251,11 +252,23 @@ export default function OverviewPage() {
             {/* Vertical Day List — starting with Today */}
             {listDays.length > 0 && (
               <section className="px-2 flex flex-col gap-3 mb-6">
-                {listDays.map((day) => {
+                {listDays.map((day, idx) => {
                   const isToday = day.dt === today?.dt;
+                  // Compute temp range bar for this week
+                  const allMax = listDays.map(d => d.tempMax)
+                  const allMin = listDays.map(d => d.tempMin)
+                  const weekMin = Math.min(...allMin)
+                  const weekMax = Math.max(...allMax)
+                  const barRange = weekMax - weekMin || 1
+                  const barLeft = ((day.tempMin - weekMin) / barRange) * 100
+                  const barWidth = ((day.tempMax - day.tempMin) / barRange) * 100
+
                   return (
-                    <div
+                    <motion.div
                       key={day.dt}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.06, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                       className="rounded-2xl p-4 flex items-center justify-between"
                       style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
                     >
@@ -291,16 +304,30 @@ export default function OverviewPage() {
                         )}
                       </div>
 
-                      {/* Right: Truncated vertical Stack for Temps */}
-                      <div className="w-1/4 flex flex-col items-end pl-2">
-                        <span className="font-headline text-[1.15rem] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
-                          {displayTempShort(day.tempMax, tempUnit)}
-                        </span>
-                        <span className="font-label text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                          {displayTempShort(day.tempMin, tempUnit)}
-                        </span>
+                      {/* Right: Temps + animated range bar */}
+                      <div className="w-1/3 flex flex-col items-end gap-1 pl-2">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-headline text-[1.1rem] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
+                            {displayTempShort(day.tempMax, tempUnit)}
+                          </span>
+                          <span className="font-label text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                            {displayTempShort(day.tempMin, tempUnit)}
+                          </span>
+                        </div>
+                        {/* Temperature range bar */}
+                        <div className="w-full h-1 rounded-full relative" style={{ background: 'var(--surface-mid)' }}>
+                          <motion.div
+                            className="absolute h-full rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${barWidth}%`, left: `${barLeft}%` }}
+                            transition={{ delay: idx * 0.06 + 0.2, duration: 0.5, ease: 'easeOut' }}
+                            style={{
+                              background: 'linear-gradient(90deg, #60a5fa, #f59e0b)',
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
                   )
                 })}
               </section>

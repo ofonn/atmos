@@ -3,15 +3,24 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
+import { useSwipeable } from 'react-swipeable'
+import { motion } from 'framer-motion'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { HourlyForecast } from '@/components/weather/HourlyForecast'
+import { WeatherParticles, getEffect } from '@/components/weather/WeatherParticles'
+import { SunArc } from '@/components/weather/SunArc'
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
+import { useHaptic } from '@/hooks/useHaptic'
 import { displayTemp, displayTempShort, displayWind, timeAgo } from '@/lib/utils'
 import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
 import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight, Share2 } from 'lucide-react'
+
+// Page order for swipe navigation
+const PAGE_ORDER = ['/', '/technical', '/overview', '/chat', '/settings']
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
   // WMO codes (0-99)
@@ -81,6 +90,7 @@ export default function Home() {
   const router = useRouter()
   const { theme } = useTheme()
   const { tempUnit, windUnit } = useSettings()
+  const haptic = useHaptic()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -93,8 +103,22 @@ export default function Home() {
   const aqiLevel: number | null = airData?.list?.[0]?.main?.aqi ?? null
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
 
+  // Swipe left/right to navigate between pages
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      haptic.light()
+      router.push('/technical')
+    },
+    preventScrollOnSwipe: false,
+    trackMouse: false,
+    delta: 80,
+  })
+
   const loading = locLoading || weatherLoading
   const isDark = theme !== 'light'
+
+  // Particle effect based on current conditions
+  const particleEffect = current ? getEffect(current.conditionCode, current.isDay) : 'none'
 
   // Dynamic sky tint based on time of day
   const getSkyTint = () => {
@@ -186,13 +210,19 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex flex-col h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div
+      className="relative flex flex-col h-[100dvh] overflow-hidden"
+      style={{ background: 'var(--bg)' }}
+      {...swipeHandlers}
+    >
       {/* Decorative glow — not a layout element */}
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
       {/* Dynamic sky tint (dawn/dusk/night) */}
       {skyTint && (
         <div className="absolute inset-0 pointer-events-none transition-colors duration-[3000ms]" style={{ background: skyTint }} />
       )}
+      {/* Weather particle system */}
+      <WeatherParticles effect={particleEffect} intensity={0.6} />
 
       {/* ═══════════════════════════════════════════════════════════
           CONTAINER 1 — HEADER
@@ -292,12 +322,18 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <p
+                <div
                   className="font-headline font-bold leading-none tracking-tighter"
                   style={{ fontSize: 'clamp(3.5rem, 15vw, 6rem)', color: 'var(--text)' }}
                 >
-                  {displayTemp(current.temp, tempUnit)}
-                </p>
+                  <AnimatedNumber
+                    value={tempUnit === 'F' ? Math.round(current.temp * 9 / 5 + 32) : current.temp}
+                    format={n => `${Math.round(n)}°${tempUnit}`}
+                    duration={600}
+                    className="font-headline font-bold leading-none tracking-tighter"
+                    style={{ fontSize: 'clamp(3.5rem, 15vw, 6rem)', color: 'var(--text)' }}
+                  />
+                </div>
                 <p className="font-label text-[11px] mt-1 mb-2">
                   <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
                   <span style={{
@@ -334,20 +370,10 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Sunrise/sunset day progress bar */}
-                {dayProgress !== null && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-[10px] opacity-50">🌅</span>
-                    <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-mid)' }}>
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${dayProgress * 100}%`,
-                          background: 'linear-gradient(90deg, #f59e0b, #f97316)',
-                        }}
-                      />
-                    </div>
-                    <span className="text-[10px] opacity-50">🌇</span>
+                {/* Sunrise/sunset SVG arc */}
+                {sun && (
+                  <div className="mt-1 -mx-2">
+                    <SunArc sunrise={sun.sunrise} sunset={sun.sunset} />
                   </div>
                 )}
               </div>

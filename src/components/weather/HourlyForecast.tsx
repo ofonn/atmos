@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { formatHourFromISO } from '@/lib/utils'
 import { wmoEmoji } from '@/lib/weatherUtils'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -19,8 +20,11 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
         const hasRain = hour.pop > 20
 
         return (
-          <div
+          <motion.div
             key={hour.dt}
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: i * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
             className={`flex flex-col items-center gap-1.5 min-w-[64px] flex-1 py-3 px-1.5 rounded-2xl ${
               isNow ? 'bg-hero-gradient text-white shadow-glass' : ''
             }`}
@@ -60,7 +64,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
             >
               {hour.pop}%
             </span>
-          </div>
+          </motion.div>
         )
       })}
     </div>
