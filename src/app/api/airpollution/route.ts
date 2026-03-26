@@ -11,7 +11,8 @@ export async function GET(req: NextRequest) {
     const res = await fetch(
       `https://air-quality-api.open-meteo.com/v1/air_quality?latitude=${lat}&longitude=${lon}` +
       `&current=european_aqi,us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone` +
-      `&timezone=auto`,
+      `&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen` +
+      `&timezone=auto&forecast_days=2`,
       { next: { revalidate: 300 } }
     )
 
@@ -43,6 +44,27 @@ export async function GET(req: NextRequest) {
     else if (aqi > 20) aqiLevel = 2
     else aqiLevel = 1
 
+    // Find current pollen values from hourly data (first available slot)
+    const pollenHourly = data.hourly
+    let pollen: Record<string, number | null> = {
+      alder: null, birch: null, grass: null, mugwort: null, olive: null, ragweed: null,
+    }
+    if (pollenHourly?.time?.length) {
+      const now = Date.now()
+      let idx = 0
+      for (let i = 0; i < pollenHourly.time.length; i++) {
+        if (new Date(pollenHourly.time[i]).getTime() >= now - 3600000) { idx = i; break }
+      }
+      pollen = {
+        alder: pollenHourly.alder_pollen?.[idx] ?? null,
+        birch: pollenHourly.birch_pollen?.[idx] ?? null,
+        grass: pollenHourly.grass_pollen?.[idx] ?? null,
+        mugwort: pollenHourly.mugwort_pollen?.[idx] ?? null,
+        olive: pollenHourly.olive_pollen?.[idx] ?? null,
+        ragweed: pollenHourly.ragweed_pollen?.[idx] ?? null,
+      }
+    }
+
     return NextResponse.json({
       list: [{
         main: { aqi: aqiLevel },
@@ -54,6 +76,7 @@ export async function GET(req: NextRequest) {
           pm2_5: current.pm2_5 ?? null,
           pm10: current.pm10 ?? null,
         },
+        pollen,
       }],
     })
   } catch (e: any) {

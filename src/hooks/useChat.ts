@@ -67,6 +67,8 @@ export function useChat(weatherContext: WeatherContextData) {
             message: content,
             history: messages.map(m => ({ role: m.role, content: m.content })),
             weather: weatherContext,
+            localHour: new Date().getHours(),
+            localMinute: new Date().getMinutes(),
           }),
         })
 

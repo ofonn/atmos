@@ -420,6 +420,33 @@ export default function TechnicalPage() {
               ] as [string, string][]).filter(([key]) => air.components[key] != null).map(([key, name]) => (
                 <DataRow key={key} label={name} value={(air.components[key] as number).toFixed(2)} unit=" μg/m³" />
               ))}
+
+              {/* Pollen data if available */}
+              {air.pollen && Object.values(air.pollen).some(v => v !== null && (v as number) > 0) && (
+                <>
+                  <SubHead title="Pollen" />
+                  {([
+                    ['alder', 'Alder Pollen'],
+                    ['birch', 'Birch Pollen'],
+                    ['grass', 'Grass Pollen'],
+                    ['mugwort', 'Mugwort Pollen'],
+                    ['olive', 'Olive Pollen'],
+                    ['ragweed', 'Ragweed Pollen'],
+                  ] as [string, string][]).filter(([key]) => air.pollen[key] != null && air.pollen[key] > 0).map(([key, name]) => {
+                    const val = air.pollen[key] as number
+                    const level = val < 10 ? 'Low' : val < 30 ? 'Moderate' : val < 100 ? 'High' : 'Very High'
+                    const color = val < 10 ? '#22c55e' : val < 30 ? '#f59e0b' : val < 100 ? '#f97316' : '#ef4444'
+                    return (
+                      <DataRow
+                        key={key}
+                        label={name}
+                        value={<span style={{ color }}>{val.toFixed(0)} <span className="text-[10px] font-normal">{level}</span></span>}
+                        unit=" /m³"
+                      />
+                    )
+                  })}
+                </>
+              )}
             </>
           )}
         </Section>
@@ -505,15 +532,16 @@ function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit, timeFormat }: { 
                         UV {uvi.toFixed(0)}
                       </span>
                     )}
-                    {mh.cape?.[idx] >= 500 && (
+                    {/* Storm badge: only show for actual storm/shower codes or extreme instability with rain likely */}
+                    {(wmo >= 95 || (mh.cape?.[idx] >= 1500 && (mh.precipitation_probability?.[idx] ?? 0) >= 50)) && (
                       <span
                         className="text-[10px] font-label font-bold px-1.5 py-0.5 rounded-full"
                         style={{
-                          background: mh.cape[idx] >= 2000 ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.15)',
-                          color: mh.cape[idx] >= 2000 ? '#ef4444' : '#f97316',
+                          background: wmo >= 95 ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.15)',
+                          color: wmo >= 95 ? '#ef4444' : '#f97316',
                         }}
                       >
-                        {mh.cape[idx] >= 2000 ? '⛈ HIGH STORM' : '⚡ Storm risk'}
+                        {wmo >= 95 ? '⛈ Storm' : '⚡ Storm possible'}
                       </span>
                     )}
                   </div>

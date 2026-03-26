@@ -43,7 +43,7 @@ export function useWeather(lat: number | null, lon: number | null) {
 
   if (rawData && rawData.current && rawData.hourly && rawData.daily) {
     current = transformCurrent(rawData)
-    hourly = transformHourly(rawData)
+    hourly = transformHourly(rawData, 24)
     daily = transformDaily(rawData)
     metrics = transformMetrics(current, hourly, rawData)
     sun = transformSun(rawData)

@@ -15,14 +15,14 @@ function isRateLimit(error: any): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const { message, history, weather } = await request.json()
+  const { message, history, weather, localHour, localMinute } = await request.json()
 
   if (!message) {
     return NextResponse.json({ error: 'Message required' }, { status: 400 })
   }
 
   const genAI = createGeminiClient()
-  const systemPrompt = buildSystemPrompt(weather || {})
+  const systemPrompt = buildSystemPrompt(weather || {}, localHour, localMinute)
   const chatHistory = (history || []).map((msg: any) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: msg.content }],

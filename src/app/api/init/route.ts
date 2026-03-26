@@ -3,7 +3,7 @@ import { geminiGenerateWithRotation } from '@/lib/gemini'
 
 export async function POST(req: NextRequest) {
   try {
-    const { current, hourly, daily } = await req.json()
+    const { current, hourly, daily, localHour, localMinute } = await req.json()
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'No API key' }, { status: 500 })
@@ -22,13 +22,15 @@ export async function POST(req: NextRequest) {
       `${new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${d.description}, high ${Math.round(d.tempMax)}°C, low ${Math.round(d.tempMin)}°C, ${d.pop}% rain`
     ).join('\n') ?? 'Not available'
 
-    const hour = new Date().getHours()
+    const hour = typeof localHour === 'number' ? localHour : new Date().getHours()
+    const minute = typeof localMinute === 'number' ? localMinute : new Date().getMinutes()
     const timeOfDay = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
-    const isNight = hour < 6 || hour >= 21
+    const isNight = hour < 6 || hour >= 22
+    const timeStr = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`
 
     const prompt = `You are Atmos, an AI weather assistant that talks like a smart, caring friend — never like a boring weather app. Generate ALL UI content using the weather data below.
 
-CURRENT TIME: ${timeOfDay} (${hour}:00)${isNight ? ' — it is night, do NOT suggest going outside or outdoor activities' : ''}
+CURRENT LOCAL TIME: ${timeStr} (${timeOfDay})${isNight ? ' — it is NIGHT, absolutely do NOT suggest going outside or any outdoor activities' : ''}
 
 WESTERN AUDIENCE — factor in seasons, commuting, school runs, dog walks, pollen, frost, BBQs, gardening, cycling, running. Mention specific concerns for this time of year when relevant.
 

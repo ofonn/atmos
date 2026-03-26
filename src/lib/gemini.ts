@@ -50,19 +50,22 @@ export async function geminiGenerateWithRotation(
   throw new Error('Service temporarily unavailable. Please try again shortly.')
 }
 
-export function buildSystemPrompt(weather: WeatherContextData): string {
-  const hour = new Date().getHours()
+export function buildSystemPrompt(weather: WeatherContextData, localHour?: number, localMinute?: number): string {
+  const hour = typeof localHour === 'number' ? localHour : new Date().getHours()
+  const minute = typeof localMinute === 'number' ? localMinute : new Date().getMinutes()
   const timeOfDay = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
-  const isNightTime = hour < 6 || hour >= 21
+  const isNightTime = hour < 6 || hour >= 22
+  const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 
   let prompt = `You are Atmos, a friendly and knowledgeable AI weather assistant. You help users make practical decisions based on real weather data.
 
 CURRENT TIME CONTEXT:
-- It is currently ${timeOfDay} (${hour}:00)
-- Night-time hours: ${isNightTime ? 'YES — do NOT suggest outdoor activities, runs, or going outside' : 'no'}
+- The user's LOCAL time right now is ${timeStr} (${timeOfDay})
+- Night-time hours (22:00–06:00): ${isNightTime ? 'YES — it is night right now' : 'no'}
 
 TIME-AWARENESS RULES (CRITICAL):
-- NEVER suggest going for a run, walk, or any outdoor activity if it is night time (9 PM – 6 AM)
+- NEVER suggest going for a run, walk, or any outdoor activity if it is night time (10 PM – 6 AM)
+- Evening (6 PM–10 PM) is OK for light walks but not intense outdoor exercise
 - In the morning (6–9 AM): gentle suggestions like a morning walk or commute prep
 - In the afternoon (12–5 PM): outdoor activity suggestions are appropriate if weather allows
 - In the evening (5–9 PM): winding-down tone, mention tomorrow if relevant

@@ -87,13 +87,14 @@ export function RainTimeline({ lat, lon }: RainTimelineProps) {
     }
   }
 
-  // Scale bars: if raining use actual values, if dry use a flat baseline visual
+  // Scale bars using fixed px heights — % height doesn't work reliably in flex-col
+  const MAX_BAR_PX = 44
   const maxPrecip = isRaining ? Math.max(0.1, ...data.map(d => d.precipitation)) : 1
 
   // Placeholder slots when no data yet
   const displaySlots = data.length > 0
     ? data
-    : [{ time: '', precipitation: 0 }, { time: '', precipitation: 0 }, { time: '', precipitation: 0 }, { time: '', precipitation: 0 }]
+    : Array.from({ length: 4 }, () => ({ time: '', precipitation: 0 }))
 
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
@@ -110,38 +111,28 @@ export function RainTimeline({ lat, lon }: RainTimelineProps) {
         <div className="h-20 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)' }} />
       ) : (
         <>
-          <p className="text-sm font-medium mb-6 text-[var(--text-muted)]">{rainMessage}</p>
+          <p className="text-sm font-medium mb-4 text-[var(--text-muted)]">{rainMessage}</p>
 
-          <div className="relative h-16 flex items-end justify-between gap-2">
-            {/* Horizontal baseline */}
-            <div className="absolute bottom-6 left-0 right-0 h-[1px]" style={{ background: 'var(--outline)' }} />
-
+          {/* Bar chart — bars are fixed px height, labels separate below */}
+          <div className="flex items-end gap-2" style={{ height: `${MAX_BAR_PX + 4}px` }}>
             {displaySlots.map((slot, i) => {
-              // When no rain: show a thin flat bar so the chart frame is always visible
-              const heightPct = isRaining
-                ? Math.min(100, Math.max(12, (slot.precipitation / maxPrecip) * 100))
-                : 8
-
+              const barPx = isRaining
+                ? Math.max(4, Math.round((slot.precipitation / maxPrecip) * MAX_BAR_PX))
+                : 3
               return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 relative group">
+                <div key={i} className="flex-1 relative group">
                   <div
                     className="w-full rounded-t transition-all duration-500 ease-out"
                     style={{
-                      height: `${heightPct}%`,
+                      height: `${barPx}px`,
                       background: slot.precipitation > 0
-                        ? 'linear-gradient(to top, var(--primary), rgba(199,191,255,0.5))'
-                        : 'var(--surface-mid)',
-                      opacity: slot.precipitation > 0 ? 0.9 : 0.5,
+                        ? 'linear-gradient(to top, var(--primary), rgba(199,191,255,0.55))'
+                        : 'rgba(199,191,255,0.18)',
                     }}
                   />
-                  <span className="text-[10px] font-label whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
-                    {i === 0 ? 'Now' : `+${i * 15}m`}
-                  </span>
-
-                  {/* Tooltip */}
                   {slot.precipitation > 0 && (
                     <div
-                      className="absolute -top-8 text-[10px] font-bold px-2 py-1 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
                       style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
                     >
                       {slot.precipitation.toFixed(1)}mm
@@ -150,6 +141,18 @@ export function RainTimeline({ lat, lon }: RainTimelineProps) {
                 </div>
               )
             })}
+          </div>
+
+          {/* Baseline line */}
+          <div className="h-[1px] mb-1.5" style={{ background: 'var(--outline)' }} />
+
+          {/* Labels */}
+          <div className="flex gap-2">
+            {displaySlots.map((_, i) => (
+              <span key={i} className="flex-1 text-center text-[10px] font-label" style={{ color: 'var(--text-muted)' }}>
+                {i === 0 ? 'Now' : `+${i * 15}m`}
+              </span>
+            ))}
           </div>
         </>
       )}

@@ -26,21 +26,55 @@ function get3DIconStyle(code: number, isDark: boolean = true) {
 }
 
 function getFallbackHeadline(temp: number, code: number): { headline: string; advice: string } {
-  // WMO codes (0-99)
-  if (code >= 95) return { headline: "A big storm is coming today.", advice: "You really don't want to be outside right now. Stay in if you can." }
-  if (code >= 51 && code <= 57) return { headline: "It'll drizzle on and off today.", advice: "Not heavy rain, but you'll want a jacket just in case you get caught." }
-  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return { headline: "It's going to rain all day.", advice: "Grab an umbrella before you leave. Your shoes will thank you later." }
-  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return { headline: "It's going to snow today.", advice: "Dress warm and be careful on the roads. They might get slippery." }
-  if (code >= 45 && code <= 48) return { headline: "You can barely see outside today.", advice: "It's really foggy out there. Take it slow if you're driving anywhere." }
-  if ((code === 0 || code === 1) && temp >= 35) return { headline: "It's crazy hot out today.", advice: "Drink lots of water and try to stay in the shade during the afternoon." }
-  if ((code === 0 || code === 1) && temp >= 25) return { headline: "It's a really nice day today.", advice: "Great weather to go out. Maybe put on some sunscreen if you'll be outside." }
-  if ((code === 0 || code === 1) && temp >= 15) return { headline: "It's sunny but not too warm.", advice: "Nice during the day but it might get chilly later. Bring a light jacket." }
-  if (code === 0 || code === 1) return { headline: "It's cold but the sky is clear.", advice: "You'll want a warm jacket today. The sun is out but it won't warm you." }
-  if (code === 2) return { headline: "A few clouds but mostly nice.", advice: "The sun will come and go today. Good enough for anything you've planned." }
-  if (code === 3) return { headline: "It's cloudy but won't rain.", advice: "The sky is grey today but it probably won't rain. No umbrella needed." }
-  if (temp >= 35) return { headline: "It's dangerously hot out there.", advice: "Stay hydrated and avoid being outside too long. The heat is no joke today." }
-  if (temp <= 5) return { headline: "It's freezing cold outside today.", advice: "Bundle up with heavy layers. You really don't want to be out too long." }
-  return { headline: "Nothing unusual going on today.", advice: "Pretty normal weather. Check back later if you want to plan something outside." }
+  const hour = new Date().getHours()
+  const isNight = hour < 6 || hour >= 22
+  const isMorning = hour >= 6 && hour < 12
+  const isEvening = hour >= 18 && hour < 22
+
+  // Storm and severe first (time-independent)
+  if (code >= 95) return { headline: "Thunderstorm moving through right now.", advice: "Stay inside. Dangerous lightning and heavy rain until it passes." }
+  if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return {
+    headline: isNight ? "Snowing through the night." : "Snow falling right now.",
+    advice: "Roads will be slippery. Give yourself extra time and drive slow."
+  }
+  if (code >= 45 && code <= 48) return { headline: "Thick fog cutting visibility down.", advice: "Drive with lights on and slow down — visibility is really low out there." }
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return {
+    headline: isNight ? "Raining through the night." : "It's raining right now.",
+    advice: isNight ? "All tucked in? It'll likely clear by morning." : "Grab an umbrella. You'll need it — this rain isn't light."
+  }
+  if (code >= 51 && code <= 57) return { headline: "Light drizzle out there right now.", advice: "Not soaking rain, but enough to ruin your hair. A light jacket helps." }
+
+  // Clear/sunny conditions with time-awareness
+  if ((code === 0 || code === 1) && temp >= 35) return {
+    headline: isNight ? "Still roasting even at night." : "Scorching heat and clear skies.",
+    advice: isNight ? "Keep windows open. The heat isn't going anywhere fast tonight." : "Stay in the shade. Drink water constantly. This heat is dangerous."
+  }
+  if ((code === 0 || code === 1) && temp >= 28) return {
+    headline: isMorning ? "Sunny start — it'll get very warm." : isNight ? "Warm and clear tonight." : "Hot, sunny, and bright outside.",
+    advice: isMorning ? "Get outside early before the heat peaks this afternoon." : isNight ? "Nice evening for a window open." : "Sun is strong today. Sunscreen if you're going out."
+  }
+  if ((code === 0 || code === 1) && temp >= 18) return {
+    headline: isMorning ? "Beautiful morning out there." : isEvening ? "Lovely evening — sun's still warm." : isNight ? "Clear and mild tonight." : "Perfect weather right now.",
+    advice: isMorning ? "Great morning for a walk or run before it gets busy." : isNight ? "Comfortable sleeping tonight — windows open should work." : "Almost perfect conditions. Get out if you can."
+  }
+  if (code === 0 || code === 1) return {
+    headline: isNight ? "Clear skies, cold night." : "Bright and cold outside.",
+    advice: isNight ? "Cold overnight. An extra blanket wouldn't hurt." : "Sun is out but don't be fooled — wrap up warm."
+  }
+  if (code === 2 || code === 3) return {
+    headline: isNight ? "Overcast and quiet tonight." : temp >= 25 ? "Warm and cloudy right now." : "Grey skies but staying dry.",
+    advice: isNight ? "Mild night ahead. Nothing dramatic." : "No rain expected. Grey but manageable — no umbrella needed."
+  }
+
+  // Temperature extremes
+  if (temp >= 38) return { headline: "Dangerously hot outside right now.", advice: "This is a heat emergency. Stay hydrated, stay inside if you can." }
+  if (temp <= 0) return { headline: "Freezing cold — below zero right now.", advice: "Bundle up completely. Watch for ice on roads and pavements." }
+  if (temp <= 8) return { headline: "Cold one out there today.", advice: "A proper coat and layers. It's sharper than it looks." }
+
+  return {
+    headline: isNight ? "Quiet and still outside tonight." : "Conditions are pretty normal today.",
+    advice: "Nothing out of the ordinary. Check the hourly for any changes."
+  }
 }
 
 export default function Home() {
@@ -121,22 +155,23 @@ export default function Home() {
   }
 
   /*
-   * Container-relative font sizing: uses cqw/cqh so the headline
-   * scales to fit its own bounding box, not the viewport.
-   * The headline container has `container-type: size`.
-   * Adjusted for #008 to be a subtitle scale rather than massive.
+   * Container-relative font sizing: fills the flex-1 headline zone.
+   * Uses cqw/cqh so type scales with the available container, not viewport.
    */
   const getHeadlineFontSize = (text: string) => {
     const words = text.split(' ').filter(Boolean).length
-    if (words <= 3) return 'clamp(1.5rem, min(8cqw, 12cqh), 2.5rem)'
-    if (words <= 5) return 'clamp(1.3rem, min(7cqw, 10cqh), 2.2rem)'
-    return 'clamp(1.2rem, min(6cqw, 8cqh), 2rem)'
+    if (words <= 3) return 'clamp(3.2rem, min(18cqw, 30cqh), 8rem)'
+    if (words <= 5) return 'clamp(2.6rem, min(14cqw, 24cqh), 6rem)'
+    if (words <= 8) return 'clamp(2rem, min(11cqw, 18cqh), 5rem)'
+    return 'clamp(1.6rem, min(9cqw, 14cqh), 4rem)'
   }
 
   const buildHeadlineLines = (plain: string, gradient: string): string[] => {
     const words = plain.split(' ').filter(Boolean)
     const total = words.length + 1
-    if (total <= 4) return [...words, gradient]
+    // For short headlines, each word on its own line — maximum drama
+    if (total <= 3) return [...words, gradient]
+    // For medium headlines, 2 words per line
     const lines: string[] = []
     for (let i = 0; i < words.length; i += 2) {
       lines.push(words.slice(i, i + 2).join(' '))
@@ -406,6 +441,14 @@ export default function Home() {
                     <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
                     Share
                   </button>
+                  <button
+                    onClick={() => router.push('/radar')}
+                    aria-label="Live radar map"
+                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 px-3 py-2"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    🛰️ Radar
+                  </button>
                 </div>
               </section>
             )}
@@ -418,53 +461,7 @@ export default function Home() {
               )}
             </section>
 
-            {/* ═══ CONTAINER 4.5 — PROACTIVE INSIGHT HINT ═══ */}
-            {aiContent?.proactiveInsight && (
-              <section className="relative flex-shrink-0 px-5 pb-1">
-                <div
-                  className="rounded-2xl px-4 py-2.5 flex items-start gap-2.5"
-                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-                >
-                  <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
-                  <p className="text-[11px] font-body leading-relaxed line-clamp-2" style={{ color: 'var(--text-muted)' }}>
-                    {aiContent.proactiveInsight}
-                  </p>
-                </div>
-              </section>
-            )}
-
-            {/* ═══ CONTAINER 5 — AI CHAT HINT ═══
-                Compact tap-to-chat pill */}
-            <section className="relative flex-shrink-0 px-5 py-1.5">
-              <button
-                onClick={() => router.push('/chat')}
-                aria-label="Chat with Atmos AI"
-                className="w-full flex items-center justify-between rounded-full px-4 py-2.5 transition-all active:scale-[0.98]"
-                style={{
-                  background: 'var(--surface)',
-                  border: '0.5px solid var(--outline)',
-                }}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)' }}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-                  </div>
-                  <span className="text-sm font-body" style={{ color: 'var(--text-muted)' }}>Ask Atmos anything…</span>
-                </div>
-                <span
-                  className="text-[10px] font-label font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)',
-                    color: 'white',
-                  }}
-                >
-                  Chat
-                </span>
-              </button>
-            </section>
+            {/* No inline AI chat bar — see floating AI FAB below */}
           </>
         ) : (
           /* Welcome — no location set */
@@ -490,8 +487,43 @@ export default function Home() {
       </main>
 
       {/* ═══════════════════════════════════════════════════════════
-          CONTAINER 6 — BOTTOM NAV
-          Fixed-height, IN the page flow (not fixed/absolute).
+          FLOATING AI FAB — pulsing button that draws eye to chat
+          Positioned above the inline nav bar
+          ═══════════════════════════════════════════════════════════ */}
+      {current && (
+        <button
+          onClick={() => router.push('/chat')}
+          aria-label="Chat with Atmos AI"
+          className="absolute right-5 z-30 active:scale-90 transition-transform"
+          style={{ bottom: '90px' }}
+        >
+          {/* Outer halo — slow pulse */}
+          <span
+            className="absolute inset-[-8px] rounded-full opacity-20 animate-pulse"
+            style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
+            aria-hidden="true"
+          />
+          {/* Mid ring — fast ping */}
+          <span
+            className="absolute inset-[-3px] rounded-full opacity-30 animate-ping"
+            style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
+            aria-hidden="true"
+          />
+          {/* Button body */}
+          <div
+            className="relative w-12 h-12 rounded-full flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #806EF8, #5896FD)',
+              boxShadow: '0 0 28px rgba(128,110,248,0.6), 0 4px 16px rgba(0,0,0,0.3)',
+            }}
+          >
+            <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
+          </div>
+        </button>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════
+          BOTTOM NAV — inline in flow, no fixed positioning
           ═══════════════════════════════════════════════════════════ */}
       <BottomNav inline />
     </div>
