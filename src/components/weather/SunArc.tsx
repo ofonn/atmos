@@ -52,9 +52,10 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
         <path
           d={arcPath}
           fill="none"
-          stroke="rgba(199,191,255,0.12)"
+          stroke="var(--outline)"
           strokeWidth="2"
           strokeLinecap="round"
+          opacity="0.6"
         />
 
         {/* Animated progress arc */}
@@ -95,8 +96,9 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
           y1={cy}
           x2={endX + 6}
           y2={cy}
-          stroke="rgba(199,191,255,0.15)"
+          stroke="var(--outline)"
           strokeWidth="1"
+          opacity="0.5"
         />
 
         {/* Animated sun/moon marker */}
@@ -115,14 +117,14 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
               cx={sunX}
               cy={sunY}
               r={14}
-              fill={isDay ? 'rgba(251,191,36,0.15)' : 'rgba(199,191,255,0.1)'}
+              fill={isDay ? 'rgba(251,191,36,0.18)' : 'rgba(128,110,248,0.12)'}
             />
-            {/* Sun circle */}
+            {/* Sun/moon circle */}
             <circle
               cx={sunX}
               cy={sunY}
               r={9}
-              fill={isDay ? 'url(#sunFill)' : 'rgba(199,191,255,0.5)'}
+              fill={isDay ? 'url(#sunFill)' : 'rgba(199,191,255,0.6)'}
               filter="url(#sunGlow)"
             />
             <text
@@ -138,17 +140,17 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
         </motion.g>
 
         {/* Sunrise label */}
-        <text x={startX} y={cy + 18} fontSize="9" fill="rgba(199,191,255,0.5)" textAnchor="start">
+        <text x={startX} y={cy + 18} fontSize="9" fill="var(--text-muted)" textAnchor="start" opacity="0.7">
           {fmtTime(sunrise)}
         </text>
         {/* Sunset label */}
-        <text x={endX} y={cy + 18} fontSize="9" fill="rgba(199,191,255,0.5)" textAnchor="end">
+        <text x={endX} y={cy + 18} fontSize="9" fill="var(--text-muted)" textAnchor="end" opacity="0.7">
           {fmtTime(sunset)}
         </text>
       </svg>
 
       {isDay && (
-        <p className="text-[10px] font-label text-center -mt-1" style={{ color: 'rgba(199,191,255,0.4)' }}>
+        <p className="text-[10px] font-label text-center -mt-1" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
           {Math.round((sunset - now) / 3600 * 10) / 10}h daylight remaining
         </p>
       )}
