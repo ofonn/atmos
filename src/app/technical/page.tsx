@@ -12,7 +12,7 @@ import {
   ThumbsUp, ThumbsDown, ArrowRight
 } from 'lucide-react'
 import {
-  wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtISOTime,
+  wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtISOTime, fmtISOTimeFmt,
   uviColor, uviLabel, aqiColor, aqiLabel,
   displayCelsius,
 } from '@/lib/weatherUtils'
@@ -110,7 +110,7 @@ function SubHead({ title }: { title: string }) {
 export default function TechnicalPage() {
   const { location, current: ctxCurrent, hourly: ctxHourly, daily: ctxDaily } = useWeatherContext()
   const { content: aiContent } = useAiContent(ctxCurrent, ctxHourly, ctxDaily)
-  const { tempUnit, windUnit } = useSettings()
+  const { tempUnit, windUnit, timeFormat } = useSettings()
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
 
   const { data: meteo } = useSWR(
@@ -163,7 +163,7 @@ export default function TechnicalPage() {
                 Conditions
               </h2>
               <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                {mc ? `Updated at ${fmtISOTime(mc.time)}` : 'Updating…'}
+                {mc ? `Updated at ${fmtISOTimeFmt(mc.time, timeFormat)}` : 'Updating…'}
               </p>
             </div>
 
@@ -181,7 +181,7 @@ export default function TechnicalPage() {
                   <h3 className="text-sm font-bold font-headline flex items-center gap-2" style={{ color: 'var(--text)' }}>
                     <Sparkles className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
                     Proactive Insight
-                    {mc && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtISOTime(mc.time)}</span>}
+                    {mc && <span className="text-[10px] uppercase tracking-wider font-normal opacity-60 ml-1 font-label" style={{ color: 'var(--text-muted)' }}>{fmtISOTimeFmt(mc.time, timeFormat)}</span>}
                   </h3>
                   <div className="flex items-center gap-3">
                     <button aria-label="Helpful" className="p-1.5 opacity-40 hover:opacity-100 transition-opacity"><ThumbsUp className="w-3.5 h-3.5" style={{ color: 'var(--text)' }} /></button>
@@ -203,7 +203,36 @@ export default function TechnicalPage() {
           </div>
 
           <div className="flex flex-col gap-4 mt-6 md:mt-0">
-        
+
+        {/* ── UV Warning Banner ──────────────────────────────────────── */}
+        {mh && mh.uv_index?.[nowHourIdx] >= 6 && (
+          <div
+            className="rounded-2xl px-4 py-3 flex items-center gap-3"
+            style={{
+              background: mh.uv_index[nowHourIdx] >= 11
+                ? 'rgba(168,85,247,0.15)'
+                : mh.uv_index[nowHourIdx] >= 8
+                  ? 'rgba(239,68,68,0.12)'
+                  : 'rgba(249,115,22,0.12)',
+              border: `1px solid ${uviColor(mh.uv_index[nowHourIdx])}33`,
+            }}
+          >
+            <span className="text-xl flex-shrink-0">☀️</span>
+            <div>
+              <p className="text-xs font-bold font-headline" style={{ color: uviColor(mh.uv_index[nowHourIdx]) }}>
+                UV {mh.uv_index[nowHourIdx].toFixed(0)} — {uviLabel(mh.uv_index[nowHourIdx])}
+              </p>
+              <p className="text-[11px] font-body" style={{ color: 'var(--text-muted)' }}>
+                {mh.uv_index[nowHourIdx] >= 11
+                  ? 'Extreme UV — stay inside or use SPF 50+ and cover up completely.'
+                  : mh.uv_index[nowHourIdx] >= 8
+                    ? 'Very high UV — limit sun exposure, use SPF 30+ and wear a hat.'
+                    : 'High UV — apply sunscreen before going outside.'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {location && (
           <RainTimeline lat={location.lat} lon={location.lon} />
         )}
@@ -315,14 +344,14 @@ export default function TechnicalPage() {
 
             {/* Sun */}
             <SubHead title="Sun" />
-            {md?.sunrise?.[0] && <DataRow label="Sunrise" value={fmtISOTime(md.sunrise[0])} />}
-            {md?.sunset?.[0] && <DataRow label="Sunset" value={fmtISOTime(md.sunset[0])} />}
+            {md?.sunrise?.[0] && <DataRow label="Sunrise" value={fmtISOTimeFmt(md.sunrise[0], timeFormat)} />}
+            {md?.sunset?.[0] && <DataRow label="Sunset" value={fmtISOTimeFmt(md.sunset[0], timeFormat)} />}
             {md?.sunrise?.[0] && md?.sunset?.[0] && (
               <DataRow label="Day Length" value={secsToHm(
                 (new Date(md.sunset[0]).getTime() - new Date(md.sunrise[0]).getTime()) / 1000
               )} />
             )}
-            <DataRow label="Last Updated" value={fmtISOTime(mc.time)} />
+            <DataRow label="Last Updated" value={fmtISOTimeFmt(mc.time, timeFormat)} />
 
             {/* Precipitation */}
             <SubHead title="Precipitation" />
@@ -347,7 +376,7 @@ export default function TechnicalPage() {
 
         {/* ── Hourly Forecast (Open-Meteo) ────────────────────────────── */}
         {mh ? (
-          <HourlyMeteoSection mh={mh} startIdx={nowHourIdx} tempUnit={tempUnit} windUnit={windUnit} />
+          <HourlyMeteoSection mh={mh} startIdx={nowHourIdx} tempUnit={tempUnit} windUnit={windUnit} timeFormat={timeFormat} />
         ) : (
           <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
         )}
@@ -421,7 +450,7 @@ export default function TechnicalPage() {
 
 // ── Hourly Section (Open-Meteo) ─────────────────────────────────────────────
 
-function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit }: { mh: any; startIdx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit, timeFormat }: { mh: any; startIdx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph'; timeFormat: '12h' | '24h' }) {
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const [showFull, setShowFull] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -456,7 +485,7 @@ function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit }: { mh: any; sta
                   className="text-xs font-label font-bold w-10 flex-shrink-0"
                   style={{ color: isNow ? 'var(--primary)' : 'var(--text-muted)' }}
                 >
-                  {isNow ? 'Now' : fmtISOTime(mh.time[idx])}
+                  {isNow ? 'Now' : fmtISOTimeFmt(mh.time[idx], timeFormat)}
                 </span>
                 <span className="text-lg flex-shrink-0" role="img" aria-label={wmoDesc(wmo)}>
                   {wmoEmoji(wmo, isDay)}
@@ -474,6 +503,17 @@ function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit }: { mh: any; sta
                     {uvi > 0 && (
                       <span className="text-xs font-label" style={{ color: uviColor(uvi) }}>
                         UV {uvi.toFixed(0)}
+                      </span>
+                    )}
+                    {mh.cape?.[idx] >= 500 && (
+                      <span
+                        className="text-[10px] font-label font-bold px-1.5 py-0.5 rounded-full"
+                        style={{
+                          background: mh.cape[idx] >= 2000 ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.15)',
+                          color: mh.cape[idx] >= 2000 ? '#ef4444' : '#f97316',
+                        }}
+                      >
+                        {mh.cape[idx] >= 2000 ? '⛈ HIGH STORM' : '⚡ Storm risk'}
                       </span>
                     )}
                   </div>

@@ -18,20 +18,21 @@ export function wmoDesc(code: number): string {
   return WMO[code] ?? `Code ${code}`
 }
 
-export function wmoEmoji(code: number, isDay = 1): string {
-  if (code === 0) return isDay ? '☀️' : '🌙'
-  if (code === 1) return isDay ? '🌤️' : '🌙'
-  if (code === 2) return '⛅'
-  if (code === 3) return '☁️'
-  if (code >= 45 && code <= 48) return '🌫️'
-  if (code >= 51 && code <= 55) return '🌦️'
-  if (code >= 56 && code <= 57) return '🌨️'
-  if (code >= 61 && code <= 67) return '🌧️'
-  if (code >= 71 && code <= 77) return '❄️'
-  if (code >= 80 && code <= 82) return '🌦️'
-  if (code >= 85 && code <= 86) return '🌨️'
-  if (code >= 95) return '⛈️'
-  return isDay ? '🌤️' : '🌙'
+export function wmoEmoji(code: number, isDay: number | boolean = 1): string {
+  const day = isDay === 1 || isDay === true
+  if (code === 0) return day ? '☀️' : '🌕'           // clear — moon at night
+  if (code === 1) return day ? '🌤️' : '🌙'           // mainly clear — crescent at night
+  if (code === 2) return day ? '⛅' : '🌥️'           // partly cloudy
+  if (code === 3) return '☁️'                         // overcast
+  if (code >= 45 && code <= 48) return '🌫️'          // fog
+  if (code >= 51 && code <= 55) return day ? '🌦️' : '🌧️'
+  if (code >= 56 && code <= 57) return '🌨️'          // freezing drizzle
+  if (code >= 61 && code <= 67) return '🌧️'          // rain
+  if (code >= 71 && code <= 77) return '❄️'           // snow
+  if (code >= 80 && code <= 82) return day ? '🌦️' : '🌧️' // showers
+  if (code >= 85 && code <= 86) return '🌨️'          // snow showers
+  if (code >= 95) return '⛈️'                         // thunderstorm
+  return day ? '🌤️' : '🌙'
 }
 
 /** Convert Kelvin to Celsius with 1 decimal place */
@@ -84,6 +85,16 @@ export function fmtUnix(dt: number, offsetSecs: number, mode: 'time' | 'date' = 
 }
 
 export function fmtISOTime(iso: string): string { return iso.slice(11, 16) }
+
+/** Format an ISO datetime string respecting 12h/24h preference */
+export function fmtISOTimeFmt(iso: string, format: '12h' | '24h' = '24h'): string {
+  if (format === '24h') return iso.slice(11, 16)
+  const [hStr, mStr] = iso.slice(11, 16).split(':')
+  const h = parseInt(hStr, 10)
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${mStr} ${suffix}`
+}
 
 export function fmtISODate(iso: string): string {
   return new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', {

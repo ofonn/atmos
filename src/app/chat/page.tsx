@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal, Mic, MicOff } from 'lucide-react'
+import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal, Mic, MicOff, ChevronDown, Copy, Check } from 'lucide-react'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useChat } from '@/hooks/useChat'
@@ -65,7 +65,7 @@ const quickPrompts = [
 export default function ChatPage() {
   const router = useRouter()
   const { location, current, hourly, daily } = useWeatherContext()
-  const { tempUnit, windUnit } = useSettings()
+  const { tempUnit, windUnit, timeFormat } = useSettings()
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const { messages, loading, sendMessage, clearChat } = useChat({ current, hourly, daily })
   const [input, setInput] = useState('')
@@ -79,6 +79,8 @@ export default function ChatPage() {
   // Default expanded: undefined = expanded, false = collapsed
   const [collapsedData, setCollapsedData] = useState<Record<string, boolean>>({})
   const [isListening, setIsListening] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
   const recognitionRef = useRef<any>(null)
 
   const toggleData = (id: string) => setCollapsedData(p => ({ ...p, [id]: !p[id] }))
@@ -108,10 +110,31 @@ export default function ChatPage() {
   }, [])
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (isAtBottom && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, isAtBottom])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const threshold = 80
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < threshold)
+  }, [])
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      setIsAtBottom(true)
+    }
+  }, [])
+
+  const copyMessage = useCallback((id: string, text: string) => {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 1800)
+    })
+  }, [])
 
   useEffect(() => {
     try {
@@ -242,7 +265,7 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
+      <main ref={scrollRef} onScroll={handleScroll} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
@@ -302,10 +325,11 @@ export default function ChatPage() {
               const time = new Date(msg.timestamp).toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
+                hour12: timeFormat === '12h',
               })
 
               return (
-                <div key={msg.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                <div key={msg.id} className={`flex flex-col group ${isUser ? 'items-end' : 'items-start'}`}>
                   <div className={`flex items-end gap-3 max-w-[88%] ${isUser ? 'flex-row-reverse' : ''}`}>
                     {!isUser && (
                       <div
@@ -337,6 +361,21 @@ export default function ChatPage() {
                           ? <p>{msg.content}</p>
                           : <div className="text-[0.9rem] leading-relaxed">{renderMarkdown(msg.content)}</div>}
                       </div>
+
+                      {/* Copy button for AI messages */}
+                      {!isUser && (
+                        <button
+                          onClick={() => copyMessage(msg.id, msg.content)}
+                          className="self-start ml-1 p-1.5 rounded-lg opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                          aria-label="Copy message"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          {copiedId === msg.id
+                            ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+                            : <Copy className="w-3.5 h-3.5" />
+                          }
+                        </button>
+                      )}
 
                       {/* Contextual inline card — expanded by default */}
                       {!isUser && (
@@ -407,6 +446,28 @@ export default function ChatPage() {
           </div>
         )}
       </main>
+
+      {/* Scroll to bottom button */}
+      <AnimatePresence>
+        {!isAtBottom && messages.length > 0 && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest message"
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-label shadow-lg backdrop-blur-md"
+            style={{
+              background: 'var(--surface)',
+              border: '0.5px solid var(--outline)',
+              color: 'var(--primary)',
+            }}
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            Latest
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Input area */}
       <div

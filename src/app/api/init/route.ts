@@ -22,7 +22,15 @@ export async function POST(req: NextRequest) {
       `${new Date(d.dt * 1000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${d.description}, high ${Math.round(d.tempMax)}°C, low ${Math.round(d.tempMin)}°C, ${d.pop}% rain`
     ).join('\n') ?? 'Not available'
 
+    const hour = new Date().getHours()
+    const timeOfDay = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
+    const isNight = hour < 6 || hour >= 21
+
     const prompt = `You are Atmos, an AI weather assistant that talks like a smart, caring friend — never like a boring weather app. Generate ALL UI content using the weather data below.
+
+CURRENT TIME: ${timeOfDay} (${hour}:00)${isNight ? ' — it is night, do NOT suggest going outside or outdoor activities' : ''}
+
+WESTERN AUDIENCE — factor in seasons, commuting, school runs, dog walks, pollen, frost, BBQs, gardening, cycling, running. Mention specific concerns for this time of year when relevant.
 
 CURRENT CONDITIONS:
 - Temperature: ${current?.temp}°C (feels like ${current?.feelsLike}°C)
@@ -55,7 +63,7 @@ Return ONLY valid JSON (no markdown, no extra text):
   "proactiveInsight": "4-5 sentences covering: what it feels like right now, what changes in the next 6 hours, any specific things to watch out for (UV, rain window, heat peak, wind), and a practical recommendation. Be specific with times and temperatures. Sound like a smart friend, not a robot.",
   "weekSummary": "3-4 sentences covering the week: best days for being outside, when to expect rain, anything to plan around. Be specific about which days.",
   "outfit": "1-2 sentences on what to wear today, referencing actual temps and conditions.",
-  "activity": "One sentence on the single best time window to go outside today and why."
+  "activity": "One sentence on the best time to go outside or do something active today — but ONLY if it's daytime and conditions are suitable. If it's night, suggest something for tomorrow morning instead. If conditions are bad (heavy rain, snow, extreme cold/heat), suggest staying in."
 }`
 
     const raw = await geminiGenerateWithRotation(prompt, apiKey)

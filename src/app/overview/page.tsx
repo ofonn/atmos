@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import { MapPin, Sparkles, ChevronDown, Sun, Info } from 'lucide-react'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { formatDay, displayTempShort, displayTemp } from '@/lib/utils'
+import { useAiContent } from '@/hooks/useAiContent'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, uviColor, uviLabel,
-  fmtISOTime, fmtISODate, displayCelsius,
+  fmtISOTime, fmtISOTimeFmt, fmtISODate, displayCelsius,
 } from '@/lib/weatherUtils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -86,8 +86,9 @@ function DataRow({ label, value, unit, tooltip }: {
 
 export default function OverviewPage() {
   const router = useRouter()
-  const { location, current, daily, loading, error } = useWeatherContext()
-  const { tempUnit, windUnit } = useSettings()
+  const { location, current, daily, hourly, loading, error } = useWeatherContext()
+  const { tempUnit, windUnit, timeFormat } = useSettings()
+  const { content: aiContent } = useAiContent(current, hourly, daily)
 
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
@@ -182,8 +183,34 @@ export default function OverviewPage() {
                   </div>
                   <div className="relative z-10 flex-shrink-0">
                     <div className="w-20 h-20 flex items-center justify-center">
-                      <WeatherIcon conditionCode={featured.conditionCode} iconCode={featured.icon} size={64} />
+                      <span className="text-5xl leading-none" role="img" aria-label={featured.description}>
+                        {wmoEmoji(featured.conditionCode)}
+                      </span>
                     </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* AI Week Summary */}
+            {aiContent?.weekSummary && (
+              <section className="px-2 mb-4">
+                <div
+                  className="rounded-2xl p-5 relative overflow-hidden"
+                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+                >
+                  <div
+                    className="absolute -right-10 -top-10 w-36 h-36 blur-[60px] rounded-full pointer-events-none"
+                    style={{ background: 'rgba(199,191,255,0.15)' }}
+                  />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+                      <span className="text-[10px] font-label uppercase tracking-widest" style={{ color: 'var(--primary)' }}>Week Outlook</span>
+                    </div>
+                    <p className="text-sm font-body leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                      {aiContent.weekSummary}
+                    </p>
                   </div>
                 </div>
               </section>
@@ -249,11 +276,17 @@ export default function OverviewPage() {
 
                       {/* Middle: Condition & Rain Status */}
                       <div className="flex-1 flex flex-col items-center justify-center">
-                        <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
+                        <span className="text-2xl leading-none" role="img" aria-label={day.description}>
+                          {wmoEmoji(day.conditionCode)}
+                        </span>
                         {day.pop > 0 && (
-                          <div className="flex items-center justify-center gap-1.5 mt-1">
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#60a5fa' }} />
+                          <div className="flex items-center justify-center gap-1 mt-1">
                             <span className="text-[10px] font-label font-bold" style={{ color: '#60a5fa' }}>{day.pop}%</span>
+                            {day.precipitationSum > 0 && (
+                              <span className="text-[9px] font-label opacity-70" style={{ color: '#60a5fa' }}>
+                                · {day.precipitationSum.toFixed(1)}mm
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
@@ -275,7 +308,7 @@ export default function OverviewPage() {
 
             {/* 16-Day Daily */}
             {md ? (
-              <DailyMeteoSection md={md} tempUnit={tempUnit} windUnit={windUnit} />
+              <DailyMeteoSection md={md} tempUnit={tempUnit} windUnit={windUnit} timeFormat={timeFormat} />
             ) : (
               <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             )}
@@ -292,7 +325,7 @@ export default function OverviewPage() {
 
 // ── 16-Day Daily Forecast ────────────────────────────────────────────────────
 
-function DailyMeteoSection({ md, tempUnit, windUnit }: { md: any; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+function DailyMeteoSection({ md, tempUnit, windUnit, timeFormat }: { md: any; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph'; timeFormat: '12h' | '24h' }) {
   return (
     <Section
       title="16-Day Forecast"
@@ -300,13 +333,13 @@ function DailyMeteoSection({ md, tempUnit, windUnit }: { md: any; tempUnit: 'C' 
       defaultOpen={false}
     >
       {(md.time as string[]).map((_, i) => (
-        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} windUnit={windUnit} />
+        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} windUnit={windUnit} timeFormat={timeFormat} />
       ))}
     </Section>
   )
 }
 
-function DailyMeteoRow({ md, idx, tempUnit, windUnit }: { md: any; idx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+function DailyMeteoRow({ md, idx, tempUnit, windUnit, timeFormat }: { md: any; idx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph'; timeFormat: '12h' | '24h' }) {
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const [open, setOpen] = useState(false)
   const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : fmtISODate(md.time[idx])
@@ -364,7 +397,7 @@ function DailyMeteoRow({ md, idx, tempUnit, windUnit }: { md: any; idx: number; 
               <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
                 <p className="text-[0.65rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunrise / Sunset</p>
                 <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>
-                  {fmtISOTime(md.sunrise[idx])} / {fmtISOTime(md.sunset[idx])}
+                  {fmtISOTimeFmt(md.sunrise[idx], timeFormat)} / {fmtISOTimeFmt(md.sunset[idx], timeFormat)}
                 </p>
                 {md.daylight_duration?.[idx] != null && (
                   <p className="text-[0.65rem] mt-0.5" style={{ color: 'var(--text-muted)' }}>

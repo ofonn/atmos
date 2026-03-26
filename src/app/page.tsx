@@ -3,14 +3,15 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
+import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { HourlyForecast } from '@/components/weather/HourlyForecast'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
-import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
-import { wmoEmoji } from '@/lib/weatherUtils'
-import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react'
+import { displayTemp, displayTempShort, displayWind, timeAgo } from '@/lib/utils'
+import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
+import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight, Share2 } from 'lucide-react'
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
   // WMO codes (0-99)
@@ -49,11 +50,55 @@ export default function Home() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
-  const { location, locLoading, searchCity, current, hourly, daily, refresh: refreshWeather, loading: weatherLoading } = useWeatherContext()
+  const { location, locLoading, searchCity, current, hourly, daily, sun, refresh: refreshWeather, loading: weatherLoading } = useWeatherContext()
+  const { data: airData } = useSWR(
+    location ? `/api/airpollution?lat=${location.lat}&lon=${location.lon}` : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { refreshInterval: 600000 }
+  )
+  const aqiLevel: number | null = airData?.list?.[0]?.main?.aqi ?? null
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
 
   const loading = locLoading || weatherLoading
   const isDark = theme !== 'light'
+
+  // Dynamic sky tint based on time of day
+  const getSkyTint = () => {
+    if (!current) return null
+    const now = Date.now() / 1000
+    if (!sun) return null
+    const { sunrise, sunset } = sun
+    const dawnStart = sunrise - 30 * 60
+    const dawnEnd = sunrise + 30 * 60
+    const duskStart = sunset - 30 * 60
+    const duskEnd = sunset + 30 * 60
+    if (now >= dawnStart && now < dawnEnd) return 'rgba(255,140,60,0.07)'  // dawn orange
+    if (now >= duskStart && now < duskEnd) return 'rgba(255,80,100,0.07)' // dusk pink
+    if (!current.isDay) return 'rgba(20,30,80,0.12)'                       // night blue
+    return null
+  }
+  const skyTint = getSkyTint()
+
+  const handleShare = async () => {
+    if (!current || !location) return
+    const text = `Weather in ${location.name}: ${current.temp}°C, ${current.description}. Feels like ${current.feelsLike}°C. — via Atmos`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Atmos Weather', text })
+      } else {
+        await navigator.clipboard.writeText(text)
+      }
+    } catch {}
+  }
+
+  // Sunrise/sunset progress (0-1)
+  const dayProgress = (() => {
+    if (!sun || !current?.isDay) return null
+    const now = Date.now() / 1000
+    const { sunrise, sunset } = sun
+    if (now < sunrise || now > sunset) return null
+    return Math.min(1, Math.max(0, (now - sunrise) / (sunset - sunrise)))
+  })()
 
   const handleRefresh = () => {
     refreshWeather()
@@ -109,6 +154,10 @@ export default function Home() {
     <div className="relative flex flex-col h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)' }}>
       {/* Decorative glow — not a layout element */}
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
+      {/* Dynamic sky tint (dawn/dusk/night) */}
+      {skyTint && (
+        <div className="absolute inset-0 pointer-events-none transition-colors duration-[3000ms]" style={{ background: skyTint }} />
+      )}
 
       {/* ═══════════════════════════════════════════════════════════
           CONTAINER 1 — HEADER
@@ -214,8 +263,15 @@ export default function Home() {
                 >
                   {displayTemp(current.temp, tempUnit)}
                 </p>
-                <p className="font-label text-[11px] mt-1 mb-2" style={{ color: 'var(--text-muted)' }}>
-                  Feels like {displayTemp(current.feelsLike, tempUnit)}
+                <p className="font-label text-[11px] mt-1 mb-2">
+                  <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
+                  <span style={{
+                    color: current.feelsLike - current.temp >= 4 ? '#f97316'
+                      : current.feelsLike - current.temp <= -4 ? '#60a5fa'
+                      : 'var(--text-muted)',
+                  }}>
+                    {displayTemp(current.feelsLike, tempUnit)}
+                  </span>
                 </p>
                 
                 {/* Stats Row (#012) */}
@@ -226,8 +282,39 @@ export default function Home() {
                     L:{displayTempShort(daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}
                   </span>
                   <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
-                  <span>{displayWind(current.windSpeed, windUnit)}</span>
+                  <span>
+                    {displayWind(current.windSpeed, windUnit)}
+                    {current.windGusts > current.windSpeed + 8 && (
+                      <span className="opacity-70"> ↑{displayWind(current.windGusts, windUnit)}</span>
+                    )}
+                  </span>
+                  <span className="opacity-50">· {timeAgo(current.dt)}</span>
+                  {aqiLevel !== null && (
+                    <span
+                      className="px-1.5 py-0.5 rounded-full text-[9px] font-bold font-label"
+                      style={{ background: `${aqiColor(aqiLevel)}25`, color: aqiColor(aqiLevel) }}
+                    >
+                      AQI {aqiLabel(aqiLevel)}
+                    </span>
+                  )}
                 </div>
+
+                {/* Sunrise/sunset day progress bar */}
+                {dayProgress !== null && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-[10px] opacity-50">🌅</span>
+                    <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-mid)' }}>
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${dayProgress * 100}%`,
+                          background: 'linear-gradient(90deg, #f59e0b, #f97316)',
+                        }}
+                      />
+                    </div>
+                    <span className="text-[10px] opacity-50">🌇</span>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -310,6 +397,15 @@ export default function Home() {
                     <RefreshCw className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     {aiLoading ? 'Updating…' : 'Refresh'}
                   </button>
+                  <button
+                    onClick={handleShare}
+                    aria-label="Share weather"
+                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 px-3 py-2"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    Share
+                  </button>
                 </div>
               </section>
             )}
@@ -322,31 +418,52 @@ export default function Home() {
               )}
             </section>
 
-            {/* ═══ CONTAINER 5 — ASK BAR ═══
-                Fixed-height: search-style CTA pill */}
-            <section className="relative flex-shrink-0 px-5 py-1.5">
-              <div className="rounded-full flex items-center gap-3 pl-5 pr-2 py-1.5 glass-input">
-                <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-                <button
-                  onClick={() => router.push('/chat')}
-                  className="flex-1 text-left text-sm font-body py-2"
-                  style={{ color: 'var(--text-muted)' }}
-                  aria-label="Ask Atmos a question"
+            {/* ═══ CONTAINER 4.5 — PROACTIVE INSIGHT HINT ═══ */}
+            {aiContent?.proactiveInsight && (
+              <section className="relative flex-shrink-0 px-5 pb-1">
+                <div
+                  className="rounded-2xl px-4 py-2.5 flex items-start gap-2.5"
+                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
                 >
-                  Ask Atmos…
-                </button>
-                <button
-                  onClick={() => router.push('/chat')}
-                  className="px-5 py-2 rounded-full font-bold text-xs tracking-wide text-white flex-shrink-0"
-                  aria-label="Open AI chat"
+                  <Sparkles className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--primary)' }} />
+                  <p className="text-[11px] font-body leading-relaxed line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                    {aiContent.proactiveInsight}
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* ═══ CONTAINER 5 — AI CHAT HINT ═══
+                Compact tap-to-chat pill */}
+            <section className="relative flex-shrink-0 px-5 py-1.5">
+              <button
+                onClick={() => router.push('/chat')}
+                aria-label="Chat with Atmos AI"
+                className="w-full flex items-center justify-between rounded-full px-4 py-2.5 transition-all active:scale-[0.98]"
+                style={{
+                  background: 'var(--surface)',
+                  border: '0.5px solid var(--outline)',
+                }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)' }}
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+                  </div>
+                  <span className="text-sm font-body" style={{ color: 'var(--text-muted)' }}>Ask Atmos anything…</span>
+                </div>
+                <span
+                  className="text-[10px] font-label font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
                   style={{
                     background: 'linear-gradient(135deg, var(--gradient-text-from) 0%, var(--gradient-text-to) 100%)',
-                    animation: 'askGlow 2.5s ease-in-out infinite',
+                    color: 'white',
                   }}
                 >
-                  ASK
-                </button>
-              </div>
+                  Chat
+                </span>
+              </button>
             </section>
           </>
         ) : (

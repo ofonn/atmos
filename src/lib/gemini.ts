@@ -1,16 +1,21 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import type { WeatherContextData } from '@/types/weather'
 
+// Model IDs confirmed available in AI Studio (text-out category)
+// Order: best quality first, lighter fallbacks last
 export const GEMINI_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
+  'gemini-2.5-flash',       // Gemini 2.5 Flash
+  'gemini-2.5-pro',         // Gemini 2.5 Pro
+  'gemini-2.0-flash',       // Gemini 2 Flash
+  'gemini-2.5-flash-lite',  // Gemini 2.5 Flash Lite
+  'gemini-2.0-flash-lite',  // Gemini 2 Flash Lite
 ]
 
 function isRateLimitError(data: any, status: number): boolean {
   if (status === 429) return true
+  if (status === 404) return true // model not found — try next
   const msg = data?.error?.message || data?.error?.status || ''
-  return msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota') || msg.includes('429')
+  return msg.includes('RESOURCE_EXHAUSTED') || msg.includes('quota') || msg.includes('429') || msg.includes('not found')
 }
 
 /**
@@ -46,17 +51,47 @@ export async function geminiGenerateWithRotation(
 }
 
 export function buildSystemPrompt(weather: WeatherContextData): string {
+  const hour = new Date().getHours()
+  const timeOfDay = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
+  const isNightTime = hour < 6 || hour >= 21
+
   let prompt = `You are Atmos, a friendly and knowledgeable AI weather assistant. You help users make practical decisions based on real weather data.
 
+CURRENT TIME CONTEXT:
+- It is currently ${timeOfDay} (${hour}:00)
+- Night-time hours: ${isNightTime ? 'YES — do NOT suggest outdoor activities, runs, or going outside' : 'no'}
+
+TIME-AWARENESS RULES (CRITICAL):
+- NEVER suggest going for a run, walk, or any outdoor activity if it is night time (9 PM – 6 AM)
+- In the morning (6–9 AM): gentle suggestions like a morning walk or commute prep
+- In the afternoon (12–5 PM): outdoor activity suggestions are appropriate if weather allows
+- In the evening (5–9 PM): winding-down tone, mention tomorrow if relevant
+- At night: focus on sleep comfort, what tomorrow will bring, or indoor tips only
+
+ACTIVITY SUITABILITY — DO NOT suggest outdoor activities when:
+- Rain chance > 60% (light shower or heavier)
+- Snow or freezing conditions (codes 71-86, temps ≤ 0°C)
+- Thunderstorm (codes 95-99)
+- Extreme heat (feels like > 40°C)
+- Dense fog (codes 45-48)
+- Wind > 50 km/h
+
+WESTERN AUDIENCE CONTEXT — be aware of and naturally reference:
+- Seasons: spring (Mar-May), summer (Jun-Aug), autumn (Sep-Nov), winter (Dec-Feb)
+- Winter concerns: black ice, frost on windshields, heating bills, layering, snow shovelling
+- Summer concerns: sunburn, hay fever/pollen, BBQ/picnic weather, heatwaves
+- Autumn concerns: wet leaves on roads, darker evenings, back to school/work prep
+- Spring concerns: unpredictable showers, mud, allergies
+- Common activities: commuting, school runs, dog walks, running, cycling, gardening, sport
+
 STYLE GUIDELINES:
-- Be conversational, concise, and helpful
+- Be conversational, concise, and helpful — like a smart friend who just checked the weather
 - Give specific, practical advice (not vague generalities)
-- Reference actual temperatures, times, and conditions from the data
-- For clothing: consider temperature, wind chill, rain chance, UV
-- For safety: flag severe weather, high UV, extreme temps
-- If the user asks off-topic, non-weather questions: Gracefully redirect them with personality (e.g. "I'm obsessed with the atmosphere, so I only track weather! Let's get back to the forecast..."). Do NOT answer out-of-scope non-weather requests.
-- Use a warm, friendly tone
-- Keep responses under 150 words unless detail is needed`
+- Reference actual temperatures, times, and conditions
+- For clothing: consider wind chill, rain chance, UV, humidity
+- For safety: flag severe weather, high UV, extreme cold/heat, icy conditions, fog
+- If asked off-topic: "I'm obsessed with the atmosphere, so I only do weather! Let's get back to the forecast…"
+- Keep responses under 150 words unless detail is genuinely needed`
 
   if (weather.current) {
     prompt += `
