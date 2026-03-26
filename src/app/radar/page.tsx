@@ -106,7 +106,7 @@ export default function RadarPage() {
           const latest = past[past.length - 1]
           const layer = L.tileLayer(
             `https://tilecache.rainviewer.com${latest.path}/512/{z}/{x}/{y}/4/1_1.png`,
-            { opacity: 0.75, zIndex: 10 }
+            { opacity: 0.75, zIndex: 10, maxNativeZoom: 9, maxZoom: 18 }
           )
           layer.addTo(map)
           radarLayerRef.current = layer
@@ -142,7 +142,7 @@ export default function RadarPage() {
       }
       const layer = L.tileLayer(
         `https://tilecache.rainviewer.com${frame.path}/512/{z}/{x}/{y}/4/1_1.png`,
-        { opacity: 0.75, zIndex: 10 }
+        { opacity: 0.75, zIndex: 10, maxNativeZoom: 9, maxZoom: 18 }
       )
       layer.addTo(mapInstanceRef.current)
       radarLayerRef.current = layer
@@ -169,7 +169,7 @@ export default function RadarPage() {
   }
 
   return (
-    <div className="relative flex flex-col h-[100dvh] overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="flex flex-col h-[100dvh]" style={{ background: 'var(--bg)' }}>
       {/* Header */}
       <header className="relative z-20 flex-shrink-0 flex items-center gap-3 px-4 pt-4 pb-2">
         <button
@@ -211,57 +211,6 @@ export default function RadarPage() {
         )}
         <div ref={mapRef} className="w-full h-full" />
 
-        {/* Radar controls overlay */}
-        {frames.length > 0 && (
-          <div
-            className="absolute bottom-4 left-4 right-4 z-10 rounded-2xl px-4 py-3"
-            style={{ background: 'rgba(16,19,28,0.85)', backdropFilter: 'blur(12px)', border: '0.5px solid rgba(199,191,255,0.15)' }}
-          >
-            {/* Time scrubber */}
-            <div className="flex items-center gap-3 mb-2">
-              <button
-                onClick={handlePlayPause}
-                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-opacity active:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isPlaying
-                  ? <Pause className="w-3.5 h-3.5 text-white" />
-                  : <Play className="w-3.5 h-3.5 text-white" />}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={frames.length - 1}
-                value={currentFrame}
-                onChange={e => { setIsPlaying(false); setCurrentFrame(Number(e.target.value)) }}
-                className="flex-1 h-1 rounded-full appearance-none"
-                style={{ accentColor: '#806EF8' }}
-              />
-              <span className="flex-shrink-0 text-[11px] font-label font-bold w-14 text-right" style={{ color: 'var(--primary)' }}>
-                {frames[currentFrame] ? fmtTime(frames[currentFrame].time) : '--:--'}
-              </span>
-            </div>
-
-            {/* Frame dots */}
-            <div className="flex items-center gap-1 justify-center">
-              {frames.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setIsPlaying(false); setCurrentFrame(i) }}
-                  className="rounded-full transition-all"
-                  style={{
-                    width: i === currentFrame ? '16px' : '6px',
-                    height: '6px',
-                    background: i === currentFrame ? '#806EF8' : 'rgba(199,191,255,0.3)',
-                  }}
-                  aria-label={`Frame ${i + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Loading state */}
         {!mapReady && location && (
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg)] z-20">
@@ -272,6 +221,57 @@ export default function RadarPage() {
           </div>
         )}
       </div>
+
+      {/* Radar controls — sits between map and nav, never overlapped */}
+      {frames.length > 0 && (
+        <div
+          className="flex-shrink-0 px-4 py-3"
+          style={{ background: 'rgba(16,19,28,0.92)', backdropFilter: 'blur(16px)', borderTop: '0.5px solid rgba(199,191,255,0.12)' }}
+        >
+          {/* Time scrubber */}
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={handlePlayPause}
+              className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-opacity active:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying
+                ? <Pause className="w-4 h-4 text-white" />
+                : <Play className="w-4 h-4 text-white" />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={frames.length - 1}
+              value={currentFrame}
+              onChange={e => { setIsPlaying(false); setCurrentFrame(Number(e.target.value)) }}
+              className="flex-1 h-1 rounded-full appearance-none"
+              style={{ accentColor: '#806EF8' }}
+            />
+            <span className="flex-shrink-0 text-[11px] font-label font-bold w-14 text-right" style={{ color: 'var(--primary)' }}>
+              {frames[currentFrame] ? fmtTime(frames[currentFrame].time) : '--:--'}
+            </span>
+          </div>
+
+          {/* Frame dots */}
+          <div className="flex items-center gap-1 justify-center">
+            {frames.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { setIsPlaying(false); setCurrentFrame(i) }}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === currentFrame ? '16px' : '6px',
+                  height: '6px',
+                  background: i === currentFrame ? '#806EF8' : 'rgba(199,191,255,0.3)',
+                }}
+                aria-label={`Frame ${i + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <BottomNav inline />
     </div>

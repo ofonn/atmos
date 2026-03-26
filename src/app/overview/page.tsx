@@ -107,10 +107,13 @@ export default function OverviewPage() {
     <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 backdrop-blur-xl w-full max-w-4xl mx-auto">
-        <div className="flex items-center gap-2">
+      <header
+        className="sticky top-0 z-30 flex justify-between items-center px-6 py-3.5 backdrop-blur-xl w-full"
+        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+      >
+        <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
           <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-          <span className="font-headline font-extrabold tracking-tight text-2xl" style={{ color: 'var(--primary)' }}>
+          <span className="font-headline font-bold tracking-tight text-xl" style={{ color: 'var(--primary)' }}>
             Atmos
           </span>
         </div>

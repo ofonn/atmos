@@ -191,10 +191,10 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-md w-full max-w-xl mx-auto"
+        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-xl w-full max-w-xl mx-auto"
         style={{
-          background: 'var(--bg)',
-          borderBottom: '1px solid var(--outline)'
+          background: 'rgba(16,19,28,0.78)',
+          borderBottom: '0.5px solid rgba(199,191,255,0.1)'
         }}
       >
         <div className="flex items-center gap-2">

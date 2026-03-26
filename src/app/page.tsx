@@ -17,7 +17,7 @@ import { useSettings } from '@/contexts/SettingsContext'
 import { useHaptic } from '@/hooks/useHaptic'
 import { displayTemp, displayTempShort, displayWind, timeAgo } from '@/lib/utils'
 import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
-import { MapPin, Search, Sparkles, X, RefreshCw, ChevronDown, ArrowRight, Share2 } from 'lucide-react'
+import { MapPin, Search, X, RefreshCw, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
 
 // Page order for swipe navigation
 const PAGE_ORDER = ['/', '/technical', '/overview', '/chat', '/settings']
@@ -136,18 +136,6 @@ export default function Home() {
     return null
   }
   const skyTint = getSkyTint()
-
-  const handleShare = async () => {
-    if (!current || !location) return
-    const text = `Weather in ${location.name}: ${current.temp}°C, ${current.description}. Feels like ${current.feelsLike}°C. — via Atmos`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'Atmos Weather', text })
-      } else {
-        await navigator.clipboard.writeText(text)
-      }
-    } catch {}
-  }
 
   // Sunrise/sunset progress (0-1)
   const dayProgress = (() => {
@@ -298,85 +286,92 @@ export default function Home() {
         ) : current && displayed && icon ? (
           <>
             {/* ═══ CONTAINER 2 — WEATHER DISPLAY ═══
-                Fixed-height: icon orb + temperature + feels like */}
-            <section className="relative flex-shrink-0 flex items-center gap-3 px-5 py-1">
-              <div
-                className="relative flex-shrink-0"
-                style={{ filter: `drop-shadow(0 0 18px ${icon.glow})` }}
-              >
+                Redesigned: large 3D floating icon + temp side-by-side,
+                SunArc on its own full-width row below */}
+            <section className="relative flex-shrink-0 px-5 pt-2 pb-0">
+              <div className="flex items-center gap-4">
+                {/* 3D Weather orb — animated, large */}
                 <div
-                  className="absolute inset-0 rounded-full opacity-60 blur-xl"
-                  style={{ background: `linear-gradient(135deg, ${icon.from}, ${icon.to})` }}
-                />
-                <div
-                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{
-                    background: `linear-gradient(135deg, ${icon.from}, ${icon.via}, ${icon.to})`,
-                    boxShadow: `inset -4px -4px 14px rgba(0,0,0,0.25), 0 4px 18px ${icon.glow}`,
-                  }}
+                  className="relative flex-shrink-0"
+                  style={{ filter: `drop-shadow(0 0 28px ${icon.glow})` }}
                 >
-                  <div className="absolute top-1.5 left-2.5 w-4 h-2 bg-white/40 blur-sm rounded-full -rotate-[30deg]" />
-                  <span className="relative z-10 text-2xl leading-none" role="img" aria-label={current.description}>
-                    {wmoEmoji(current.conditionCode, current.isDay ? 1 : 0)}
-                  </span>
+                  <motion.div
+                    className="absolute -inset-2 rounded-full blur-2xl opacity-50"
+                    style={{ background: `radial-gradient(circle, ${icon.from}, ${icon.to})` }}
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.7, 0.5] }}
+                    transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <motion.div
+                    className="relative w-[78px] h-[78px] rounded-full flex items-center justify-center overflow-hidden"
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{
+                      background: `radial-gradient(circle at 38% 32%, ${icon.from} 0%, ${icon.via} 45%, ${icon.to} 100%)`,
+                      boxShadow: `inset -6px -6px 20px rgba(0,0,0,0.32), inset 5px 5px 14px rgba(255,255,255,0.18), 0 12px 40px ${icon.glow}`,
+                    }}
+                  >
+                    {/* Specular highlight */}
+                    <div className="absolute top-2.5 left-3.5 w-7 h-3 bg-white/30 blur-[5px] rounded-full -rotate-[28deg]" />
+                    <span
+                      className="relative z-10 leading-none select-none"
+                      style={{ fontSize: '2.2rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                      role="img"
+                      aria-label={current.description}
+                    >
+                      {wmoEmoji(current.conditionCode, current.isDay ? 1 : 0)}
+                    </span>
+                  </motion.div>
                 </div>
-              </div>
-              <div>
-                <div
-                  className="font-headline font-bold leading-none tracking-tighter"
-                  style={{ fontSize: 'clamp(3.5rem, 15vw, 6rem)', color: 'var(--text)' }}
-                >
+
+                {/* Temperature + meta */}
+                <div className="flex-1 min-w-0">
                   <AnimatedNumber
                     value={tempUnit === 'F' ? Math.round(current.temp * 9 / 5 + 32) : current.temp}
                     format={n => `${Math.round(n)}°${tempUnit}`}
                     duration={600}
-                    className="font-headline font-bold leading-none tracking-tighter"
-                    style={{ fontSize: 'clamp(3.5rem, 15vw, 6rem)', color: 'var(--text)' }}
+                    className="font-headline font-bold leading-none tracking-tighter block"
+                    style={{ fontSize: 'clamp(3.4rem, 15vw, 5.5rem)', color: 'var(--text)' }}
                   />
-                </div>
-                <p className="font-label text-[11px] mt-1 mb-2">
-                  <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
-                  <span style={{
-                    color: current.feelsLike - current.temp >= 4 ? '#f97316'
-                      : current.feelsLike - current.temp <= -4 ? '#60a5fa'
-                      : 'var(--text-muted)',
-                  }}>
-                    {displayTemp(current.feelsLike, tempUnit)}
-                  </span>
-                </p>
-                
-                {/* Stats Row (#012) */}
-                <div className="flex items-center gap-3 text-[11px] font-label tracking-wide" style={{ color: 'var(--text-muted)' }}>
-                  <span>
-                    H:{displayTempShort(daily?.[0]?.tempMax ?? current.tempMax, tempUnit)}
-                    &nbsp;&nbsp;
-                    L:{displayTempShort(daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}
-                  </span>
-                  <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
-                  <span>
-                    {displayWind(current.windSpeed, windUnit)}
-                    {current.windGusts > current.windSpeed + 8 && (
-                      <span className="opacity-70"> ↑{displayWind(current.windGusts, windUnit)}</span>
-                    )}
-                  </span>
-                  <span className="opacity-50">· {timeAgo(current.dt)}</span>
-                  {aqiLevel !== null && (
-                    <span
-                      className="px-1.5 py-0.5 rounded-full text-[9px] font-bold font-label"
-                      style={{ background: `${aqiColor(aqiLevel)}25`, color: aqiColor(aqiLevel) }}
-                    >
-                      AQI {aqiLabel(aqiLevel)}
+                  <p className="font-label text-[11px] mt-1 mb-1.5">
+                    <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
+                    <span style={{
+                      color: current.feelsLike - current.temp >= 4 ? '#f97316'
+                        : current.feelsLike - current.temp <= -4 ? '#60a5fa'
+                        : 'var(--text-muted)',
+                    }}>
+                      {displayTemp(current.feelsLike, tempUnit)}
                     </span>
-                  )}
-                </div>
-
-                {/* Sunrise/sunset SVG arc */}
-                {sun && (
-                  <div className="mt-1 -mx-2">
-                    <SunArc sunrise={sun.sunrise} sunset={sun.sunset} />
+                  </p>
+                  {/* Stats Row */}
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] font-label" style={{ color: 'var(--text-muted)' }}>
+                    <span>H:{displayTempShort(daily?.[0]?.tempMax ?? current.tempMax, tempUnit)} L:{displayTempShort(daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}</span>
+                    <span className="opacity-40">·</span>
+                    <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
+                    <span className="opacity-40">·</span>
+                    <span>
+                      {displayWind(current.windSpeed, windUnit)}
+                      {current.windGusts > current.windSpeed + 8 && (
+                        <span className="opacity-60"> ↑{displayWind(current.windGusts, windUnit)}</span>
+                      )}
+                    </span>
+                    {aqiLevel !== null && (
+                      <span
+                        className="px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+                        style={{ background: `${aqiColor(aqiLevel)}25`, color: aqiColor(aqiLevel) }}
+                      >
+                        AQI {aqiLabel(aqiLevel)}
+                      </span>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
+
+              {/* SunArc — full-width below the icon+temp row */}
+              {sun && (
+                <div className="mt-2">
+                  <SunArc sunrise={sun.sunrise} sunset={sun.sunset} />
+                </div>
+              )}
             </section>
 
             {/* ═══ CONTAINER 3 — HEADLINE ONLY (flex-1, container-query sized) ═══
@@ -457,15 +452,6 @@ export default function Home() {
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     {aiLoading ? 'Updating…' : 'Refresh'}
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    aria-label="Share weather"
-                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 px-3 py-2"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    <Share2 className="w-3.5 h-3.5" aria-hidden="true" />
-                    Share
                   </button>
                   <button
                     onClick={() => router.push('/radar')}

@@ -116,16 +116,16 @@ export default function SettingsPage() {
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
       {/* Header */}
-      <header className="relative z-10 px-6 pt-14 pb-2">
+      <header
+        className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-xl"
+        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+      >
         <h1
-          className="text-3xl font-extrabold font-headline tracking-tight"
-          style={{ color: 'var(--text)' }}
+          className="text-xl font-bold font-headline tracking-tight"
+          style={{ color: 'var(--primary)' }}
         >
           Settings
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-          Customize your Atmos experience.
-        </p>
       </header>
 
       <main className="relative z-10 flex-1 px-6 pt-6 pb-32 w-full max-w-4xl mx-auto">

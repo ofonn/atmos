@@ -15,22 +15,18 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
     ? Math.max(0, Math.min(1, (now - sunrise) / (sunset - sunrise)))
     : now < sunrise ? 0 : 1
 
-  const W = 280
-  const H = 80
+  const W = 320
+  const H = 72
   const cx = W / 2
-  const cy = H + 10
-  const r = H + 10
+  const cy = H + 16
+  const r = H + 16
 
-  // Semicircle arc: from left to right, arching up
-  // Start point (sunrise): left side
-  // End point (sunset): right side
   const startX = cx - r
   const startY = cy
   const endX = cx + r
   const endY = cy
 
-  // Sun position on the arc
-  const angle = Math.PI - progress * Math.PI // π (left) → 0 (right)
+  const angle = Math.PI - progress * Math.PI
   const sunX = cx + r * Math.cos(angle)
   const sunY = cy - r * Math.sin(angle)
 
@@ -43,92 +39,117 @@ export function SunArc({ sunrise, sunset, now: nowProp }: SunArcProps) {
   }
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <svg width={W} height={H + 20} viewBox={`0 0 ${W} ${H + 20}`} className="overflow-visible">
+    <div className="w-full">
+      <svg
+        width="100%"
+        viewBox={`0 0 ${W} ${H + 28}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="overflow-visible"
+        aria-label={`Sun arc: sunrise ${fmtTime(sunrise)}, sunset ${fmtTime(sunset)}`}
+        role="img"
+      >
         {/* Background track */}
         <path
           d={arcPath}
           fill="none"
-          stroke="var(--outline)"
+          stroke="rgba(199,191,255,0.12)"
           strokeWidth="2"
           strokeLinecap="round"
         />
-        {/* Progress glow */}
+
+        {/* Animated progress arc */}
         {isDay && (
-          <path
+          <motion.path
             d={progressPath}
             fill="none"
             stroke="url(#sunGrad)"
             strokeWidth="2.5"
             strokeLinecap="round"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1.4, ease: 'easeOut', delay: 0.1 }}
           />
         )}
+
         <defs>
           <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.5" />
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
           </linearGradient>
-        </defs>
-        {/* Horizon line */}
-        <line
-          x1={startX - 8}
-          y1={cy}
-          x2={endX + 8}
-          y2={cy}
-          stroke="var(--outline)"
-          strokeWidth="1"
-          opacity="0.4"
-        />
-        {/* Sun/Moon marker */}
-        {isDay && (
-          <motion.g
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          >
-            <circle
-              cx={sunX}
-              cy={sunY}
-              r={10}
-              fill="url(#sunFill)"
-              filter="url(#sunGlow)"
-            />
-            <text
-              x={sunX}
-              y={sunY + 4}
-              textAnchor="middle"
-              fontSize="10"
-              style={{ userSelect: 'none' }}
-            >
-              ☀️
-            </text>
-          </motion.g>
-        )}
-        <defs>
           <radialGradient id="sunFill">
             <stop offset="0%" stopColor="#fde68a" />
             <stop offset="100%" stopColor="#f59e0b" />
           </radialGradient>
-          <filter id="sunGlow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          <filter id="sunGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
+
+        {/* Horizon line */}
+        <line
+          x1={startX - 6}
+          y1={cy}
+          x2={endX + 6}
+          y2={cy}
+          stroke="rgba(199,191,255,0.15)"
+          strokeWidth="1"
+        />
+
+        {/* Animated sun/moon marker */}
+        <motion.g
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 180, damping: 18, delay: 0.5 }}
+          style={{ originX: `${sunX}px`, originY: `${sunY}px` }}
+        >
+          <motion.g
+            animate={{ y: isDay ? [-2, 2, -2] : [0, 0, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {/* Glow ring */}
+            <circle
+              cx={sunX}
+              cy={sunY}
+              r={14}
+              fill={isDay ? 'rgba(251,191,36,0.15)' : 'rgba(199,191,255,0.1)'}
+            />
+            {/* Sun circle */}
+            <circle
+              cx={sunX}
+              cy={sunY}
+              r={9}
+              fill={isDay ? 'url(#sunFill)' : 'rgba(199,191,255,0.5)'}
+              filter="url(#sunGlow)"
+            />
+            <text
+              x={sunX}
+              y={sunY + 4.5}
+              textAnchor="middle"
+              fontSize="11"
+              style={{ userSelect: 'none' }}
+            >
+              {isDay ? '☀️' : '🌙'}
+            </text>
+          </motion.g>
+        </motion.g>
+
         {/* Sunrise label */}
-        <text x={startX - 2} y={cy + 16} fontSize="9" fill="var(--text-muted)" textAnchor="middle">
+        <text x={startX} y={cy + 18} fontSize="9" fill="rgba(199,191,255,0.5)" textAnchor="start">
           {fmtTime(sunrise)}
         </text>
         {/* Sunset label */}
-        <text x={endX + 2} y={cy + 16} fontSize="9" fill="var(--text-muted)" textAnchor="middle">
+        <text x={endX} y={cy + 18} fontSize="9" fill="rgba(199,191,255,0.5)" textAnchor="end">
           {fmtTime(sunset)}
         </text>
       </svg>
+
       {isDay && (
-        <p className="text-[10px] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          {Math.round((sunset - now) / 3600 * 10) / 10}h of daylight remaining
+        <p className="text-[10px] font-label text-center -mt-1" style={{ color: 'rgba(199,191,255,0.4)' }}>
+          {Math.round((sunset - now) / 3600 * 10) / 10}h daylight remaining
         </p>
       )}
     </div>
