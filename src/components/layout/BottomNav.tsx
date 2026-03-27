@@ -24,7 +24,7 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
       }
       aria-label="Main navigation"
     >
-      <div className="flex items-end gap-0.5 sm:gap-1 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full nav-glass">
+      <div className="flex items-end gap-0.5 px-2.5 py-2 rounded-full nav-glass">
         {navItems.map(({ href, icon: Icon, label }) => {
           const active = pathname === href
           return (
@@ -33,19 +33,19 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
               href={href}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-col items-center gap-0.5 px-1 py-0.5 sm:py-1 rounded-full transition-all duration-300 active:scale-90 ${
+              className={`relative flex flex-col items-center gap-0.5 px-1.5 py-0.5 rounded-full transition-all duration-300 active:scale-90 ${
                 active ? '' : 'hover:opacity-80'
               }`}
             >
               <div
-                className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all duration-300 ${
+                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all duration-300 ${
                   active
-                    ? 'bg-hero-gradient shadow-[0_0_20px_rgba(128,110,248,0.35)]'
+                    ? 'bg-hero-gradient shadow-[0_0_16px_rgba(128,110,248,0.4)]'
                     : ''
                 }`}
               >
                 <Icon
-                  className="w-4 h-4 sm:w-[18px] sm:h-[18px] transition-colors"
+                  className="w-[18px] h-[18px] transition-colors"
                   style={{
                     color: active ? '#ffffff' : 'var(--text-muted)',
                     opacity: active ? 1 : 0.5,
@@ -53,7 +53,7 @@ export function BottomNav({ inline = false }: { inline?: boolean }) {
                 />
               </div>
               <span
-                className={`font-label text-[9px] sm:text-[10px] leading-none tracking-wide transition-colors ${
+                className={`font-label text-[9px] leading-none tracking-wide transition-colors ${
                   active ? 'font-semibold' : 'font-normal'
                 }`}
                 style={{

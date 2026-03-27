@@ -17,10 +17,10 @@
     --glass-rgb: 255, 255, 255;
     --glass-border-rgb: 0, 0, 0;
     
-    /* Nav variables */
-    --nav-bg: rgba(250, 250, 253, 0.88);
-    --nav-border: rgba(0, 0, 0, 0.08);
-    --nav-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    /* Nav variables — frosted glass, light mode */
+    --nav-bg: rgba(248, 248, 252, 0.82);
+    --nav-border: rgba(0, 0, 0, 0.10);
+    --nav-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 
     /* Gradient Text variables */
     --gradient-text-from: #5b47d1;
@@ -39,9 +39,9 @@
     --glass-rgb: 39, 42, 51;
     --glass-border-rgb: 71, 69, 84;
 
-    /* Nav variables */
-    --nav-bg: rgba(16, 19, 28, 0.88);
-    --nav-border: rgba(255, 255, 255, 0.06);
+    /* Nav variables — frosted glass, dark mode (lighter than bg so blur is visible) */
+    --nav-bg: rgba(30, 34, 48, 0.80);
+    --nav-border: rgba(255, 255, 255, 0.09);
     --nav-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 
     /* Gradient Text variables */
@@ -49,10 +49,16 @@
     --gradient-text-to: #acc7ff;
   }
 
+  html {
+    /* Prevent browser swipe-to-navigate interfering with in-app horizontal scrolling */
+    overscroll-behavior: none;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+    overscroll-behavior: none;
     @apply antialiased;
   }
 }

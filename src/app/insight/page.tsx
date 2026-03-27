@@ -16,7 +16,10 @@ export default function InsightPage() {
     <div className="relative flex flex-col min-h-screen bg-[var(--bg)]">
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 backdrop-blur-xl w-full max-w-2xl mx-auto">
+      <header
+        className="sticky top-0 z-30 flex items-center justify-between px-6 py-3.5 backdrop-blur-2xl saturate-150 w-full"
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
+      >
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}

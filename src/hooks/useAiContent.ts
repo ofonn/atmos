@@ -53,7 +53,7 @@ export function useAiContent(
       const res = await fetch('/api/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ current, hourly, daily }),
+        body: JSON.stringify({ current, hourly, daily, localHour: new Date().getHours(), localMinute: new Date().getMinutes() }),
       })
       const data = await res.json()
       if (data.headline) {

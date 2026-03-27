@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal } from 'lucide-react'
+import { ChevronLeft, ArrowUp, Sparkles, Trash2, MoreHorizontal, Mic, MicOff, ChevronDown, Copy, Check } from 'lucide-react'
 import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useChat } from '@/hooks/useChat'
@@ -56,12 +56,14 @@ const quickPrompts = [
   'Will it rain tomorrow?',
   'Dress for a run?',
   'Weekend outlook?',
+  'Best time to go outside?',
+  'What should I wear tonight?',
 ]
 
 export default function ChatPage() {
   const router = useRouter()
   const { location, current, hourly, daily } = useWeatherContext()
-  const { tempUnit, windUnit } = useSettings()
+  const { tempUnit, windUnit, timeFormat } = useSettings()
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const { messages, loading, sendMessage, clearChat } = useChat({ current, hourly, daily })
   const [input, setInput] = useState('')
@@ -72,15 +74,74 @@ export default function ChatPage() {
 
   const [showMenu, setShowMenu] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
-  const [revealedData, setRevealedData] = useState<Record<string, boolean>>({})
+  // Default expanded: undefined = expanded, false = collapsed
+  const [collapsedData, setCollapsedData] = useState<Record<string, boolean>>({})
+  const [isListening, setIsListening] = useState(false)
+  const [micBlobActive, setMicBlobActive] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
+  const recognitionRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const toggleData = (id: string) => setRevealedData(p => ({ ...p, [id]: !p[id] }))
+  const autoResizeTextarea = useCallback(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`
+  }, [])
+
+  const toggleData = (id: string) => setCollapsedData(p => ({ ...p, [id]: !p[id] }))
+  const isDataVisible = (id: string) => collapsedData[id] !== true
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+    const recognition = new SpeechRecognition()
+    recognition.continuous = false
+    recognition.interimResults = true
+    recognition.lang = 'en-US'
+    recognition.onstart = () => setIsListening(true)
+    recognition.onresult = (e: any) => {
+      const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join('')
+      setInput(transcript)
+    }
+    recognition.onend = () => setIsListening(false)
+    recognition.onerror = () => setIsListening(false)
+    recognitionRef.current = recognition
+    recognition.start()
+  }, [])
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop()
+    setIsListening(false)
+  }, [])
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (isAtBottom && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, isAtBottom])
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const threshold = 80
+    setIsAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < threshold)
+  }, [])
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      setIsAtBottom(true)
+    }
+  }, [])
+
+  const copyMessage = useCallback((id: string, text: string) => {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), 1800)
+    })
+  }, [])
 
   useEffect(() => {
     try {
@@ -118,6 +179,7 @@ export default function ChatPage() {
     if (input.trim() && !loading) {
       sendMessage(input.trim())
       setInput('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
     }
   }
 
@@ -137,10 +199,10 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-md w-full max-w-xl mx-auto"
+        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl mx-auto"
         style={{
-          background: 'var(--bg)',
-          borderBottom: '1px solid var(--outline)'
+          background: 'var(--nav-bg)',
+          borderBottom: '1px solid var(--nav-border)'
         }}
       >
         <div className="flex items-center gap-2">
@@ -180,7 +242,7 @@ export default function ChatPage() {
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-xl border z-50 text-[13px] font-body"
+                className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-2xl saturate-150 border z-50 text-[13px] font-body"
                 style={{ background: 'var(--surface)', borderColor: 'var(--outline)' }}
               >
                 {!confirmClear ? (
@@ -211,7 +273,7 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
+      <main ref={scrollRef} onScroll={handleScroll} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
@@ -271,10 +333,11 @@ export default function ChatPage() {
               const time = new Date(msg.timestamp).toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
+                hour12: timeFormat === '12h',
               })
 
               return (
-                <div key={msg.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                <div key={msg.id} className={`flex flex-col group ${isUser ? 'items-end' : 'items-start'}`}>
                   <div className={`flex items-end gap-3 max-w-[88%] ${isUser ? 'flex-row-reverse' : ''}`}>
                     {!isUser && (
                       <div
@@ -307,7 +370,22 @@ export default function ChatPage() {
                           : <div className="text-[0.9rem] leading-relaxed">{renderMarkdown(msg.content)}</div>}
                       </div>
 
-                      {/* Contextual inline card — animated in via Show Data */}
+                      {/* Copy button for AI messages */}
+                      {!isUser && (
+                        <button
+                          onClick={() => copyMessage(msg.id, msg.content)}
+                          className="self-start ml-1 p-1.5 rounded-lg opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                          aria-label="Copy message"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          {copiedId === msg.id
+                            ? <Check className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+                            : <Copy className="w-3.5 h-3.5" />
+                          }
+                        </button>
+                      )}
+
+                      {/* Contextual inline card — expanded by default */}
                       {!isUser && (
                         <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--outline)' }}>
                           <button
@@ -315,9 +393,9 @@ export default function ChatPage() {
                             className="flex items-center text-[10px] uppercase font-bold tracking-widest hover:opacity-80 transition-opacity"
                             style={{ color: 'var(--primary)' }}
                           >
-                            {revealedData[msg.id] ? 'Hide Data' : 'Show Data \u2192'}
+                            {isDataVisible(msg.id) ? 'Hide Data' : 'Show Data \u2192'}
                           </button>
-                          {revealedData[msg.id] && (
+                          {isDataVisible(msg.id) && (
                             <div className="mt-3">
                               <ContextualCard
                                 userMsg={messages[idx - 1]?.content ?? ''}
@@ -377,6 +455,28 @@ export default function ChatPage() {
         )}
       </main>
 
+      {/* Scroll to bottom button */}
+      <AnimatePresence>
+        {!isAtBottom && messages.length > 0 && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={scrollToBottom}
+            aria-label="Scroll to latest message"
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-label shadow-lg backdrop-blur-md"
+            style={{
+              background: 'var(--surface)',
+              border: '0.5px solid var(--outline)',
+              color: 'var(--primary)',
+            }}
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            Latest
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* Input area */}
       <div
         className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4 w-full max-w-xl mx-auto"
@@ -409,24 +509,81 @@ export default function ChatPage() {
             style={{ background: 'linear-gradient(90deg, rgba(128,110,248,0.2), rgba(88,150,253,0.2))' }}
           />
           <div
-            className="relative flex items-center rounded-full p-2 pl-6 pr-2"
+            className="relative flex items-end rounded-3xl p-2 pl-6 pr-2"
             style={{
               background: 'var(--surface)',
               boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
               border: '0.5px solid var(--outline)',
             }}
           >
-            <input
-              type="text"
+            <textarea
+              ref={textareaRef}
               value={typingText || input}
-              onChange={(e) => { if (!typingText) setInput(e.target.value) }}
-              placeholder="Ask about the forecast..."
+              onChange={(e) => {
+                if (!typingText) setInput(e.target.value)
+                autoResizeTextarea()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  if (input.trim() && !loading) handleSubmit(e as any)
+                }
+              }}
+              placeholder={isListening ? 'Listening…' : 'Ask about the forecast...'}
               aria-label="Message to Atmos AI"
-              className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem]"
-              style={{ color: typingText ? 'var(--primary)' : 'var(--text)' }}
+              rows={1}
+              className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem] resize-none overflow-y-auto"
+              style={{
+                color: isListening ? 'var(--primary)' : typingText ? 'var(--primary)' : 'var(--text)',
+                maxHeight: '7.5rem',
+                lineHeight: '1.5rem',
+              }}
               disabled={loading || !!typingText}
               readOnly={!!typingText}
             />
+            {/* Mic button with blob animation */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!isListening) {
+                  setMicBlobActive(true)
+                  setTimeout(() => {
+                    setMicBlobActive(false)
+                    startListening()
+                  }, 600)
+                } else {
+                  stopListening()
+                }
+              }}
+              disabled={loading || !!typingText}
+              aria-label={isListening ? 'Stop recording' : 'Voice input'}
+              className="w-9 h-9 flex items-center justify-center rounded-full mr-1 transition-all active:scale-90 disabled:opacity-30 relative overflow-visible"
+              style={{ color: isListening ? 'var(--primary)' : 'var(--text-muted)' }}
+            >
+              {/* Blob expand animation */}
+              <AnimatePresence>
+                {micBlobActive && (
+                  <motion.span
+                    className="absolute rounded-full z-0"
+                    style={{ background: 'linear-gradient(135deg, rgba(128,110,248,0.25), rgba(88,150,253,0.2))' }}
+                    initial={{ width: 36, height: 36, left: 0, top: 0, opacity: 0.8 }}
+                    animate={{ width: 280, height: 48, left: -220, top: -4, opacity: 1, borderRadius: 24 }}
+                    exit={{ width: 36, height: 36, left: 0, top: 0, opacity: 0, borderRadius: 18 }}
+                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                  />
+                )}
+              </AnimatePresence>
+              {isListening && (
+                <>
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(199,191,255,0.3)' }} />
+                  <span className="absolute inset-1 rounded-full animate-pulse" style={{ background: 'rgba(199,191,255,0.15)' }} />
+                </>
+              )}
+              {isListening
+                ? <MicOff className="w-4 h-4 relative z-10" aria-hidden="true" />
+                : <Mic className="w-4 h-4 relative z-10" aria-hidden="true" />
+              }
+            </button>
             <button
               type="submit"
               disabled={!input.trim() || loading}

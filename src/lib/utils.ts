@@ -95,6 +95,15 @@ export function formatHourFromISO(iso: string, format: '12h' | '24h' = '24h'): s
   return `${String(date.getHours()).padStart(2, '0')}:00`
 }
 
+/** Returns "X min ago" or "just now" relative to a unix timestamp (seconds) */
+export function timeAgo(dt: number): string {
+  const mins = Math.floor((Date.now() / 1000 - dt) / 60)
+  if (mins < 1) return 'just now'
+  if (mins === 1) return '1 min ago'
+  if (mins < 60) return `${mins} min ago`
+  return `${Math.floor(mins / 60)}h ago`
+}
+
 export function formatDay(timestamp: number): string {
   const date = new Date(timestamp * 1000)
   return date.toLocaleDateString('en-US', { weekday: 'short' })

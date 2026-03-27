@@ -3,25 +3,26 @@ import { createGeminiClient, buildSystemPrompt } from '@/lib/gemini'
 
 const MODEL_ROTATION = [
   'gemini-2.5-flash',
-  'gemini-2.0-flash-lite',
+  'gemini-2.5-pro',
   'gemini-2.0-flash',
-  'gemini-1.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash-lite',
 ]
 
 function isRateLimit(error: any): boolean {
   const msg = (error?.message || '') + (error?.status || '')
-  return msg.includes('quota') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')
+  return msg.includes('quota') || msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('not found')
 }
 
 export async function POST(request: NextRequest) {
-  const { message, history, weather } = await request.json()
+  const { message, history, weather, localHour, localMinute } = await request.json()
 
   if (!message) {
     return NextResponse.json({ error: 'Message required' }, { status: 400 })
   }
 
   const genAI = createGeminiClient()
-  const systemPrompt = buildSystemPrompt(weather || {})
+  const systemPrompt = buildSystemPrompt(weather || {}, localHour, localMinute)
   const chatHistory = (history || []).map((msg: any) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: msg.content }],

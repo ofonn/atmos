@@ -2,16 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { MapPin, Sparkles, ChevronDown, Sun, Info } from 'lucide-react'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { WeatherIcon } from '@/components/weather/WeatherIcon'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { formatDay, displayTempShort, displayTemp } from '@/lib/utils'
+import { useAiContent } from '@/hooks/useAiContent'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, uviColor, uviLabel,
-  fmtISOTime, fmtISODate, displayCelsius,
+  fmtISOTime, fmtISOTimeFmt, fmtISODate, displayCelsius,
 } from '@/lib/weatherUtils'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -86,8 +87,9 @@ function DataRow({ label, value, unit, tooltip }: {
 
 export default function OverviewPage() {
   const router = useRouter()
-  const { location, current, daily, loading, error } = useWeatherContext()
-  const { tempUnit, windUnit } = useSettings()
+  const { location, current, daily, hourly, loading, error } = useWeatherContext()
+  const { tempUnit, windUnit, timeFormat } = useSettings()
+  const { content: aiContent } = useAiContent(current, hourly, daily)
 
   const { data: meteo } = useSWR(
     location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
@@ -105,10 +107,13 @@ export default function OverviewPage() {
     <div className="relative flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
-      <header className="sticky top-0 z-30 flex justify-between items-center px-6 py-4 backdrop-blur-xl w-full max-w-4xl mx-auto">
-        <div className="flex items-center gap-2">
+      <header
+        className="sticky top-0 z-30 flex justify-between items-center px-6 py-3.5 backdrop-blur-2xl saturate-150 w-full"
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
+      >
+        <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
           <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />
-          <span className="font-headline font-extrabold tracking-tight text-2xl" style={{ color: 'var(--primary)' }}>
+          <span className="font-headline font-bold tracking-tight text-xl" style={{ color: 'var(--primary)' }}>
             Atmos
           </span>
         </div>
@@ -182,8 +187,34 @@ export default function OverviewPage() {
                   </div>
                   <div className="relative z-10 flex-shrink-0">
                     <div className="w-20 h-20 flex items-center justify-center">
-                      <WeatherIcon conditionCode={featured.conditionCode} iconCode={featured.icon} size={64} />
+                      <span className="text-5xl leading-none" role="img" aria-label={featured.description}>
+                        {wmoEmoji(featured.conditionCode)}
+                      </span>
                     </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* AI Week Summary */}
+            {aiContent?.weekSummary && (
+              <section className="px-2 mb-4">
+                <div
+                  className="rounded-2xl p-5 relative overflow-hidden"
+                  style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+                >
+                  <div
+                    className="absolute -right-10 -top-10 w-36 h-36 blur-[60px] rounded-full pointer-events-none"
+                    style={{ background: 'rgba(199,191,255,0.15)' }}
+                  />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+                      <span className="text-[10px] font-label uppercase tracking-widest" style={{ color: 'var(--primary)' }}>Week Outlook</span>
+                    </div>
+                    <p className="text-sm font-body leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                      {aiContent.weekSummary}
+                    </p>
                   </div>
                 </div>
               </section>
@@ -224,11 +255,23 @@ export default function OverviewPage() {
             {/* Vertical Day List — starting with Today */}
             {listDays.length > 0 && (
               <section className="px-2 flex flex-col gap-3 mb-6">
-                {listDays.map((day) => {
+                {listDays.map((day, idx) => {
                   const isToday = day.dt === today?.dt;
+                  // Compute temp range bar for this week
+                  const allMax = listDays.map(d => d.tempMax)
+                  const allMin = listDays.map(d => d.tempMin)
+                  const weekMin = Math.min(...allMin)
+                  const weekMax = Math.max(...allMax)
+                  const barRange = weekMax - weekMin || 1
+                  const barLeft = ((day.tempMin - weekMin) / barRange) * 100
+                  const barWidth = ((day.tempMax - day.tempMin) / barRange) * 100
+
                   return (
-                    <div
+                    <motion.div
                       key={day.dt}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.06, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                       className="rounded-2xl p-4 flex items-center justify-between"
                       style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
                     >
@@ -249,25 +292,45 @@ export default function OverviewPage() {
 
                       {/* Middle: Condition & Rain Status */}
                       <div className="flex-1 flex flex-col items-center justify-center">
-                        <WeatherIcon conditionCode={day.conditionCode} iconCode={day.icon} size={28} />
+                        <span className="text-2xl leading-none" role="img" aria-label={day.description}>
+                          {wmoEmoji(day.conditionCode)}
+                        </span>
                         {day.pop > 0 && (
-                          <div className="flex items-center justify-center gap-1.5 mt-1">
-                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#60a5fa' }} />
+                          <div className="flex items-center justify-center gap-1 mt-1">
                             <span className="text-[10px] font-label font-bold" style={{ color: '#60a5fa' }}>{day.pop}%</span>
+                            {day.precipitationSum > 0 && (
+                              <span className="text-[9px] font-label opacity-70" style={{ color: '#60a5fa' }}>
+                                · {day.precipitationSum.toFixed(1)}mm
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
 
-                      {/* Right: Truncated vertical Stack for Temps */}
-                      <div className="w-1/4 flex flex-col items-end pl-2">
-                        <span className="font-headline text-[1.15rem] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
-                          {displayTempShort(day.tempMax, tempUnit)}
-                        </span>
-                        <span className="font-label text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                          {displayTempShort(day.tempMin, tempUnit)}
-                        </span>
+                      {/* Right: Temps + animated range bar */}
+                      <div className="w-1/3 flex flex-col items-end gap-1 pl-2">
+                        <div className="flex items-baseline gap-2">
+                          <span className="font-headline text-[1.1rem] font-extrabold leading-tight" style={{ color: 'var(--text)' }}>
+                            {displayTempShort(day.tempMax, tempUnit)}
+                          </span>
+                          <span className="font-label text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                            {displayTempShort(day.tempMin, tempUnit)}
+                          </span>
+                        </div>
+                        {/* Temperature range bar */}
+                        <div className="w-full h-1 rounded-full relative" style={{ background: 'var(--surface-mid)' }}>
+                          <motion.div
+                            className="absolute h-full rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${barWidth}%`, left: `${barLeft}%` }}
+                            transition={{ delay: idx * 0.06 + 0.2, duration: 0.5, ease: 'easeOut' }}
+                            style={{
+                              background: 'linear-gradient(90deg, #60a5fa, #f59e0b)',
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
                   )
                 })}
               </section>
@@ -275,7 +338,7 @@ export default function OverviewPage() {
 
             {/* 16-Day Daily */}
             {md ? (
-              <DailyMeteoSection md={md} tempUnit={tempUnit} windUnit={windUnit} />
+              <DailyMeteoSection md={md} tempUnit={tempUnit} windUnit={windUnit} timeFormat={timeFormat} />
             ) : (
               <div className="h-16 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />
             )}
@@ -292,7 +355,7 @@ export default function OverviewPage() {
 
 // ── 16-Day Daily Forecast ────────────────────────────────────────────────────
 
-function DailyMeteoSection({ md, tempUnit, windUnit }: { md: any; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+function DailyMeteoSection({ md, tempUnit, windUnit, timeFormat }: { md: any; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph'; timeFormat: '12h' | '24h' }) {
   return (
     <Section
       title="16-Day Forecast"
@@ -300,13 +363,13 @@ function DailyMeteoSection({ md, tempUnit, windUnit }: { md: any; tempUnit: 'C' 
       defaultOpen={false}
     >
       {(md.time as string[]).map((_, i) => (
-        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} windUnit={windUnit} />
+        <DailyMeteoRow key={md.time[i]} md={md} idx={i} tempUnit={tempUnit} windUnit={windUnit} timeFormat={timeFormat} />
       ))}
     </Section>
   )
 }
 
-function DailyMeteoRow({ md, idx, tempUnit, windUnit }: { md: any; idx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph' }) {
+function DailyMeteoRow({ md, idx, tempUnit, windUnit, timeFormat }: { md: any; idx: number; tempUnit: 'C' | 'F'; windUnit: 'kmh' | 'mph'; timeFormat: '12h' | '24h' }) {
   const fmtWind = (kmh: number) => windUnit === 'mph' ? `${Math.round(kmh * 0.621371)} mph` : `${kmh.toFixed(1)} km/h`
   const [open, setOpen] = useState(false)
   const label = idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : fmtISODate(md.time[idx])
@@ -364,7 +427,7 @@ function DailyMeteoRow({ md, idx, tempUnit, windUnit }: { md: any; idx: number; 
               <div className="rounded-lg p-2.5" style={{ background: 'var(--surface-mid)' }}>
                 <p className="text-[0.65rem] font-label uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Sunrise / Sunset</p>
                 <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>
-                  {fmtISOTime(md.sunrise[idx])} / {fmtISOTime(md.sunset[idx])}
+                  {fmtISOTimeFmt(md.sunrise[idx], timeFormat)} / {fmtISOTimeFmt(md.sunset[idx], timeFormat)}
                 </p>
                 {md.daylight_duration?.[idx] != null && (
                   <p className="text-[0.65rem] mt-0.5" style={{ color: 'var(--text-muted)' }}>

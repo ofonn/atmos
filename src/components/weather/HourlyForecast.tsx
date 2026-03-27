@@ -1,7 +1,8 @@
 'use client'
 
-import { WeatherIcon } from './WeatherIcon'
+import { motion } from 'framer-motion'
 import { formatHourFromISO } from '@/lib/utils'
+import { wmoEmoji } from '@/lib/weatherUtils'
 import { useSettings } from '@/contexts/SettingsContext'
 import type { HourlyData } from '@/types/weather'
 
@@ -13,14 +14,17 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
   const { timeFormat } = useSettings()
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 overscroll-x-contain" style={{ touchAction: 'pan-x' }}>
       {data.map((hour, i) => {
         const isNow = i === 0
         const hasRain = hour.pop > 20
 
         return (
-          <div
+          <motion.div
             key={hour.dt}
+            initial={{ opacity: 0, y: 12, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: i * 0.04, duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
             className={`flex flex-col items-center gap-1.5 min-w-[64px] flex-1 py-3 px-1.5 rounded-2xl ${
               isNow ? 'bg-hero-gradient text-white shadow-glass' : ''
             }`}
@@ -37,7 +41,9 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
               {isNow ? 'Now' : formatHourFromISO(hour.time, timeFormat)}
             </span>
 
-            <WeatherIcon conditionCode={hour.conditionCode} isDay={hour.isDay} size={26} />
+            <span className="text-2xl leading-none" role="img" aria-label={hour.description}>
+              {wmoEmoji(hour.conditionCode, hour.isDay ? 1 : 0)}
+            </span>
 
             <span
               className="font-semibold text-sm font-headline"
@@ -58,7 +64,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
             >
               {hour.pop}%
             </span>
-          </div>
+          </motion.div>
         )
       })}
     </div>
