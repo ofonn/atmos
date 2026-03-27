@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { RainTimeline } from '@/components/weather/RainTimeline'
+import { RadarPreview } from '@/components/weather/RadarPreview'
 import { WindCompass } from '@/components/weather/WindCompass'
 import { MoonPhase } from '@/components/weather/MoonPhase'
 import { SunArc } from '@/components/weather/SunArc'
@@ -15,7 +16,7 @@ import { useSettings } from '@/contexts/SettingsContext'
 import { useRouter } from 'next/navigation'
 import {
   ChevronDown, ChevronUp, Wind, Thermometer, Sparkles, Info, Clock,
-  ThumbsUp, ThumbsDown, ArrowRight, Radio, Droplets, Eye, Gauge
+  ThumbsUp, ThumbsDown, ArrowRight, Droplets, Eye, Gauge
 } from 'lucide-react'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, fmtISOTime, fmtISOTimeFmt,
@@ -234,82 +235,40 @@ export default function TechnicalPage() {
               </div>
             </div>
 
-            {/* ── Live Radar + RainTimeline + AQI — DESKTOP ONLY (hidden on mobile) ── */}
+            {/* ── Desktop-only left column extras ── */}
             <div className="hidden md:flex flex-col gap-4">
-              <button
-                onClick={() => router.push('/radar')}
-                className="w-full rounded-2xl overflow-hidden relative flex items-center gap-4 px-5 py-4 text-left active:scale-[0.98] transition-transform"
-                style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-                aria-label="Open live radar"
-              >
-                <div
-                  className="absolute inset-0 opacity-20"
-                  style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(128,110,248,0.6) 0%, rgba(88,150,253,0.4) 50%, transparent 70%)' }}
-                />
-                <motion.div
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-5xl opacity-20"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-                >
-                  🛰️
-                </motion.div>
-                <div
-                  className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
-                >
-                  <Radio className="w-5 h-5 text-white" aria-hidden="true" />
-                </div>
-                <div className="relative z-10 flex-1">
-                  <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>Live Radar</p>
-                  <p className="text-[11px] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                    {location ? `${location.name} · Powered by RainViewer` : 'Real-time precipitation radar'}
-                  </p>
-                </div>
-                <ArrowRight className="relative z-10 w-4 h-4 flex-shrink-0 opacity-40" style={{ color: 'var(--text)' }} aria-hidden="true" />
-              </button>
-
+              {location && (
+                <RadarPreview lat={location.lat} lon={location.lon} locationName={location.name} />
+              )}
               {location && <RainTimeline lat={location.lat} lon={location.lon} />}
               <AirQualitySection air={air} airData={airData} />
+
+              {/* Location Metadata — desktop left col */}
+              {location && (
+                <div className="rounded-2xl p-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
+                  <p className="text-[0.65rem] font-label uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                    Location Metadata
+                  </p>
+                  <DataRow label="City" value={`${location.name}${location.country ? `, ${location.country}` : ''}`} />
+                  <DataRow label="Coordinates" value={`${location.lat.toFixed(4)}, ${location.lon.toFixed(4)}`} />
+                  <DataRow label="UTC Offset" value={`UTC${offset >= 0 ? '+' : ''}${(offset / 3600).toFixed(0)}h`} />
+                  <p className="text-[0.65rem] font-label mt-3 text-center" style={{ color: 'var(--text-muted)' }}>
+                    Data: Open-Meteo · Air Quality API
+                  </p>
+                </div>
+              )}
             </div>
 
           </div>{/* end left col */}
 
           <div className="flex flex-col gap-4 mt-6 md:mt-0">
 
-        {/* ── Live Radar + RainTimeline — MOBILE ONLY (hidden on desktop) ── */}
-        <div className="flex flex-col gap-4 md:hidden">
-          <button
-            onClick={() => router.push('/radar')}
-            className="w-full rounded-2xl overflow-hidden relative flex items-center gap-4 px-5 py-4 text-left active:scale-[0.98] transition-transform"
-            style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-            aria-label="Open live radar"
-          >
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(128,110,248,0.6) 0%, rgba(88,150,253,0.4) 50%, transparent 70%)' }}
-            />
-            <motion.div
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-5xl opacity-20"
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-            >
-              🛰️
-            </motion.div>
-            <div
-              className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
-            >
-              <Radio className="w-5 h-5 text-white" aria-hidden="true" />
-            </div>
-            <div className="relative z-10 flex-1">
-              <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>Live Radar</p>
-              <p className="text-[11px] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                {location ? `${location.name} · Powered by RainViewer` : 'Real-time precipitation radar'}
-              </p>
-            </div>
-            <ArrowRight className="relative z-10 w-4 h-4 flex-shrink-0 opacity-40" style={{ color: 'var(--text)' }} aria-hidden="true" />
-          </button>
-        </div>
+        {/* ── Radar preview — MOBILE ONLY ── */}
+        {location && (
+          <div className="md:hidden">
+            <RadarPreview lat={location.lat} lon={location.lon} locationName={location.name} />
+          </div>
+        )}
 
         {/* ── UV Warning Banner ──────────────────────────────────────── */}
         {mh && mh.uv_index?.[nowHourIdx] >= 6 && (
@@ -637,9 +596,9 @@ export default function TechnicalPage() {
         </Section>
         </div>{/* end md:hidden AQI wrapper */}
 
-        {/* ── Location Metadata ─────────────────────────────────────────── */}
+        {/* ── Location Metadata — MOBILE ONLY (desktop shows in left col) ── */}
         {location && (
-          <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
+          <div className="md:hidden rounded-2xl p-4 mb-4" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
             <p className="text-[0.65rem] font-label uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
               Location Metadata
             </p>
