@@ -33,7 +33,7 @@ function get3DIconStyle(code: number, isDark: boolean = true) {
   return { from: '#94A3B8', via: '#64748B', to: isDark ? '#475569' : '#94A3B8', glow: 'rgba(148,163,184,0.3)' }
 }
 
-function getFallbackHeadline(temp: number, code: number): { headline: string; advice: string } {
+function getFallbackHeadline(temp: number, code: number): { headline: string; advice: string; hook?: string | null } {
   const hour = new Date().getHours()
   const isNight = hour < 6 || hour >= 22
   const isMorning = hour >= 6 && hour < 12
@@ -91,6 +91,7 @@ export default function Home() {
   const { tempUnit, windUnit, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware } = useSettings()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [toneSheetOpen, setToneSheetOpen] = useState(false)
 
   const { location, locLoading, searchCity, current, hourly, daily, sun, refresh: refreshWeather, loading: weatherLoading } = useWeatherContext()
   const { data: airData } = useSWR(
@@ -507,6 +508,15 @@ export default function Home() {
                     style={{ color: 'var(--text-muted)' }}
                   >
                     🛰️ Radar
+                  </button>
+                  <button
+                    onClick={() => setToneSheetOpen(true)}
+                    aria-label="Change headline tone"
+                    className="flex items-center gap-1.5 text-[11px] font-label uppercase tracking-widest transition-opacity active:scale-95 px-3 py-2 ml-auto"
+                    style={{ color: 'var(--primary)' }}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                    Tone
                   </button>
                 </div>
               </section>
