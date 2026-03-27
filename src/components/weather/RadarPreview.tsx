@@ -148,43 +148,57 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
         <ArrowRight className="w-4 h-4 text-white opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
       </div>
 
-      {/* Bottom bar — timestamp + play button */}
+      {/* Centre play button — large, visible when paused; shrinks when playing */}
+      {ready && (
+        <button
+          onClick={togglePlay}
+          className="absolute inset-0 m-auto z-20 flex items-center justify-center transition-all duration-300"
+          style={{
+            width: isPlaying ? 32 : 48,
+            height: isPlaying ? 32 : 48,
+            borderRadius: '50%',
+            background: isPlaying ? 'rgba(199,191,255,0.15)' : 'rgba(128,110,248,0.85)',
+            border: '1.5px solid rgba(199,191,255,0.6)',
+            backdropFilter: 'blur(6px)',
+            opacity: isPlaying ? 0.6 : 1,
+          }}
+          aria-label={isPlaying ? 'Pause' : 'Play animation'}
+        >
+          {isPlaying
+            ? <Pause className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+            : <Play className="w-4 h-4 text-white ml-0.5" aria-hidden="true" />
+          }
+        </button>
+      )}
+
+      {/* Bottom bar — timestamp + scrubber */}
       <div
         className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)' }}
       >
         <p className="text-[10px] font-label text-white opacity-70">
           {ready && frames[frameIdx] ? fmtTime(frames[frameIdx].time) : 'Loading…'}
         </p>
 
-        {/* Play / Pause button — stops propagation so it doesn't navigate */}
-        <button
-          onClick={togglePlay}
-          className="flex items-center justify-center w-8 h-8 rounded-full transition-transform active:scale-90"
-          style={{ background: 'rgba(199,191,255,0.2)', border: '1px solid rgba(199,191,255,0.4)' }}
-          aria-label={isPlaying ? 'Pause' : 'Play animation'}
-        >
-          {isPlaying
-            ? <Pause className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-            : <Play className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-          }
-        </button>
+        {/* Scrubber dots */}
+        {ready && frames.length > 0 && (
+          <div className="flex items-center gap-1">
+            {frames.map((_, i) => (
+              <button
+                key={i}
+                onClick={e => { e.stopPropagation(); setIsPlaying(false); setFrameIdx(i) }}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === frameIdx ? 14 : 5,
+                  height: 5,
+                  background: i === frameIdx ? '#c7bfff' : 'rgba(255,255,255,0.4)',
+                }}
+                aria-label={`Frame ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Frame scrubber dots */}
-      {ready && frames.length > 0 && (
-        <div className="absolute bottom-10 left-0 right-0 flex justify-center gap-1 z-10">
-          {frames.map((_, i) => (
-            <button
-              key={i}
-              onClick={e => { e.stopPropagation(); setIsPlaying(false); setFrameIdx(i) }}
-              className="w-1.5 h-1.5 rounded-full transition-all"
-              style={{ background: i === frameIdx ? '#c7bfff' : 'rgba(255,255,255,0.35)' }}
-              aria-label={`Frame ${i + 1}`}
-            />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
