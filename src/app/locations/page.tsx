@@ -204,7 +204,7 @@ export default function LocationsPage() {
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
       <header
-        className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3.5 backdrop-blur-xl w-full"
+        className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3.5 backdrop-blur-2xl saturate-150 w-full"
         style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <button

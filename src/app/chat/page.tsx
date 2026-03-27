@@ -199,7 +199,7 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-xl w-full max-w-xl mx-auto"
+        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl mx-auto"
         style={{
           background: 'var(--nav-bg)',
           borderBottom: '1px solid var(--nav-border)'
@@ -242,7 +242,7 @@ export default function ChatPage() {
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-xl border z-50 text-[13px] font-body"
+                className="absolute right-0 top-12 rounded-xl p-2 w-48 shadow-2xl backdrop-blur-2xl saturate-150 border z-50 text-[13px] font-body"
                 style={{ background: 'var(--surface)', borderColor: 'var(--outline)' }}
               >
                 {!confirmClear ? (

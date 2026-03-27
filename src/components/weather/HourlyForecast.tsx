@@ -14,7 +14,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
   const { timeFormat } = useSettings()
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 overscroll-x-contain" style={{ touchAction: 'pan-x' }}>
       {data.map((hour, i) => {
         const isNow = i === 0
         const hasRain = hour.pop > 20

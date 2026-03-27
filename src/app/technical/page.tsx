@@ -162,7 +162,7 @@ export default function TechnicalPage() {
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
       <header
-        className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-xl"
+        className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-2xl saturate-150"
         style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <h1 className="text-xl font-bold tracking-tighter font-headline" style={{ color: 'var(--primary)' }}>Atmos</h1>
