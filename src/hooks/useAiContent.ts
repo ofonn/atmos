@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { CurrentWeatherData, HourlyData, DailyData } from '@/types/weather'
+import type { HeadlineTone } from '@/contexts/SettingsContext'
 
 const CACHE_KEY = 'atmos_ai_content'
-const CACHE_TTL = 60 * 60 * 1000 // 1 hour in ms
+const CACHE_TTL = 60 * 60 * 1000
 
 export interface AiContent {
   headline: string
+  hook?: string | null   // two-line mode: the setup line (plain), headline = payoff (gradient)
   advice: string
   proactiveInsight: string
   weekSummary: string
@@ -16,14 +18,22 @@ export interface AiContent {
   fetchedAt: number
 }
 
+export interface HeadlineOptions {
+  headlineTone: HeadlineTone
+  headlineTwoLine: boolean
+  headlineLocationFlavor: boolean
+  headlineTimeAware: boolean
+  locationName?: string
+  locationCountry?: string
+}
+
 function getCache(): AiContent | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
     const parsed: AiContent = JSON.parse(raw)
-    const age = Date.now() - parsed.fetchedAt
-    if (age > CACHE_TTL) return null // expired
+    if (Date.now() - parsed.fetchedAt > CACHE_TTL) return null
     return parsed
   } catch {
     return null
@@ -31,15 +41,18 @@ function getCache(): AiContent | null {
 }
 
 function setCache(content: AiContent) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(content))
-  } catch {}
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(content)) } catch {}
+}
+
+export function clearAiCache() {
+  try { localStorage.removeItem(CACHE_KEY) } catch {}
 }
 
 export function useAiContent(
   current: CurrentWeatherData | null,
   hourly: HourlyData[] | null,
-  daily: DailyData[] | null
+  daily: DailyData[] | null,
+  options?: HeadlineOptions
 ) {
   const [content, setContent] = useState<AiContent | null>(null)
   const [loading, setLoading] = useState(false)
@@ -53,12 +66,23 @@ export function useAiContent(
       const res = await fetch('/api/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ current, hourly, daily, localHour: new Date().getHours(), localMinute: new Date().getMinutes() }),
+        body: JSON.stringify({
+          current, hourly, daily,
+          localHour: new Date().getHours(),
+          localMinute: new Date().getMinutes(),
+          headlineTone: options?.headlineTone ?? 'casual',
+          headlineTwoLine: options?.headlineTwoLine ?? false,
+          headlineLocationFlavor: options?.headlineLocationFlavor ?? false,
+          headlineTimeAware: options?.headlineTimeAware ?? false,
+          locationName: options?.locationName,
+          locationCountry: options?.locationCountry,
+        }),
       })
       const data = await res.json()
       if (data.headline) {
         const newContent: AiContent = {
           headline: data.headline,
+          hook: data.hook ?? null,
           advice: data.advice,
           proactiveInsight: data.proactiveInsight,
           weekSummary: data.weekSummary,
@@ -71,19 +95,15 @@ export function useAiContent(
       }
     } catch {}
     setLoading(false)
-  }, [current, hourly, daily])
+  }, [current, hourly, daily, options?.headlineTone, options?.headlineTwoLine, options?.headlineLocationFlavor, options?.headlineTimeAware, options?.locationName, options?.locationCountry]) // eslint-disable-line
 
-  // On mount or when weather data arrives: use cache if fresh, otherwise fetch
   useEffect(() => {
     if (!current || hasFetched.current) return
-
     const cached = getCache()
     if (cached) {
-      // Cache is fresh — use it immediately, no API call
       setContent(cached)
       hasFetched.current = true
     } else {
-      // Cache expired or empty — fetch fresh AI content
       fetchContent()
     }
   }, [current, fetchContent])

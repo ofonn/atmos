@@ -90,7 +90,7 @@ function SegmentedControl({
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { tempUnit, windUnit, timeFormat, updateSetting } = useSettings()
+  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, updateSetting } = useSettings()
   const { location, locLoading, searchCity, syncLocation } = useWeatherContext()
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
@@ -193,6 +193,87 @@ export default function SettingsPage() {
             onChange={(v) => updateSetting('timeFormat', v)}
           />
         </SettingRow>
+
+        {/* AI & Headlines section */}
+        <div className="pt-4">
+          <p className="text-[11px] font-label uppercase tracking-widest px-1 mb-1" style={{ color: 'var(--text-muted)' }}>
+            AI &amp; Headlines
+          </p>
+        </div>
+
+        {/* Tone picker */}
+        <div className="rounded-2xl px-5 py-4" style={{ background: 'var(--surface)' }}>
+          <div className="flex items-center gap-3 mb-3">
+            <Sparkles className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+            <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>Headline Tone</span>
+          </div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {([
+              { value: 'casual',      label: 'Casual',       emoji: '💬' },
+              { value: 'punchy',      label: 'Punchy',       emoji: '⚡' },
+              { value: 'sarcastic',   label: 'Sarcastic',    emoji: '🙄' },
+              { value: 'funny',       label: 'Funny',        emoji: '😄' },
+              { value: 'dramatic',    label: 'Dramatic',     emoji: '🎭' },
+              { value: 'informative', label: 'Inform.',      emoji: '📋' },
+              { value: 'smart',       label: 'Smart',        emoji: '🧠' },
+              { value: 'local',       label: 'Local',        emoji: '📍' },
+            ] as { value: string; label: string; emoji: string }[]).map(opt => {
+              const active = headlineTone === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => updateSetting('headlineTone', opt.value as any)}
+                  className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-center transition-all"
+                  style={{
+                    background: active ? 'var(--primary)' : 'var(--surface-mid)',
+                    color: active ? 'var(--bg)' : 'var(--text-muted)',
+                    boxShadow: active ? '0 0 0 1px rgba(199,191,255,0.4)' : 'none',
+                  }}
+                  aria-pressed={active}
+                >
+                  <span className="text-base leading-none">{opt.emoji}</span>
+                  <span className="text-[10px] font-bold font-label leading-none">{opt.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Toggle options */}
+        {([
+          { key: 'headlineTwoLine',        val: headlineTwoLine,        label: 'Two-line Hook + Punchline',  icon: '↵', desc: 'Short punchy setup, then the payoff on a new line' },
+          { key: 'headlineLocationFlavor', val: headlineLocationFlavor, label: 'Local Flavour',              icon: '📍', desc: 'Mentions your city and climate naturally' },
+          { key: 'headlineTimeAware',      val: headlineTimeAware,      label: 'Time-aware Tone',            icon: '🕐', desc: 'Morning = briefing, night = atmospheric, etc.' },
+        ] as { key: any; val: boolean; label: string; icon: string; desc: string }[]).map(({ key, val, label, icon, desc }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between px-5 py-4 rounded-2xl"
+            style={{ background: 'var(--surface)' }}
+          >
+            <div className="flex-1 min-w-0 mr-4">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-base leading-none">{icon}</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{label}</span>
+              </div>
+              <p className="text-[11px] font-label pl-7" style={{ color: 'var(--text-muted)' }}>{desc}</p>
+            </div>
+            <button
+              onClick={() => updateSetting(key, !val)}
+              className="flex-shrink-0 w-12 h-6 rounded-full relative transition-colors duration-200"
+              style={{ background: val ? 'var(--primary)' : 'var(--surface-mid)' }}
+              aria-pressed={val}
+              role="switch"
+            >
+              <span
+                className="absolute top-0.5 w-5 h-5 rounded-full transition-transform duration-200"
+                style={{
+                  background: 'white',
+                  transform: val ? 'translateX(24px)' : 'translateX(2px)',
+                }}
+              />
+            </button>
+          </div>
+        ))}
 
           </div>
 

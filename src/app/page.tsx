@@ -88,7 +88,7 @@ function getFallbackHeadline(temp: number, code: number): { headline: string; ad
 export default function Home() {
   const router = useRouter()
   const { theme } = useTheme()
-  const { tempUnit, windUnit } = useSettings()
+  const { tempUnit, windUnit, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware } = useSettings()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -140,7 +140,14 @@ export default function Home() {
         }))
     : []
 
-  const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
+  const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily, {
+    headlineTone,
+    headlineTwoLine,
+    headlineLocationFlavor,
+    headlineTimeAware,
+    locationName: location?.name,
+    locationCountry: location?.country,
+  })
 
   const loading = locLoading || weatherLoading
   const isDark = theme !== 'light'
@@ -409,14 +416,16 @@ export default function Home() {
                 <h1
                   className="font-headline font-extrabold leading-[1.05] tracking-tighter"
                   style={{
-                    fontSize: getHeadlineFontSize(displayed.headline),
+                    fontSize: getHeadlineFontSize(
+                      headlineTwoLine && displayed.hook
+                        ? `${displayed.hook} ${displayed.headline}`
+                        : displayed.headline
+                    ),
                     color: 'var(--text)',
                     paddingBottom: '0.15em',
                   }}
                 >
                   {(() => {
-                    const { plain, gradient } = splitHeadline(displayed.headline)
-                    const lines = buildHeadlineLines(plain, gradient)
                     const gradientStyle = {
                       background: isDark
                         ? 'linear-gradient(135deg, #c7bfff 0%, #acc7ff 100%)'
@@ -425,9 +434,29 @@ export default function Home() {
                       WebkitTextFillColor: 'transparent' as const,
                       backgroundClip: 'text' as const,
                     }
-                    const isLastLine = (i: number) => i === lines.length - 1
+
+                    // Two-line mode: hook (plain) + headline (gradient payoff)
+                    if (headlineTwoLine && displayed.hook) {
+                      const hookLines = buildHeadlineLines(displayed.hook, '')
+                        .filter(l => l.trim())
+                        .map((line, i) => (
+                          <span key={`h${i}`} className="block">{line}</span>
+                        ))
+                      const payoffLines = buildHeadlineLines('', displayed.headline)
+                        .filter(l => l.trim())
+                        .map((line, i) => (
+                          <span key={`p${i}`} className="block" style={{ ...gradientStyle, paddingBottom: '0.25em' }}>
+                            {line}
+                          </span>
+                        ))
+                      return [...hookLines, ...payoffLines]
+                    }
+
+                    // Single-line mode (default): last word/phrase is gradient
+                    const { plain, gradient } = splitHeadline(displayed.headline)
+                    const lines = buildHeadlineLines(plain, gradient)
                     return lines.map((line, i) => (
-                      <span key={i} className="block" style={isLastLine(i) ? { ...gradientStyle, paddingBottom: '0.25em' } : {}}>
+                      <span key={i} className="block" style={i === lines.length - 1 ? { ...gradientStyle, paddingBottom: '0.25em' } : {}}>
                         {line}
                       </span>
                     ))

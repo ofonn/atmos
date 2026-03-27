@@ -5,17 +5,26 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 export type TempUnit = 'C' | 'F'
 export type WindUnit = 'kmh' | 'mph'
 export type TimeFormat = '12h' | '24h'
+export type HeadlineTone = 'casual' | 'punchy' | 'sarcastic' | 'funny' | 'dramatic' | 'informative' | 'smart' | 'local'
 
 export interface Settings {
   tempUnit: TempUnit
   windUnit: WindUnit
   timeFormat: TimeFormat
+  headlineTone: HeadlineTone
+  headlineTwoLine: boolean
+  headlineLocationFlavor: boolean
+  headlineTimeAware: boolean
 }
 
 const defaults: Settings = {
   tempUnit: 'C',
   windUnit: 'kmh',
   timeFormat: '24h',
+  headlineTone: 'casual',
+  headlineTwoLine: false,
+  headlineLocationFlavor: false,
+  headlineTimeAware: false,
 }
 
 const CACHE_KEY = 'atmos_settings'
@@ -40,12 +49,10 @@ function readCache(): Settings {
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  // Always start with defaults to match server render, then hydrate from localStorage
   const [settings, setSettings] = useState<Settings>(defaults)
 
   useEffect(() => {
-    const cached = readCache()
-    setSettings(cached)
+    setSettings(readCache())
   }, [])
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
