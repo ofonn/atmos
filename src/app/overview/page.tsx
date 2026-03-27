@@ -109,7 +109,7 @@ export default function OverviewPage() {
 
       <header
         className="sticky top-0 z-30 flex justify-between items-center px-6 py-3.5 backdrop-blur-xl w-full"
-        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">
           <MapPin className="w-4 h-4" style={{ color: 'var(--primary)' }} aria-hidden="true" />

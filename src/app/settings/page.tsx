@@ -118,7 +118,7 @@ export default function SettingsPage() {
       {/* Header */}
       <header
         className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-xl"
-        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <h1
           className="text-xl font-bold font-headline tracking-tight"

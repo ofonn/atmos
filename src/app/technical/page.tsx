@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { RainTimeline } from '@/components/weather/RainTimeline'
 import { WindCompass } from '@/components/weather/WindCompass'
 import { MoonPhase } from '@/components/weather/MoonPhase'
+import { SunArc } from '@/components/weather/SunArc'
 import { PressureSparkline } from '@/components/weather/PressureSparkline'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
@@ -162,7 +163,7 @@ export default function TechnicalPage() {
 
       <header
         className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-xl"
-        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <h1 className="text-xl font-bold tracking-tighter font-headline" style={{ color: 'var(--primary)' }}>Atmos</h1>
       </header>
@@ -476,6 +477,17 @@ export default function TechnicalPage() {
               )} />
             )}
             <DataRow label="Last Updated" value={fmtISOTimeFmt(mc.time, timeFormat)} />
+
+            {/* Sun arc visualization */}
+            {md?.sunrise?.[0] && md?.sunset?.[0] && (
+              <div className="py-3">
+                <SunArc
+                  sunrise={new Date(md.sunrise[0]).getTime() / 1000}
+                  sunset={new Date(md.sunset[0]).getTime() / 1000}
+                />
+              </div>
+            )}
+
             <div className="py-3">
               <MoonPhase size={36} />
             </div>

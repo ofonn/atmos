@@ -122,7 +122,7 @@ export default function LocationsPage() {
 
       <header
         className="sticky top-0 z-30 flex items-center gap-4 px-6 py-3.5 backdrop-blur-xl w-full"
-        style={{ background: 'rgba(16,19,28,0.78)', borderBottom: '0.5px solid rgba(199,191,255,0.1)' }}
+        style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <button
           onClick={() => router.back()}

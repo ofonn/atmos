@@ -70,7 +70,7 @@ export function WindCompass({ degrees, speed, unit }: WindCompassProps) {
         <motion.g
           animate={{ rotate: degrees }}
           transition={{ type: 'spring', stiffness: 60, damping: 20 }}
-          style={{ originX: cx, originY: cy, transformBox: 'fill-box' }}
+          style={{ transformOrigin: `${cx}px ${cy}px` }}
         >
           {/* Arrow shaft */}
           <line

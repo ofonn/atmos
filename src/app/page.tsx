@@ -101,6 +101,16 @@ export default function Home() {
     { refreshInterval: 600000 }
   )
   const aqiLevel: number | null = airData?.list?.[0]?.main?.aqi ?? null
+
+  // Raw Open-Meteo data — same SWR key as conditions page, so cache is shared
+  const { data: meteo } = useSWR(
+    location ? `/api/openmeteo?lat=${location.lat}&lon=${location.lon}` : null,
+    (url: string) => fetch(url).then(r => r.json()),
+    { refreshInterval: 300000 }
+  )
+  const mc = meteo?.current
+  const md = meteo?.daily
+
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
 
   // Swipe left/right to navigate between pages
@@ -316,26 +326,36 @@ export default function Home() {
 
                 {/* Temperature + meta */}
                 <div className="flex-1 min-w-0">
-                  <AnimatedNumber
-                    value={tempUnit === 'F' ? Math.round(current.temp * 9 / 5 + 32) : current.temp}
-                    format={n => `${Math.round(n)}°${tempUnit}`}
-                    duration={600}
-                    className="font-headline font-bold leading-none tracking-tighter block"
-                    style={{ fontSize: 'clamp(3.4rem, 15vw, 5.5rem)', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}
-                  />
-                  <p className="font-label text-[11px] mt-1 mb-1.5">
-                    <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
-                    <span style={{
-                      color: current.feelsLike - current.temp >= 4 ? '#f97316'
-                        : current.feelsLike - current.temp <= -4 ? '#60a5fa'
-                        : 'var(--text-muted)',
-                    }}>
-                      {displayTemp(current.feelsLike, tempUnit)}
-                    </span>
-                  </p>
+                  {(() => {
+                    // Use raw Open-Meteo temperature (same as conditions page) to avoid rounding mismatch
+                    const rawTemp = mc?.temperature_2m ?? current.temp
+                    const rawFeels = mc?.apparent_temperature ?? current.feelsLike
+                    const displayValue = tempUnit === 'F' ? rawTemp * 9 / 5 + 32 : rawTemp
+                    return (
+                      <>
+                        <AnimatedNumber
+                          value={displayValue}
+                          format={n => `${Math.round(n)}°${tempUnit}`}
+                          duration={600}
+                          className="font-headline font-bold leading-none tracking-tighter block"
+                          style={{ fontSize: 'clamp(3.4rem, 15vw, 5.5rem)', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}
+                        />
+                        <p className="font-label text-[11px] mt-1 mb-1.5">
+                          <span style={{ color: 'var(--text-muted)' }}>Feels like </span>
+                          <span style={{
+                            color: rawFeels - rawTemp >= 4 ? '#f97316'
+                              : rawFeels - rawTemp <= -4 ? '#60a5fa'
+                              : 'var(--text-muted)',
+                          }}>
+                            {displayTemp(rawFeels, tempUnit)}
+                          </span>
+                        </p>
+                      </>
+                    )
+                  })()}
                   {/* Stats Row */}
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] font-label" style={{ color: 'var(--text-muted)' }}>
-                    <span>H:{displayTempShort(daily?.[0]?.tempMax ?? current.tempMax, tempUnit)} L:{displayTempShort(daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}</span>
+                    <span>H:{displayTempShort(md?.temperature_2m_max?.[0] ?? daily?.[0]?.tempMax ?? current.tempMax, tempUnit)} L:{displayTempShort(md?.temperature_2m_min?.[0] ?? daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}</span>
                     <span className="opacity-40">·</span>
                     <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
                     <span className="opacity-40">·</span>
