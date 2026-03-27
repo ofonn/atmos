@@ -310,41 +310,38 @@ export default function Home() {
         ) : current && displayed && icon ? (
           <>
             {/* ═══ CONTAINER 2 — WEATHER DISPLAY ═══
-                Redesigned: large 3D floating icon + temp side-by-side,
-                SunArc on its own full-width row below */}
-            <section className="relative flex-shrink-0 px-5 pt-2 pb-0">
-              <div className="flex items-center gap-4">
-                {/* 3D Weather icon — larger, ambient glow, floats with text layered over edge */}
-                <div
-                  className="relative flex-shrink-0 z-0"
-                  style={{
-                    filter: `drop-shadow(0 4px 32px ${icon.glow})`,
-                    marginRight: '-18px', // pulls text over icon's right edge
-                  }}
-                >
-                  <motion.div
-                    className="absolute -inset-6 rounded-full blur-3xl opacity-25"
-                    style={{ background: `radial-gradient(circle, ${icon.from}, ${icon.to})` }}
-                    animate={{ scale: [1, 1.25, 1], opacity: [0.25, 0.45, 0.25] }}
-                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                  <motion.div
-                    className="relative flex items-center justify-center"
-                    animate={{ y: [0, -7, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    aria-label={current.description}
-                  >
-                    <MeteoIcon
-                      conditionCode={current.conditionCode}
-                      isDay={current.isDay}
-                      size={110}
-                      className="drop-shadow-xl"
-                    />
-                  </motion.div>
-                </div>
+                Icon is absolutely anchored left at 130px.
+                Text column starts at pl-[88px] — 42px INTO the icon —
+                so the temperature number clearly layers over the icon edge. */}
+            <section className="relative flex-shrink-0 px-5 pt-2 pb-1" style={{ minHeight: '120px' }}>
 
-                {/* Temperature + meta — z-10 so it layers over the icon edge */}
-                <div className="flex-1 min-w-0 relative z-10">
+              {/* Icon — behind text (z-0), large, floating animation */}
+              <div
+                className="absolute left-5 top-0 z-0 pointer-events-none"
+                style={{ filter: `drop-shadow(0 6px 28px ${icon.glow})` }}
+              >
+                <motion.div
+                  className="absolute -inset-6 rounded-full blur-3xl"
+                  style={{ background: `radial-gradient(circle, ${icon.from}, ${icon.to})` }}
+                  animate={{ scale: [1, 1.28, 1], opacity: [0.22, 0.42, 0.22] }}
+                  transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                  aria-label={current.description}
+                >
+                  <MeteoIcon
+                    conditionCode={current.conditionCode}
+                    isDay={current.isDay}
+                    size={130}
+                    className="drop-shadow-xl relative"
+                  />
+                </motion.div>
+              </div>
+
+              {/* Text — z-10, pl-[88px] so it begins 42px into the 130px icon */}
+              <div className="relative z-10 pl-[88px]">
                   {(() => {
                     // Use raw Open-Meteo temperature (same as conditions page) to avoid rounding mismatch
                     const rawTemp = mc?.temperature_2m ?? current.temp
@@ -393,7 +390,6 @@ export default function Home() {
                       </span>
                     )}
                   </div>
-                </div>
               </div>
 
             </section>
