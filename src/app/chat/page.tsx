@@ -57,9 +57,7 @@ const quickPrompts = [
   'Dress for a run?',
   'Weekend outlook?',
   'Best time to go outside?',
-  'Is it safe to drive today?',
   'What should I wear tonight?',
-  'How hot will it get today?',
 ]
 
 export default function ChatPage() {
@@ -79,9 +77,18 @@ export default function ChatPage() {
   // Default expanded: undefined = expanded, false = collapsed
   const [collapsedData, setCollapsedData] = useState<Record<string, boolean>>({})
   const [isListening, setIsListening] = useState(false)
+  const [micBlobActive, setMicBlobActive] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const recognitionRef = useRef<any>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const autoResizeTextarea = useCallback(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`
+  }, [])
 
   const toggleData = (id: string) => setCollapsedData(p => ({ ...p, [id]: !p[id] }))
   const isDataVisible = (id: string) => collapsedData[id] !== true
@@ -172,6 +179,7 @@ export default function ChatPage() {
     if (input.trim() && !loading) {
       sendMessage(input.trim())
       setInput('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
     }
   }
 
@@ -501,33 +509,70 @@ export default function ChatPage() {
             style={{ background: 'linear-gradient(90deg, rgba(128,110,248,0.2), rgba(88,150,253,0.2))' }}
           />
           <div
-            className="relative flex items-center rounded-full p-2 pl-6 pr-2"
+            className="relative flex items-end rounded-3xl p-2 pl-6 pr-2"
             style={{
               background: 'var(--surface)',
               boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
               border: '0.5px solid var(--outline)',
             }}
           >
-            <input
-              type="text"
+            <textarea
+              ref={textareaRef}
               value={typingText || input}
-              onChange={(e) => { if (!typingText) setInput(e.target.value) }}
+              onChange={(e) => {
+                if (!typingText) setInput(e.target.value)
+                autoResizeTextarea()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  if (input.trim() && !loading) handleSubmit(e as any)
+                }
+              }}
               placeholder={isListening ? 'Listening…' : 'Ask about the forecast...'}
               aria-label="Message to Atmos AI"
-              className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem]"
-              style={{ color: isListening ? 'var(--primary)' : typingText ? 'var(--primary)' : 'var(--text)' }}
+              rows={1}
+              className="bg-transparent border-none focus:ring-0 focus:outline-none flex-1 py-3 font-body text-[0.9rem] resize-none overflow-y-auto"
+              style={{
+                color: isListening ? 'var(--primary)' : typingText ? 'var(--primary)' : 'var(--text)',
+                maxHeight: '7.5rem',
+                lineHeight: '1.5rem',
+              }}
               disabled={loading || !!typingText}
               readOnly={!!typingText}
             />
-            {/* Mic button */}
+            {/* Mic button with blob animation */}
             <button
               type="button"
-              onClick={isListening ? stopListening : startListening}
+              onClick={() => {
+                if (!isListening) {
+                  setMicBlobActive(true)
+                  setTimeout(() => {
+                    setMicBlobActive(false)
+                    startListening()
+                  }, 600)
+                } else {
+                  stopListening()
+                }
+              }}
               disabled={loading || !!typingText}
               aria-label={isListening ? 'Stop recording' : 'Voice input'}
-              className="w-9 h-9 flex items-center justify-center rounded-full mr-1 transition-all active:scale-90 disabled:opacity-30 relative"
+              className="w-9 h-9 flex items-center justify-center rounded-full mr-1 transition-all active:scale-90 disabled:opacity-30 relative overflow-visible"
               style={{ color: isListening ? 'var(--primary)' : 'var(--text-muted)' }}
             >
+              {/* Blob expand animation */}
+              <AnimatePresence>
+                {micBlobActive && (
+                  <motion.span
+                    className="absolute rounded-full z-0"
+                    style={{ background: 'linear-gradient(135deg, rgba(128,110,248,0.25), rgba(88,150,253,0.2))' }}
+                    initial={{ width: 36, height: 36, left: 0, top: 0, opacity: 0.8 }}
+                    animate={{ width: 280, height: 48, left: -220, top: -4, opacity: 1, borderRadius: 24 }}
+                    exit={{ width: 36, height: 36, left: 0, top: 0, opacity: 0, borderRadius: 18 }}
+                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                  />
+                )}
+              </AnimatePresence>
               {isListening && (
                 <>
                   <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(199,191,255,0.3)' }} />

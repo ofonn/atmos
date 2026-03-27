@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from 'next-themes'
-import { useSwipeable } from 'react-swipeable'
+
 import { motion } from 'framer-motion'
 import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -14,13 +14,11 @@ import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
-import { useHaptic } from '@/hooks/useHaptic'
+
 import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
 import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
 import { MapPin, Search, X, RefreshCw, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
 
-// Page order for swipe navigation
-const PAGE_ORDER = ['/', '/technical', '/overview', '/chat', '/settings']
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
   // WMO codes (0-99)
@@ -90,7 +88,6 @@ export default function Home() {
   const router = useRouter()
   const { theme } = useTheme()
   const { tempUnit, windUnit } = useSettings()
-  const haptic = useHaptic()
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -112,17 +109,6 @@ export default function Home() {
   const md = meteo?.daily
 
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
-
-  // Swipe left/right to navigate between pages
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => {
-      haptic.light()
-      router.push('/technical')
-    },
-    preventScrollOnSwipe: false,
-    trackMouse: false,
-    delta: 80,
-  })
 
   const loading = locLoading || weatherLoading
   const isDark = theme !== 'light'
@@ -202,7 +188,6 @@ export default function Home() {
     <div
       className="relative flex flex-col h-[100dvh] overflow-hidden"
       style={{ background: 'var(--bg)' }}
-      {...swipeHandlers}
     >
       {/* Decorative glow — not a layout element */}
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
