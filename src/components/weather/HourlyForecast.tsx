@@ -2,8 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { formatHourFromISO } from '@/lib/utils'
-import { wmoEmoji, uviColor } from '@/lib/weatherUtils'
+import { uviColor } from '@/lib/weatherUtils'
 import { useSettings } from '@/contexts/SettingsContext'
+import { MeteoIcon } from './MeteoIcon'
 import type { HourlyData } from '@/types/weather'
 
 interface HourlyForecastProps {
@@ -42,9 +43,11 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
               {isNow ? 'Now' : formatHourFromISO(hour.time, timeFormat)}
             </span>
 
-            <span className="text-2xl leading-none" role="img" aria-label={hour.description}>
-              {wmoEmoji(hour.conditionCode, hour.isDay ? 1 : 0)}
-            </span>
+            <MeteoIcon
+              conditionCode={hour.conditionCode}
+              isDay={hour.isDay}
+              size={36}
+            />
 
             <span
               className="font-semibold text-sm font-headline"

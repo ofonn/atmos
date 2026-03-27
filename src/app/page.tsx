@@ -15,9 +15,10 @@ import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 
 import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
-import { wmoEmoji, aqiColor, aqiLabel, wmoDesc } from '@/lib/weatherUtils'
+import { aqiColor, aqiLabel, wmoDesc } from '@/lib/weatherUtils'
 import { MapPin, Search, X, RefreshCw, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
 import type { HourlyData } from '@/types/weather'
+import { MeteoIcon } from '@/components/weather/MeteoIcon'
 
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
@@ -313,36 +314,29 @@ export default function Home() {
                 SunArc on its own full-width row below */}
             <section className="relative flex-shrink-0 px-5 pt-2 pb-0">
               <div className="flex items-center gap-4">
-                {/* 3D Weather orb — animated, large */}
+                {/* 3D Weather icon — Meteocons animated SVG with subtle ambient glow */}
                 <div
                   className="relative flex-shrink-0"
-                  style={{ filter: `drop-shadow(0 0 28px ${icon.glow})` }}
+                  style={{ filter: `drop-shadow(0 4px 24px ${icon.glow})` }}
                 >
                   <motion.div
-                    className="absolute -inset-2 rounded-full blur-2xl opacity-50"
+                    className="absolute -inset-4 rounded-full blur-2xl opacity-30"
                     style={{ background: `radial-gradient(circle, ${icon.from}, ${icon.to})` }}
-                    animate={{ scale: [1, 1.25, 1], opacity: [0.5, 0.7, 0.5] }}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <motion.div
-                    className="relative w-[78px] h-[78px] rounded-full flex items-center justify-center overflow-hidden"
+                    className="relative w-[88px] h-[88px] flex items-center justify-center"
                     animate={{ y: [0, -6, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{
-                      background: `radial-gradient(circle at 38% 32%, ${icon.from} 0%, ${icon.via} 45%, ${icon.to} 100%)`,
-                      boxShadow: `inset -6px -6px 20px rgba(0,0,0,0.32), inset 5px 5px 14px rgba(255,255,255,0.18), 0 12px 40px ${icon.glow}`,
-                    }}
+                    aria-label={current.description}
                   >
-                    {/* Specular highlight */}
-                    <div className="absolute top-2.5 left-3.5 w-7 h-3 bg-white/30 blur-[5px] rounded-full -rotate-[28deg]" />
-                    <span
-                      className="relative z-10 leading-none select-none"
-                      style={{ fontSize: '2.2rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
-                      role="img"
-                      aria-label={current.description}
-                    >
-                      {wmoEmoji(current.conditionCode, current.isDay ? 1 : 0)}
-                    </span>
+                    <MeteoIcon
+                      conditionCode={current.conditionCode}
+                      isDay={current.isDay}
+                      size={88}
+                      className="relative z-10 drop-shadow-lg"
+                    />
                   </motion.div>
                 </div>
 
