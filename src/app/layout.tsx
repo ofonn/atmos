@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: 'Atmos — AI Weather Assistant',
   description: 'Your intelligent weather companion.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
