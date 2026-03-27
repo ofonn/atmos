@@ -185,26 +185,6 @@ export default function Home() {
 
   const icon = current ? get3DIconStyle(current.conditionCode, isDark) : null
   const displayed = aiContent ?? (current ? getFallbackHeadline(current.temp, current.conditionCode) : null)
-  const toneLabelMap = {
-    casual: 'Casual',
-    punchy: 'Punchy',
-    sarcastic: 'Sarcastic',
-    funny: 'Funny',
-    dramatic: 'Dramatic',
-    informative: 'Informative',
-    smart: 'Smart',
-    local: 'Local',
-  } as const
-  const toneFromAi = aiContent?.toneUsed
-  const appliedTone = toneFromAi && toneFromAi in toneLabelMap
-    ? (toneFromAi as keyof typeof toneLabelMap)
-    : headlineTone
-  const activeHeadlineModes = [
-    `Tone: ${toneLabelMap[appliedTone]}`,
-    headlineTwoLine ? 'Two-line ON' : 'Two-line OFF',
-    headlineLocationFlavor ? 'Local flavour ON' : 'Local flavour OFF',
-    headlineTimeAware ? 'Time-aware ON' : 'Time-aware OFF',
-  ]
 
   const splitHeadline = (text: string) => {
     const clean = text.replace(/[.!?,;]+$/, '')
@@ -427,21 +407,6 @@ export default function Home() {
               className="relative flex-1 flex flex-col justify-center min-h-0 px-5"
               style={{ containerType: 'size', marginTop: '20px' }}
             >
-              <div className="mb-3 flex flex-wrap gap-2">
-                {activeHeadlineModes.map((mode) => (
-                  <span
-                    key={mode}
-                    className="px-2 py-1 rounded-full text-[10px] font-label uppercase tracking-wider"
-                    style={{
-                      background: 'rgba(128,110,248,0.14)',
-                      border: '1px solid rgba(128,110,248,0.30)',
-                      color: 'var(--primary)',
-                    }}
-                  >
-                    {mode}
-                  </span>
-                ))}
-              </div>
               {aiLoading && !displayed ? (
                 <div className="flex flex-col gap-2 pt-2">
                   <div className="h-[15%] w-full rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.4 }} />

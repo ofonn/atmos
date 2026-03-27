@@ -23,6 +23,53 @@ const TONE_FINGERPRINTS: Record<string, string> = {
   local: 'Mention local rhythm/place identity naturally.',
 }
 
+function applyTonePersonality(
+  tone: string,
+  headline: string,
+  advice: string,
+  temp?: number,
+  locationName?: string
+) {
+  let h = headline.trim()
+  let a = advice.trim()
+
+  if (tone === 'punchy') {
+    const words = h.split(/\s+/).filter(Boolean).slice(0, 6)
+    h = words.join(' ').replace(/[.!?]+$/, '')
+    h = `${h}!`
+  }
+
+  if (tone === 'sarcastic' && !/^(sure|of course|apparently|yeah)/i.test(h)) {
+    h = `Sure, ${h.charAt(0).toLowerCase()}${h.slice(1)}`
+  }
+
+  if (tone === 'funny' && !/^plot twist:/i.test(h)) {
+    h = `Plot twist: ${h}`
+  }
+
+  if (tone === 'dramatic' && !/^(tonight|today):/i.test(h)) {
+    h = `${temp != null && temp < 22 ? 'Tonight' : 'Today'}: ${h}`
+  }
+
+  if (tone === 'informative' && !/^\d+°/.test(h) && temp != null) {
+    h = `${Math.round(temp)}° now: ${h}`
+  }
+
+  if (tone === 'smart' && !/^translation:/i.test(h)) {
+    h = `Translation: ${h}`
+  }
+
+  if (tone === 'local' && locationName && !h.toLowerCase().includes(locationName.toLowerCase())) {
+    h = `${locationName}: ${h}`
+  }
+
+  if (tone === 'punchy' && !/^(grab|wear|bring|stay|dont|don't|you'll need)/i.test(a)) {
+    a = `Grab what you need and move fast before this weather turns.`
+  }
+
+  return { headline: h, advice: a }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -136,11 +183,18 @@ Return ONLY valid JSON (no markdown):
         hook = 'Right now'
       }
     }
+    const styled = applyTonePersonality(
+      effectiveTone,
+      headline,
+      parsed.advice || '',
+      current?.temp,
+      locationName
+    )
 
     return NextResponse.json({
-      headline,
+      headline: styled.headline,
       hook: hook || null,
-      advice: parsed.advice || 'Bring what you need for the weather and stay flexible through the day.',
+      advice: styled.advice || 'Bring what you need for the weather and stay flexible through the day.',
       proactiveInsight: parsed.proactiveInsight || 'The weather will shift through the day, so check again later before heading out.',
       weekSummary: parsed.weekSummary || 'A mixed week ahead. Keep an eye on rain windows and use the drier stretches well.',
       outfit: parsed.outfit || 'Dress for the conditions.',
