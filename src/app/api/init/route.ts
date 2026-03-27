@@ -12,6 +12,17 @@ const TONE_INSTRUCTIONS: Record<string, string> = {
   local:       'Speak like a local who knows this place well. Reference the city and its weather personality naturally.',
 }
 
+const TONE_FINGERPRINTS: Record<string, string> = {
+  casual: 'Use contractions and plain everyday wording.',
+  punchy: 'Max 6 words. Strong verb. One exclamation mark.',
+  sarcastic: 'Use dry irony with a subtle eye-roll vibe.',
+  funny: 'Include one playful joke or light wordplay.',
+  dramatic: 'Use cinematic language and vivid scene-setting.',
+  informative: 'Lead with the most important fact first.',
+  smart: 'Add one sharp observation that feels clever.',
+  local: 'Mention local rhythm/place identity naturally.',
+}
+
 export async function POST(req: NextRequest) {
   try {
     const {
@@ -55,6 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     const toneInstruction = TONE_INSTRUCTIONS[effectiveTone] ?? TONE_INSTRUCTIONS.casual
+    const toneFingerprint = TONE_FINGERPRINTS[effectiveTone] ?? TONE_FINGERPRINTS.casual
 
     // Location context block
     const locationBlock = (headlineLocationFlavor && locationName)
@@ -69,6 +81,7 @@ export async function POST(req: NextRequest) {
     const prompt = `You are Atmos, an AI weather assistant. Generate home screen content from the weather data below.
 
 HEADLINE TONE: ${toneInstruction}
+TONE FINGERPRINT (MUST BE OBVIOUS): ${toneFingerprint}
 ${locationBlock}
 
 CURRENT LOCAL TIME: ${timeStr} (${timeOfDay})${isNight ? ' — it is NIGHT, do NOT suggest outdoor activities' : ''}
@@ -106,15 +119,33 @@ Return ONLY valid JSON (no markdown):
     const raw = await geminiGenerateWithRotation(prompt, apiKey)
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const parsed = JSON.parse(cleaned)
+    let headline = typeof parsed.headline === 'string' ? parsed.headline.trim() : ''
+    let hook = typeof parsed.hook === 'string' ? parsed.hook.trim() : ''
+
+    if (!headline) {
+      headline = 'Weather update coming in.'
+    }
+
+    // Ensure two-line mode is visually obvious even if the model omits hook.
+    if (headlineTwoLine && !hook) {
+      const words = headline.split(/\s+/).filter(Boolean)
+      if (words.length >= 5) {
+        hook = words.slice(0, 2).join(' ')
+        headline = words.slice(2).join(' ')
+      } else {
+        hook = 'Right now'
+      }
+    }
 
     return NextResponse.json({
-      headline: parsed.headline,
-      hook: parsed.hook ?? null,
-      advice: parsed.advice,
-      proactiveInsight: parsed.proactiveInsight,
-      weekSummary: parsed.weekSummary,
+      headline,
+      hook: hook || null,
+      advice: parsed.advice || 'Bring what you need for the weather and stay flexible through the day.',
+      proactiveInsight: parsed.proactiveInsight || 'The weather will shift through the day, so check again later before heading out.',
+      weekSummary: parsed.weekSummary || 'A mixed week ahead. Keep an eye on rain windows and use the drier stretches well.',
       outfit: parsed.outfit || 'Dress for the conditions.',
       activity: parsed.activity || 'Take it easy today.',
+      toneUsed: effectiveTone,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
