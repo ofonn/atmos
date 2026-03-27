@@ -314,34 +314,37 @@ export default function Home() {
                 SunArc on its own full-width row below */}
             <section className="relative flex-shrink-0 px-5 pt-2 pb-0">
               <div className="flex items-center gap-4">
-                {/* 3D Weather icon — Meteocons animated SVG with subtle ambient glow */}
+                {/* 3D Weather icon — larger, ambient glow, floats with text layered over edge */}
                 <div
-                  className="relative flex-shrink-0"
-                  style={{ filter: `drop-shadow(0 4px 24px ${icon.glow})` }}
+                  className="relative flex-shrink-0 z-0"
+                  style={{
+                    filter: `drop-shadow(0 4px 32px ${icon.glow})`,
+                    marginRight: '-18px', // pulls text over icon's right edge
+                  }}
                 >
                   <motion.div
-                    className="absolute -inset-4 rounded-full blur-2xl opacity-30"
+                    className="absolute -inset-6 rounded-full blur-3xl opacity-25"
                     style={{ background: `radial-gradient(circle, ${icon.from}, ${icon.to})` }}
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                    animate={{ scale: [1, 1.25, 1], opacity: [0.25, 0.45, 0.25] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <motion.div
-                    className="relative w-[88px] h-[88px] flex items-center justify-center"
-                    animate={{ y: [0, -6, 0] }}
+                    className="relative flex items-center justify-center"
+                    animate={{ y: [0, -7, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
                     aria-label={current.description}
                   >
                     <MeteoIcon
                       conditionCode={current.conditionCode}
                       isDay={current.isDay}
-                      size={88}
-                      className="relative z-10 drop-shadow-lg"
+                      size={110}
+                      className="drop-shadow-xl"
                     />
                   </motion.div>
                 </div>
 
-                {/* Temperature + meta */}
-                <div className="flex-1 min-w-0">
+                {/* Temperature + meta — z-10 so it layers over the icon edge */}
+                <div className="flex-1 min-w-0 relative z-10">
                   {(() => {
                     // Use raw Open-Meteo temperature (same as conditions page) to avoid rounding mismatch
                     const rawTemp = mc?.temperature_2m ?? current.temp

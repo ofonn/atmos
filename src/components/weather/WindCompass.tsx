@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useEffect } from 'react'
+import { motion, useSpring, useTransform } from 'framer-motion'
 
 interface WindCompassProps {
   degrees: number
@@ -8,109 +9,95 @@ interface WindCompassProps {
   unit: string
 }
 
-const DIR_LABELS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+const DIR_LABELS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
 
 export function WindCompass({ degrees, speed, unit }: WindCompassProps) {
-  const cardinals = ['N', 'E', 'S', 'W']
   const size = 120
   const cx = size / 2
   const cy = size / 2
-  const r = size / 2 - 8
+  const r = size / 2 - 10
+  const arrowLen = r * 0.65
 
-  // Direction label
-  const idx = Math.round(degrees / 45) % 8
+  // 16-point direction label
+  const idx = Math.round(degrees / 22.5) % 16
   const dirLabel = DIR_LABELS[idx]
 
-  // Arrow endpoint (FROM which direction the wind blows, pointing toward)
-  const rad = ((degrees - 90) * Math.PI) / 180
-  const arrowLen = r * 0.6
-  const ax = cx + Math.cos(rad) * arrowLen
-  const ay = cy + Math.sin(rad) * arrowLen
+  // Spring-animated rotation using SVG rotate(deg, cx, cy) — browser-consistent
+  const springDeg = useSpring(degrees, { stiffness: 60, damping: 20 })
+  useEffect(() => { springDeg.set(degrees) }, [degrees, springDeg])
+
+  // SVG rotate transform: rotate(angle, pivotX, pivotY) — no CSS transform-origin quirks
+  const svgRotate = useTransform(springDeg, d => `rotate(${d}, ${cx}, ${cy})`)
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
         {/* Outer ring */}
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--outline)" strokeWidth="1.5" />
-        {/* Inner rings */}
-        <circle cx={cx} cy={cy} r={r * 0.6} fill="none" stroke="var(--outline)" strokeWidth="0.5" opacity="0.4" />
+        {/* Inner ring */}
+        <circle cx={cx} cy={cy} r={r * 0.55} fill="none" stroke="var(--outline)" strokeWidth="0.5" opacity="0.35" />
 
         {/* Cardinal ticks + labels */}
-        {[0, 90, 180, 270].map((angle, i) => {
-          const a = ((angle - 90) * Math.PI) / 180
-          const x1 = cx + Math.cos(a) * (r - 2)
-          const y1 = cy + Math.sin(a) * (r - 2)
-          const x2 = cx + Math.cos(a) * (r + 4)
-          const y2 = cy + Math.sin(a) * (r + 4)
-          const tx = cx + Math.cos(a) * (r + 12)
-          const ty = cy + Math.sin(a) * (r + 12)
+        {['N', 'E', 'S', 'W'].map((label, i) => {
+          const rad = ((i * 90 - 90) * Math.PI) / 180
+          const x1 = cx + Math.cos(rad) * (r - 6)
+          const y1 = cy + Math.sin(rad) * (r - 6)
+          const x2 = cx + Math.cos(rad) * r
+          const y2 = cy + Math.sin(rad) * r
+          const tx = cx + Math.cos(rad) * (r + 10)
+          const ty = cy + Math.sin(rad) * (r + 10)
           return (
-            <g key={angle}>
+            <g key={label}>
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--text-muted)" strokeWidth="1.5" />
               <text x={tx} y={ty + 3} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="600">
-                {cardinals[i]}
+                {label}
               </text>
             </g>
           )
         })}
 
-        {/* Intercardinal ticks (smaller) */}
+        {/* Intercardinal ticks */}
         {[45, 135, 225, 315].map(angle => {
-          const a = ((angle - 90) * Math.PI) / 180
-          const x1 = cx + Math.cos(a) * (r - 2)
-          const y1 = cy + Math.sin(a) * (r - 2)
-          const x2 = cx + Math.cos(a) * r
-          const y2 = cy + Math.sin(a) * r
+          const rad = ((angle - 90) * Math.PI) / 180
           return (
-            <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--outline)" strokeWidth="1" />
+            <line
+              key={angle}
+              x1={cx + Math.cos(rad) * (r - 3)}
+              y1={cy + Math.sin(rad) * (r - 3)}
+              x2={cx + Math.cos(rad) * r}
+              y2={cy + Math.sin(rad) * r}
+              stroke="var(--outline)"
+              strokeWidth="1"
+            />
           )
         })}
 
-        {/* Animated wind arrow */}
-        <motion.g
-          animate={{ rotate: degrees }}
-          transition={{ type: 'spring', stiffness: 60, damping: 20 }}
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
-        >
-          {/* Arrow shaft */}
+        {/* Arrow — drawn pointing north (up), rotated by wind direction via SVG transform.
+            Wind direction is where the wind comes FROM, so the arrow tip points toward
+            the source bearing, which matches the "SSE / 157°" label convention. */}
+        <motion.g transform={svgRotate}>
+          {/* Shaft */}
           <line
-            x1={cx}
-            y1={cy + arrowLen * 0.3}
-            x2={cx}
-            y2={cy - arrowLen}
+            x1={cx} y1={cy + arrowLen * 0.3}
+            x2={cx} y2={cy - arrowLen + 6}
             stroke="#c7bfff"
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           {/* Arrowhead */}
           <polygon
-            points={`${cx},${cy - arrowLen - 6} ${cx - 5},${cy - arrowLen + 4} ${cx + 5},${cy - arrowLen + 4}`}
+            points={`${cx},${cy - arrowLen - 2} ${cx - 5},${cy - arrowLen + 7} ${cx + 5},${cy - arrowLen + 7}`}
             fill="#c7bfff"
           />
           {/* Tail feathers */}
-          <line
-            x1={cx}
-            y1={cy + arrowLen * 0.3}
-            x2={cx - 5}
-            y2={cy + arrowLen * 0.5}
-            stroke="#c7bfff"
-            strokeWidth="1.5"
-            opacity="0.5"
-          />
-          <line
-            x1={cx}
-            y1={cy + arrowLen * 0.3}
-            x2={cx + 5}
-            y2={cy + arrowLen * 0.5}
-            stroke="#c7bfff"
-            strokeWidth="1.5"
-            opacity="0.5"
-          />
+          <line x1={cx} y1={cy + arrowLen * 0.3} x2={cx - 5} y2={cy + arrowLen * 0.55} stroke="#c7bfff" strokeWidth="1.5" opacity="0.5" />
+          <line x1={cx} y1={cy + arrowLen * 0.3} x2={cx + 5} y2={cy + arrowLen * 0.55} stroke="#c7bfff" strokeWidth="1.5" opacity="0.5" />
         </motion.g>
 
-        {/* Center dot */}
+        {/* Center pivot dot */}
         <circle cx={cx} cy={cy} r={3.5} fill="var(--primary)" />
       </svg>
+
       <p className="text-xs font-bold font-headline" style={{ color: 'var(--text)' }}>
         {speed} {unit} {dirLabel}
       </p>
