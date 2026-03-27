@@ -148,15 +148,25 @@ function LocationWeatherCard({
 
 export default function LocationsPage() {
   const router = useRouter()
-  const { location, savedLocations, removeLocation, setAsCurrentLocation, saveLocation, searchCity } = useWeatherContext()
+  const { location, savedLocations, removeLocation, setAsCurrentLocation, saveLocation } = useWeatherContext()
   const [showSearch, setShowSearch] = useState(false)
   const [searchInput, setSearchInput] = useState('')
   const [searchResults, setSearchResults] = useState<Location[]>([])
   const [searching, setSearching] = useState(false)
 
+  // Clicking a card: switch location and go home to view its weather
   const handleSelect = (loc: Location) => {
     setAsCurrentLocation(loc)
     router.push('/')
+  }
+
+  // Switch via search sheet: switch but stay on this page
+  const handleSwitchOnly = (loc: Location) => {
+    saveLocation(loc)
+    setAsCurrentLocation(loc)
+    setShowSearch(false)
+    setSearchInput('')
+    setSearchResults([])
   }
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -184,14 +194,6 @@ export default function LocationsPage() {
 
   const handleAddFromSearch = (loc: Location) => {
     saveLocation(loc)
-    setShowSearch(false)
-    setSearchInput('')
-    setSearchResults([])
-  }
-
-  const handleAddAndSwitch = (loc: Location) => {
-    saveLocation(loc)
-    setAsCurrentLocation(loc)
     setShowSearch(false)
     setSearchInput('')
     setSearchResults([])
@@ -343,7 +345,13 @@ export default function LocationsPage() {
                           </div>
                         </div>
                         {alreadySaved ? (
-                          <span className="text-[11px] font-label px-3 py-1.5 rounded-full" style={{ color: 'var(--text-muted)', background: 'var(--surface)' }}>Saved</span>
+                          <button
+                            onClick={() => { handleSwitchOnly(result); }}
+                            className="text-[11px] font-label font-semibold px-3 py-1.5 rounded-full transition-all active:scale-95"
+                            style={{ background: 'var(--surface)', color: 'var(--primary)' }}
+                          >
+                            Switch
+                          </button>
                         ) : (
                           <div className="flex gap-2">
                             <button
@@ -354,11 +362,11 @@ export default function LocationsPage() {
                               Save
                             </button>
                             <button
-                              onClick={() => handleAddAndSwitch(result)}
+                              onClick={() => handleSwitchOnly(result)}
                               className="text-[11px] font-label font-semibold px-3 py-1.5 rounded-full text-white transition-all active:scale-95"
                               style={{ background: 'var(--primary)' }}
                             >
-                              Switch
+                              Save & Switch
                             </button>
                           </div>
                         )}

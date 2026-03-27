@@ -9,7 +9,6 @@ import useSWR from 'swr'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { HourlyForecast } from '@/components/weather/HourlyForecast'
 import { WeatherParticles, getEffect } from '@/components/weather/WeatherParticles'
-import { SunArc } from '@/components/weather/SunArc'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
@@ -209,11 +208,17 @@ export default function Home() {
           aria-expanded={searchOpen}
           className="flex items-center gap-2 active:opacity-70 transition-opacity"
         >
-          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+          {locLoading ? (
+            <div className="w-4 h-4 flex-shrink-0 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }} aria-hidden="true" />
+          ) : (
+            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} aria-hidden="true" />
+          )}
           <span className="font-headline text-sm font-medium tracking-tight truncate max-w-[200px]" style={{ color: 'var(--primary)' }}>
-            {locLoading ? 'Locating…' : location
-              ? `${location.name}${location.country ? `, ${location.country}` : ''}`
-              : 'Set location'}
+            {locLoading
+              ? 'Syncing GPS…'
+              : location
+                ? `${location.name}${location.country ? `, ${location.country}` : ''}`
+                : 'Set location'}
           </span>
           <ChevronDown className="w-4 h-4 flex-shrink-0 opacity-70" style={{ color: 'var(--primary)' }} aria-hidden="true" />
         </button>
@@ -362,12 +367,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* SunArc — full-width below the icon+temp row */}
-              {sun && (
-                <div className="mt-2">
-                  <SunArc sunrise={sun.sunrise} sunset={sun.sunset} />
-                </div>
-              )}
             </section>
 
             {/* ═══ CONTAINER 3 — HEADLINE ONLY (flex-1, container-query sized) ═══
