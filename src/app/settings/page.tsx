@@ -117,7 +117,7 @@ export default function SettingsPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-2xl saturate-150"
+        className="sticky top-0 z-50 px-6 py-3.5 backdrop-blur-2xl saturate-150"
         style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <h1

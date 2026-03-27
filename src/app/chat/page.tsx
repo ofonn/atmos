@@ -199,7 +199,7 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl mx-auto"
+        className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl mx-auto"
         style={{
           background: 'var(--nav-bg)',
           borderBottom: '1px solid var(--nav-border)'

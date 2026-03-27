@@ -108,7 +108,7 @@ export default function OverviewPage() {
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
       <header
-        className="sticky top-0 z-30 flex justify-between items-center px-6 py-3.5 backdrop-blur-2xl saturate-150 w-full"
+        className="sticky top-0 z-50 flex justify-between items-center px-6 py-3.5 backdrop-blur-2xl saturate-150 w-full"
         style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <div className="flex items-center gap-2 max-w-4xl mx-auto w-full">

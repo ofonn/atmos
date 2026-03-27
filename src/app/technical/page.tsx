@@ -162,7 +162,7 @@ export default function TechnicalPage() {
       <div className="absolute inset-0 pointer-events-none bg-atmospheric-glow" />
 
       <header
-        className="sticky top-0 z-30 px-6 py-3.5 backdrop-blur-2xl saturate-150"
+        className="sticky top-0 z-50 px-6 py-3.5 backdrop-blur-2xl saturate-150"
         style={{ background: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
       >
         <h1 className="text-xl font-bold tracking-tighter font-headline" style={{ color: 'var(--primary)' }}>Atmos</h1>
@@ -170,7 +170,7 @@ export default function TechnicalPage() {
 
       <main className="relative z-10 px-4 pb-32 max-w-5xl mx-auto w-full">
         <div className="md:grid md:grid-cols-2 md:gap-8 items-start">
-          <div className="md:sticky md:top-24 flex flex-col">
+          <div className="md:sticky md:top-20 flex flex-col">
             {/* Title */}
             <div className="mb-6 px-2">
               <h2
@@ -231,43 +231,50 @@ export default function TechnicalPage() {
                 </button>
               </div>
             </div>
-          </div>
+
+            {/* ── Live Radar Preview Card — desktop: left col, mobile: right col order ── */}
+            <button
+              onClick={() => router.push('/radar')}
+              className="w-full rounded-2xl overflow-hidden relative flex items-center gap-4 px-5 py-4 text-left active:scale-[0.98] transition-transform mb-4"
+              style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
+              aria-label="Open live radar"
+            >
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(128,110,248,0.6) 0%, rgba(88,150,253,0.4) 50%, transparent 70%)' }}
+              />
+              <motion.div
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-5xl opacity-20"
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+              >
+                🛰️
+              </motion.div>
+              <div
+                className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
+              >
+                <Radio className="w-5 h-5 text-white" aria-hidden="true" />
+              </div>
+              <div className="relative z-10 flex-1">
+                <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>Live Radar</p>
+                <p className="text-[11px] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  {location ? `${location.name} · Powered by RainViewer` : 'Real-time precipitation radar'}
+                </p>
+              </div>
+              <ArrowRight className="relative z-10 w-4 h-4 flex-shrink-0 opacity-40" style={{ color: 'var(--text)' }} aria-hidden="true" />
+            </button>
+
+            {/* ── 60-Min Precipitation — desktop: left col ── */}
+            {location && (
+              <div className="mb-4">
+                <RainTimeline lat={location.lat} lon={location.lon} />
+              </div>
+            )}
+
+          </div>{/* end left col */}
 
           <div className="flex flex-col gap-4 mt-6 md:mt-0">
-
-        {/* ── Live Radar Preview Card ────────────────────────────────── */}
-        <button
-          onClick={() => router.push('/radar')}
-          className="w-full rounded-2xl overflow-hidden relative flex items-center gap-4 px-5 py-4 text-left active:scale-[0.98] transition-transform"
-          style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-          aria-label="Open live radar"
-        >
-          {/* Animated gradient background */}
-          <div
-            className="absolute inset-0 opacity-20"
-            style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(128,110,248,0.6) 0%, rgba(88,150,253,0.4) 50%, transparent 70%)' }}
-          />
-          <motion.div
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-5xl opacity-20"
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-          >
-            🛰️
-          </motion.div>
-          <div
-            className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #806EF8, #5896FD)' }}
-          >
-            <Radio className="w-5 h-5 text-white" aria-hidden="true" />
-          </div>
-          <div className="relative z-10 flex-1">
-            <p className="text-sm font-bold font-headline" style={{ color: 'var(--text)' }}>Live Radar</p>
-            <p className="text-[11px] font-label mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {location ? `${location.name} · Powered by RainViewer` : 'Real-time precipitation radar'}
-            </p>
-          </div>
-          <ArrowRight className="relative z-10 w-4 h-4 flex-shrink-0 opacity-40" style={{ color: 'var(--text)' }} aria-hidden="true" />
-        </button>
 
         {/* ── UV Warning Banner ──────────────────────────────────────── */}
         {mh && mh.uv_index?.[nowHourIdx] >= 6 && (
@@ -296,10 +303,6 @@ export default function TechnicalPage() {
               </p>
             </div>
           </div>
-        )}
-
-        {location && (
-          <RainTimeline lat={location.lat} lon={location.lon} />
         )}
 
         {/* ── Current Conditions ─────────────────────────────────────── */}
