@@ -15,8 +15,9 @@ import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
 
 import { displayTemp, displayTempShort, displayWind } from '@/lib/utils'
-import { wmoEmoji, aqiColor, aqiLabel } from '@/lib/weatherUtils'
+import { wmoEmoji, aqiColor, aqiLabel, wmoDesc } from '@/lib/weatherUtils'
 import { MapPin, Search, X, RefreshCw, ChevronDown, ArrowRight, Sparkles } from 'lucide-react'
+import type { HourlyData } from '@/types/weather'
 
 
 function get3DIconStyle(code: number, isDark: boolean = true) {
@@ -106,6 +107,37 @@ export default function Home() {
   )
   const mc = meteo?.current
   const md = meteo?.daily
+  const mh = meteo?.hourly
+
+  // Find the closest hourly index to now — identical logic to the conditions page
+  const nowHourIdx = (() => {
+    if (!mh?.time) return 0
+    const now = Date.now()
+    let closest = 0
+    let minDiff = Infinity
+    for (let i = 0; i < mh.time.length; i++) {
+      const diff = Math.abs(new Date(mh.time[i]).getTime() - now)
+      if (diff < minDiff) { minDiff = diff; closest = i }
+    }
+    return closest
+  })()
+
+  // Build hourly card data directly from raw mh — same source as conditions page
+  const rawHourlyCards: HourlyData[] = mh
+    ? Array.from({ length: 8 }, (_, i) => nowHourIdx + i)
+        .filter(idx => idx < mh.time.length)
+        .map(idx => ({
+          dt: Math.floor(new Date(mh.time[idx]).getTime() / 1000),
+          time: mh.time[idx],
+          temp: Math.round(mh.temperature_2m[idx]),
+          icon: String(mh.weather_code[idx]),
+          conditionCode: mh.weather_code[idx],
+          pop: mh.precipitation_probability?.[idx] ?? 0,
+          description: wmoDesc(mh.weather_code[idx]),
+          isDay: (mh.is_day?.[idx] ?? 1) === 1,
+          uvIndex: Math.round((mh.uv_index?.[idx] ?? 0) * 10) / 10,
+        }))
+    : []
 
   const { content: aiContent, loading: aiLoading, refresh: refreshAi } = useAiContent(current, hourly, daily)
 
@@ -347,12 +379,12 @@ export default function Home() {
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] font-label" style={{ color: 'var(--text-muted)' }}>
                     <span>H:{displayTempShort(md?.temperature_2m_max?.[0] ?? daily?.[0]?.tempMax ?? current.tempMax, tempUnit)} L:{displayTempShort(md?.temperature_2m_min?.[0] ?? daily?.[0]?.tempMin ?? current.tempMin, tempUnit)}</span>
                     <span className="opacity-40">·</span>
-                    <span>{hourly?.[0]?.pop ?? 0}% Rain</span>
+                    <span>{mh?.precipitation_probability?.[nowHourIdx] ?? hourly?.[0]?.pop ?? 0}% Rain</span>
                     <span className="opacity-40">·</span>
                     <span>
-                      {displayWind(current.windSpeed, windUnit)}
-                      {current.windGusts > current.windSpeed + 8 && (
-                        <span className="opacity-60"> ↑{displayWind(current.windGusts, windUnit)}</span>
+                      {displayWind(mc?.wind_speed_10m ?? current.windSpeed, windUnit)}
+                      {(mc?.wind_gusts_10m ?? current.windGusts) > (mc?.wind_speed_10m ?? current.windSpeed) + 8 && (
+                        <span className="opacity-60"> ↑{displayWind(mc?.wind_gusts_10m ?? current.windGusts, windUnit)}</span>
                       )}
                     </span>
                     {aqiLevel !== null && (
@@ -461,11 +493,14 @@ export default function Home() {
             )}
 
             {/* ═══ CONTAINER 4 — HOURLY FORECAST ═══
-                Fixed-height: horizontal scrollable card strip */}
+                Fixed-height: horizontal scrollable card strip
+                Uses raw meteo.hourly (same source as conditions page) */}
             <section className="relative flex-shrink-0 px-5 py-1.5">
-              {hourly && hourly.length > 0 && (
+              {rawHourlyCards.length > 0 ? (
+                <HourlyForecast data={rawHourlyCards} />
+              ) : hourly && hourly.length > 0 ? (
                 <HourlyForecast data={hourly} />
-              )}
+              ) : null}
             </section>
 
             {/* No inline AI chat bar — see floating AI FAB below */}

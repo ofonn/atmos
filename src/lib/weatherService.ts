@@ -85,6 +85,7 @@ export function transformHourly(data: OpenMeteoResponse, count = 8): HourlyData[
     pop: h.precipitation_probability[i] ?? 0,
     description: wmoDesc(h.weather_code[i]),
     isDay: (h.is_day?.[i] ?? 1) === 1,
+    uvIndex: Math.round((h.uv_index?.[i] ?? 0) * 10) / 10,
   }))
 }
 

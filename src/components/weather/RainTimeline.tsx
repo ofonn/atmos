@@ -87,14 +87,47 @@ export function RainTimeline({ lat, lon }: RainTimelineProps) {
     }
   }
 
-  // Scale bars using fixed px heights — % height doesn't work reliably in flex-col
-  const MAX_BAR_PX = 44
-  const maxPrecip = isRaining ? Math.max(0.1, ...data.map(d => d.precipitation)) : 1
+  // SVG line graph dimensions
+  const W = 280
+  const H = 56
+  const maxPrecip = isRaining ? Math.max(0.1, ...data.map(d => d.precipitation)) : 0.1
 
   // Placeholder slots when no data yet
   const displaySlots = data.length > 0
     ? data
     : Array.from({ length: 4 }, () => ({ time: '', precipitation: 0 }))
+
+  // Map data to SVG points — y is inverted (SVG 0 = top)
+  const pts = displaySlots.map((slot, i) => ({
+    x: (i / (displaySlots.length - 1)) * W,
+    y: isRaining
+      ? H - Math.max(6, (slot.precipitation / maxPrecip) * H)
+      : H - 4,
+    v: slot.precipitation,
+  }))
+
+  // Catmull-Rom → cubic bezier smooth path
+  function smoothPath(points: { x: number; y: number }[]): string {
+    if (points.length < 2) return ''
+    let d = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`
+    const t = 0.38
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)]
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const p3 = points[Math.min(points.length - 1, i + 2)]
+      const cp1x = p1.x + (p2.x - p0.x) * t / 3
+      const cp1y = p1.y + (p2.y - p0.y) * t / 3
+      const cp2x = p2.x - (p3.x - p1.x) * t / 3
+      const cp2y = p2.y - (p3.y - p1.y) * t / 3
+      d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`
+    }
+    return d
+  }
+
+  const linePath = smoothPath(pts)
+  const areaPath = linePath + ` L ${W},${H} L 0,${H} Z`
+  const gradId = 'rainGrad'
 
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}>
@@ -111,43 +144,72 @@ export function RainTimeline({ lat, lon }: RainTimelineProps) {
         <div className="h-20 rounded-lg animate-pulse" style={{ background: 'var(--surface-mid)' }} />
       ) : (
         <>
-          <p className="text-sm font-medium mb-4 text-[var(--text-muted)]">{rainMessage}</p>
+          <p className="text-sm font-medium mb-3 text-[var(--text-muted)]">{rainMessage}</p>
 
-          {/* Bar chart — bars are fixed px height, labels separate below */}
-          <div className="flex items-end gap-2" style={{ height: `${MAX_BAR_PX + 4}px` }}>
-            {displaySlots.map((slot, i) => {
-              const barPx = isRaining
-                ? Math.max(4, Math.round((slot.precipitation / maxPrecip) * MAX_BAR_PX))
-                : 3
-              return (
-                <div key={i} className="flex-1 relative group">
-                  <div
-                    className="w-full rounded-t transition-all duration-500 ease-out"
-                    style={{
-                      height: `${barPx}px`,
-                      background: slot.precipitation > 0
-                        ? 'linear-gradient(to top, var(--primary), rgba(199,191,255,0.55))'
-                        : 'rgba(199,191,255,0.18)',
-                    }}
-                  />
-                  {slot.precipitation > 0 && (
-                    <div
-                      className="absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                      style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+          {/* SVG freehand line graph */}
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            width="100%"
+            height={H}
+            style={{ overflow: 'visible', display: 'block' }}
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(199,191,255,0.45)" />
+                <stop offset="100%" stopColor="rgba(199,191,255,0.03)" />
+              </linearGradient>
+            </defs>
+
+            {/* Baseline */}
+            <line x1="0" y1={H} x2={W} y2={H} stroke="var(--outline)" strokeWidth="1" />
+
+            {/* Area fill */}
+            {isRaining && (
+              <path d={areaPath} fill={`url(#${gradId})`} />
+            )}
+
+            {/* Flat baseline when no rain */}
+            {!isRaining && (
+              <line x1="0" y1={H - 4} x2={W} y2={H - 4} stroke="rgba(199,191,255,0.2)" strokeWidth="1.5" strokeLinecap="round" />
+            )}
+
+            {/* Line */}
+            {isRaining && (
+              <path
+                d={linePath}
+                fill="none"
+                stroke="rgba(199,191,255,0.75)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+
+            {/* Data points with value labels */}
+            {pts.map((p, i) => (
+              <g key={i}>
+                {p.v > 0 && (
+                  <>
+                    <circle cx={p.x} cy={p.y} r="3" fill="var(--primary)" opacity="0.85" />
+                    <text
+                      x={p.x}
+                      y={p.y - 7}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fill="var(--text-muted)"
+                      fontFamily="var(--font-inter, sans-serif)"
                     >
-                      {slot.precipitation.toFixed(1)}mm
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                      {p.v.toFixed(1)}
+                    </text>
+                  </>
+                )}
+              </g>
+            ))}
+          </svg>
 
-          {/* Baseline line */}
-          <div className="h-[1px] mb-1.5" style={{ background: 'var(--outline)' }} />
-
-          {/* Labels */}
-          <div className="flex gap-2">
+          {/* Time labels */}
+          <div className="flex mt-1">
             {displaySlots.map((_, i) => (
               <span key={i} className="flex-1 text-center text-[10px] font-label" style={{ color: 'var(--text-muted)' }}>
                 {i === 0 ? 'Now' : `+${i * 15}m`}

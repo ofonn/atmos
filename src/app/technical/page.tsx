@@ -671,16 +671,16 @@ function HourlyMeteoSection({ mh, startIdx, tempUnit, windUnit, timeFormat }: { 
                         UV {uvi.toFixed(0)}
                       </span>
                     )}
-                    {/* Storm badge: only show for actual storm/shower codes or extreme instability with rain likely */}
+                    {/* Storm badge — subtle indicator only */}
                     {(wmo >= 95 || (mh.cape?.[idx] >= 1500 && (mh.precipitation_probability?.[idx] ?? 0) >= 50)) && (
                       <span
-                        className="text-[10px] font-label font-bold px-1.5 py-0.5 rounded-full"
+                        className="text-[9px] font-label px-1 py-0.5 rounded"
                         style={{
-                          background: wmo >= 95 ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.15)',
-                          color: wmo >= 95 ? '#ef4444' : '#f97316',
+                          background: wmo >= 95 ? 'rgba(239,68,68,0.08)' : 'rgba(249,115,22,0.08)',
+                          color: wmo >= 95 ? 'rgba(239,68,68,0.65)' : 'rgba(249,115,22,0.65)',
                         }}
                       >
-                        {wmo >= 95 ? '⛈ Storm' : '⚡ Storm possible'}
+                        {wmo >= 95 ? '⛈' : '⚡'} {wmo >= 95 ? 'Storm' : 'Storm possible'}
                       </span>
                     )}
                   </div>

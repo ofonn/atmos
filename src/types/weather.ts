@@ -35,6 +35,7 @@ export interface HourlyData {
   pop: number // probability of precipitation 0-100
   description: string
   isDay: boolean
+  uvIndex: number
 }
 
 export interface DailyData {
