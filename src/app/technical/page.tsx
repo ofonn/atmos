@@ -169,34 +169,36 @@ export default function TechnicalPage() {
       </header>
 
       <main className="relative z-10 px-4 pb-32 max-w-5xl mx-auto w-full">
+
+        {/* ── Page title — full width above the two-column grid ── */}
+        <div className="mb-6 px-2 pt-2">
+          <h2
+            className="text-[2.6rem] font-extrabold font-headline leading-none tracking-tight mb-1"
+            style={{
+              background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            }}
+          >
+            Conditions
+          </h2>
+          <div className="flex items-center gap-2">
+            {mc && (
+              <motion.div
+                className="w-2 h-2 rounded-full"
+                style={{ background: '#22c55e' }}
+                animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                aria-hidden="true"
+              />
+            )}
+            <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              {mc ? `Updated at ${fmtISOTimeFmt(mc.time, timeFormat)}` : 'Updating…'}
+            </p>
+          </div>
+        </div>
+
         <div className="md:grid md:grid-cols-2 md:gap-8 items-start">
-          <div className="md:sticky md:top-20 flex flex-col">
-            {/* Title */}
-            <div className="mb-6 px-2">
-              <h2
-                className="text-[2.6rem] font-extrabold font-headline leading-none tracking-tight mb-1"
-                style={{
-                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}
-              >
-                Conditions
-              </h2>
-              <div className="flex items-center gap-2">
-                {mc && (
-                  <motion.div
-                    className="w-2 h-2 rounded-full"
-                    style={{ background: '#22c55e' }}
-                    animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    aria-hidden="true"
-                  />
-                )}
-                <p className="font-label uppercase tracking-widest text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  {mc ? `Updated at ${fmtISOTimeFmt(mc.time, timeFormat)}` : 'Updating…'}
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-col">
 
             {/* AI Proactive Insight */}
             <div
@@ -232,7 +234,7 @@ export default function TechnicalPage() {
               </div>
             </div>
 
-            {/* ── Live Radar + RainTimeline — DESKTOP ONLY (hidden on mobile) ── */}
+            {/* ── Live Radar + RainTimeline + AQI — DESKTOP ONLY (hidden on mobile) ── */}
             <div className="hidden md:flex flex-col gap-4">
               <button
                 onClick={() => router.push('/radar')}
@@ -267,6 +269,7 @@ export default function TechnicalPage() {
               </button>
 
               {location && <RainTimeline lat={location.lat} lon={location.lon} />}
+              <AirQualitySection air={air} airData={airData} />
             </div>
 
           </div>{/* end left col */}
@@ -562,7 +565,8 @@ export default function TechnicalPage() {
           <div className="h-24 rounded-2xl animate-pulse mb-4" style={{ background: 'var(--surface-mid)', opacity: 0.5 }} />
         )}
 
-        {/* ── Air Quality ──────────────────────────────────────────────── */}
+        {/* ── Air Quality — MOBILE ONLY (desktop shows in left col) ─────── */}
+        <div className="md:hidden">
         <Section title="Air Quality" icon={<Wind className="w-4 h-4" style={{ color: 'var(--secondary)' }} aria-hidden="true" />}>
           {!airData ? (
             <div className="flex flex-col gap-2 py-2">
@@ -631,6 +635,7 @@ export default function TechnicalPage() {
             </>
           )}
         </Section>
+        </div>{/* end md:hidden AQI wrapper */}
 
         {/* ── Location Metadata ─────────────────────────────────────────── */}
         {location && (
@@ -653,6 +658,74 @@ export default function TechnicalPage() {
 
       <BottomNav />
     </div>
+  )
+}
+
+// ── Air Quality Section (reusable — rendered in both columns) ───────────────
+
+function AirQualitySection({ air, airData }: { air: any; airData: any }) {
+  return (
+    <Section title="Air Quality" icon={<Wind className="w-4 h-4" style={{ color: 'var(--secondary)' }} aria-hidden="true" />}>
+      {!airData ? (
+        <div className="flex flex-col gap-2 py-2">
+          <div className="h-14 rounded-xl animate-pulse" style={{ background: 'var(--surface-mid)' }} />
+          <div className="h-8 rounded animate-pulse" style={{ background: 'var(--surface-mid)', opacity: 0.6 }} />
+        </div>
+      ) : !air ? (
+        <p className="text-xs py-3 text-center" style={{ color: 'var(--text-muted)' }}>
+          Air quality data unavailable for this location
+        </p>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: 'var(--surface-mid)' }}>
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg"
+              style={{ background: aqiColor(air.main.aqi) }}
+              aria-label={`AQI ${air.main.aqi}: ${aqiLabel(air.main.aqi)}`}
+            >
+              {air.main.aqi}
+            </div>
+            <div>
+              <p className="font-bold text-sm font-headline" style={{ color: 'var(--text)' }}>{aqiLabel(air.main.aqi)}</p>
+              <p className="text-xs font-label" style={{ color: 'var(--text-muted)' }}>
+                Air Quality Index (1 = Good, 5 = Very Poor)
+              </p>
+            </div>
+          </div>
+          {([
+            ['co', 'Carbon Monoxide (CO)'],
+            ['no2', 'Nitrogen Dioxide (NO₂)'],
+            ['o3', 'Ozone (O₃)'],
+            ['so2', 'Sulphur Dioxide (SO₂)'],
+            ['pm2_5', 'Fine Particles (PM2.5)'],
+            ['pm10', 'Coarse Particles (PM10)'],
+          ] as [string, string][]).filter(([key]) => air.components[key] != null).map(([key, name]) => (
+            <DataRow key={key} label={name} value={(air.components[key] as number).toFixed(2)} unit=" μg/m³" />
+          ))}
+          {air.pollen && Object.values(air.pollen).some(v => v !== null && (v as number) > 0) && (
+            <>
+              <SubHead title="Pollen" />
+              {([
+                ['alder', 'Alder Pollen'], ['birch', 'Birch Pollen'], ['grass', 'Grass Pollen'],
+                ['mugwort', 'Mugwort Pollen'], ['olive', 'Olive Pollen'], ['ragweed', 'Ragweed Pollen'],
+              ] as [string, string][]).filter(([key]) => air.pollen[key] != null && air.pollen[key] > 0).map(([key, name]) => {
+                const val = air.pollen[key] as number
+                const level = val < 10 ? 'Low' : val < 30 ? 'Moderate' : val < 100 ? 'High' : 'Very High'
+                const color = val < 10 ? '#22c55e' : val < 30 ? '#f59e0b' : val < 100 ? '#f97316' : '#ef4444'
+                return (
+                  <DataRow
+                    key={key}
+                    label={name}
+                    value={<span style={{ color }}>{val.toFixed(0)} <span className="text-[10px] font-normal">{level}</span></span>}
+                    unit=" /m³"
+                  />
+                )
+              })}
+            </>
+          )}
+        </>
+      )}
+    </Section>
   )
 }
 

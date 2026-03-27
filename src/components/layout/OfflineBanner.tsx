@@ -1,22 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { WifiOff } from 'lucide-react'
+import Image from 'next/image'
 
 export function OfflineBanner() {
   const [isOffline, setIsOffline] = useState(false)
 
   useEffect(() => {
-    // Initial check
     setIsOffline(!navigator.onLine)
-
-    // Listeners for changes
     const handleOnline = () => setIsOffline(false)
     const handleOffline = () => setIsOffline(true)
-
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
-
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
@@ -26,22 +21,37 @@ export function OfflineBanner() {
   if (!isOffline) return null
 
   return (
-    <div className="fixed top-0 left-0 w-full z-50 flex justify-center mt-2 px-4 pointer-events-none animate-in fade-in slide-in-from-top-4 duration-500">
-      <div 
-        className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg pointer-events-auto"
-        style={{ 
-          background: 'rgba(255, 184, 0, 0.15)', 
-          border: '1px solid rgba(255, 184, 0, 0.4)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)'
+    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center pointer-events-none">
+      {/* Blurred backdrop */}
+      <div className="absolute inset-0 backdrop-blur-sm" style={{ background: 'rgba(0,0,0,0.35)' }} />
+
+      <div
+        className="relative flex flex-col items-center gap-5 px-8 py-8 rounded-3xl shadow-2xl pointer-events-auto"
+        style={{
+          background: 'rgba(16,19,28,0.85)',
+          border: '1px solid rgba(199,191,255,0.15)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
         }}
         role="alert"
         aria-live="assertive"
       >
-        <WifiOff className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-        <span className="font-label text-[11px] font-bold tracking-wide text-amber-500">
-          You&apos;re offline — showing cached data
-        </span>
+        <Image
+          src="/icon.png"
+          alt="Atmos"
+          width={72}
+          height={72}
+          className="rounded-2xl opacity-80"
+          priority
+        />
+        <div className="text-center">
+          <p className="font-headline font-bold text-base" style={{ color: 'var(--text)' }}>
+            You&apos;re offline
+          </p>
+          <p className="font-label text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>
+            Showing cached data — reconnect for live weather
+          </p>
+        </div>
       </div>
     </div>
   )
