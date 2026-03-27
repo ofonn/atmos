@@ -31,12 +31,10 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
   const fmtTime = (unix: number) =>
     new Date(unix * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-  // Show a frame by opacity toggle
   const showFrame = useCallback((idx: number) => {
     layersRef.current.forEach((l, i) => l.setOpacity(i === idx ? 0.72 : 0))
   }, [])
 
-  // Init map + load frames
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
@@ -57,6 +55,7 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
         zoom: 6,
         zoomControl: false,
         attributionControl: false,
+        // All interaction disabled — preview only
         dragging: false,
         scrollWheelZoom: false,
         doubleClickZoom: false,
@@ -75,6 +74,9 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
         radius: 6, color: '#c7bfff', fillColor: '#806EF8', fillOpacity: 0.95, weight: 2,
       }).addTo(map)
 
+      // Let the DOM settle before measuring the container so tiles render correctly
+      setTimeout(() => map.invalidateSize(), 200)
+
       try {
         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json')
         const data = await res.json()
@@ -91,7 +93,9 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
         setFrames(rawFrames)
         setFrameIdx(latest)
         setReady(true)
-      } catch {}
+      } catch (e) {
+        console.error('RadarPreview: RainViewer fetch failed', e)
+      }
     }
 
     init()
@@ -106,10 +110,8 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
     }
   }, [lat, lon])
 
-  // Frame display
   useEffect(() => { if (ready) showFrame(frameIdx) }, [frameIdx, ready, showFrame])
 
-  // Playback loop
   useEffect(() => {
     if (!isPlaying || frames.length === 0) return
     const tick = () => {
@@ -127,67 +129,76 @@ export function RadarPreview({ lat, lon, locationName }: Props) {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden relative cursor-pointer group"
-      style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)' }}
-      onClick={() => router.push('/radar')}
-      role="button"
-      aria-label="Open live radar"
+      className="rounded-2xl overflow-hidden relative"
+      style={{ background: 'var(--surface)', border: '0.5px solid var(--outline)', minHeight: 176 }}
     >
-      {/* Map */}
-      <div ref={mapRef} className="w-full h-44 pointer-events-none" />
+      {/* Leaflet map — no pointer-events override; Leaflet needs the div intact */}
+      <div ref={mapRef} style={{ width: '100%', height: 176 }} />
 
-      {/* Top bar — title + open arrow */}
+      {/*
+        Transparent full-cover overlay for navigation.
+        Sits above the map (z-10) so clicks navigate, but below the
+        play button and bars (z-20) so those still work independently.
+        Leaflet stops its own event propagation internally, so we need
+        this overlay rather than relying on bubbling from the map div.
+      */}
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10"
-        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)' }}
+        className="absolute inset-0 z-10 cursor-pointer"
+        onClick={() => router.push('/radar')}
+        aria-label="Open live radar"
+        role="button"
+      />
+
+      {/* Top bar — title + open icon */}
+      <div
+        className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-20 pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)' }}
       >
         <div>
           <p className="text-xs font-bold font-headline text-white">Live Radar</p>
           <p className="text-[10px] font-label opacity-70 text-white">{locationName} · RainViewer</p>
         </div>
-        <ArrowRight className="w-4 h-4 text-white opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+        <ArrowRight className="w-4 h-4 text-white opacity-70" aria-hidden="true" />
       </div>
 
-      {/* Centre play button — large, visible when paused; shrinks when playing */}
-      {ready && (
-        <button
-          onClick={togglePlay}
-          className="absolute inset-0 m-auto z-20 flex items-center justify-center transition-all duration-300"
-          style={{
-            width: isPlaying ? 32 : 48,
-            height: isPlaying ? 32 : 48,
-            borderRadius: '50%',
-            background: isPlaying ? 'rgba(199,191,255,0.15)' : 'rgba(128,110,248,0.85)',
-            border: '1.5px solid rgba(199,191,255,0.6)',
-            backdropFilter: 'blur(6px)',
-            opacity: isPlaying ? 0.6 : 1,
-          }}
-          aria-label={isPlaying ? 'Pause' : 'Play animation'}
-        >
-          {isPlaying
-            ? <Pause className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-            : <Play className="w-4 h-4 text-white ml-0.5" aria-hidden="true" />
-          }
-        </button>
-      )}
+      {/* Centred play / pause button — z-20 so clicks reach it, not the nav overlay */}
+      <button
+        onClick={togglePlay}
+        className="absolute z-20 flex items-center justify-center transition-all duration-200 active:scale-90"
+        style={{
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: isPlaying ? 34 : 50,
+          height: isPlaying ? 34 : 50,
+          borderRadius: '50%',
+          background: isPlaying ? 'rgba(0,0,0,0.35)' : 'rgba(128,110,248,0.9)',
+          border: '1.5px solid rgba(199,191,255,0.55)',
+          backdropFilter: 'blur(6px)',
+        }}
+        aria-label={isPlaying ? 'Pause' : 'Play radar animation'}
+      >
+        {isPlaying
+          ? <Pause className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+          : <Play className="w-4 h-4 text-white" style={{ marginLeft: 2 }} aria-hidden="true" />
+        }
+      </button>
 
-      {/* Bottom bar — timestamp + scrubber */}
+      {/* Bottom bar — timestamp + scrubber dots */}
       <div
-        className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-10"
+        className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-20"
         style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 100%)' }}
       >
         <p className="text-[10px] font-label text-white opacity-70">
           {ready && frames[frameIdx] ? fmtTime(frames[frameIdx].time) : 'Loading…'}
         </p>
 
-        {/* Scrubber dots */}
         {ready && frames.length > 0 && (
           <div className="flex items-center gap-1">
             {frames.map((_, i) => (
               <button
                 key={i}
                 onClick={e => { e.stopPropagation(); setIsPlaying(false); setFrameIdx(i) }}
-                className="rounded-full transition-all"
+                className="rounded-full transition-all duration-150"
                 style={{
                   width: i === frameIdx ? 14 : 5,
                   height: 5,
