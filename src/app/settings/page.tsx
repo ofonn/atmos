@@ -4,6 +4,9 @@ import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { AccountSection } from '@/components/auth/AccountSection'
+import { ProfileEditor } from '@/components/auth/ProfileEditor'
+import { StreakBadge } from '@/components/streak/StreakBadge'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
@@ -90,7 +93,7 @@ function SegmentedControl({
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, updateSetting } = useSettings()
+  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, aiEmojiUse, aiVerbosity, updateSetting } = useSettings()
   const { location, locLoading, searchCity, syncLocation } = useWeatherContext()
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
@@ -275,9 +278,47 @@ export default function SettingsPage() {
           </div>
         ))}
 
+        {/* AI personality */}
+        <div className="pt-4">
+          <p className="text-[11px] font-label uppercase tracking-widest px-1 mb-1" style={{ color: 'var(--text-muted)' }}>
+            AI Personality
+          </p>
+        </div>
+        <SettingRow icon={Sparkles} label="Emoji use">
+          <SegmentedControl
+            options={[
+              { value: 'none', label: 'None' },
+              { value: 'light', label: 'Light' },
+              { value: 'heavy', label: 'Heavy' },
+            ]}
+            value={aiEmojiUse}
+            onChange={(v) => updateSetting('aiEmojiUse', v)}
+          />
+        </SettingRow>
+        <SettingRow icon={Sparkles} label="Verbosity">
+          <SegmentedControl
+            options={[
+              { value: 'short', label: 'Short' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'long', label: 'Long' },
+            ]}
+            value={aiVerbosity}
+            onChange={(v) => updateSetting('aiVerbosity', v)}
+          />
+        </SettingRow>
+
           </div>
 
           <div className="space-y-3 mt-8 md:mt-0">
+        {/* Account section */}
+        <AccountSection />
+
+        <ProfileEditor />
+
+        <StreakBadge />
+
+        <div className="pt-4" />
+
         {/* Location section */}
         <div>
           <p

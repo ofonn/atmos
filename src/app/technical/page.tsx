@@ -10,6 +10,10 @@ import { WindCompass } from '@/components/weather/WindCompass'
 import { MoonPhase } from '@/components/weather/MoonPhase'
 import { SunArc } from '@/components/weather/SunArc'
 import { PressureSparkline } from '@/components/weather/PressureSparkline'
+import { SunUVCard } from '@/components/weather/SunUVCard'
+import { PollenCard } from '@/components/weather/PollenCard'
+import { ComparisonRow } from '@/components/weather/ComparisonRow'
+import { PrecipChart } from '@/components/weather/PrecipChart'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -269,6 +273,34 @@ export default function TechnicalPage() {
             <RadarPreview lat={location.lat} lon={location.lon} locationName={location.name} />
           </div>
         )}
+
+        {/* New cards: sun/UV, comparison, precip, pollen */}
+        {location && md?.temperature_2m_max?.[0] != null && (
+          <ComparisonRow
+            lat={location.lat}
+            lon={location.lon}
+            todayMax={md.temperature_2m_max[0]}
+            todayMin={md.temperature_2m_min?.[0] ?? 0}
+          />
+        )}
+        {md && (
+          <SunUVCard
+            sunrise={md.sunrise?.[0]}
+            sunset={md.sunset?.[0]}
+            uvMax={md.uv_index_max?.[0]}
+            uvNow={mh?.uv_index?.[nowHourIdx]}
+            timeFormat={timeFormat as '12h' | '24h'}
+          />
+        )}
+        {meteo?.minutely_15?.time && (
+          <PrecipChart
+            minutely={meteo.minutely_15.time.slice(0, 24).map((t: string, i: number) => ({
+              dt: new Date(t).getTime() / 1000,
+              precipitation: meteo.minutely_15.precipitation?.[i] ?? 0,
+            }))}
+          />
+        )}
+        {airData?.list?.[0]?.pollen && <PollenCard pollen={airData.list[0].pollen} />}
 
         {/* ── UV Warning Banner ──────────────────────────────────────── */}
         {mh && mh.uv_index?.[nowHourIdx] >= 6 && (

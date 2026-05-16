@@ -10,6 +10,7 @@ import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { formatDay, displayTempShort, displayTemp } from '@/lib/utils'
 import { useAiContent } from '@/hooks/useAiContent'
+import { TempTrendChart } from '@/components/weather/TempTrendChart'
 import {
   wmoDesc, wmoEmoji, getWindDir16, secsToHm, uviColor, uviLabel,
   fmtISOTime, fmtISOTimeFmt, fmtISODate, displayCelsius,
@@ -149,6 +150,10 @@ export default function OverviewPage() {
         ) : (
           <div className="md:grid md:grid-cols-2 md:gap-8 md:items-start">
             <div className="flex flex-col gap-0 md:sticky md:top-24">
+            {/* 14-day temperature trend */}
+            <div className="px-2 mb-4">
+              <TempTrendChart daily={daily} />
+            </div>
             {/* Featured Day — Tomorrow */}
             {featured && (
               <section className="px-2 mb-6">

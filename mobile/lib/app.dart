@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'screens/auth/sign_in_screen.dart';
 import 'screens/chat/chat_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/insight/insight_screen.dart';
@@ -86,6 +87,7 @@ class _RoutedApp extends ConsumerWidget {
             GoRoute(path: '/locations', builder: (_, __) => const LocationsScreen()),
             GoRoute(path: '/insight', builder: (_, __) => const InsightScreen()),
             GoRoute(path: '/radar', builder: (_, __) => const RadarScreen()),
+            GoRoute(path: '/sign-in', builder: (_, __) => const SignInScreen()),
           ],
         ),
       ],
