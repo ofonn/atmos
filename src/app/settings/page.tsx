@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { AccountSection } from '@/components/auth/AccountSection'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
@@ -278,6 +279,11 @@ export default function SettingsPage() {
           </div>
 
           <div className="space-y-3 mt-8 md:mt-0">
+        {/* Account section */}
+        <AccountSection />
+
+        <div className="pt-4" />
+
         {/* Location section */}
         <div>
           <p

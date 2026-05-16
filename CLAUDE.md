@@ -21,10 +21,14 @@ No test suite is configured.
 
 Required in `.env.local`:
 ```
-GEMINI_API_KEY=        # Use gemini-2.5-flash (NOT 2.0-flash — it has 0 quota)
+GEMINI_API_KEY=                       # Use gemini-2.5-flash (NOT 2.0-flash — it has 0 quota)
+NEXT_PUBLIC_SUPABASE_URL=             # https://<project>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=        # Supabase anon (publishable) key
 ```
 
 No weather API key needed — Open-Meteo is free and keyless.
+
+For Google OAuth: in the Supabase dashboard → Authentication → Providers → Google, enable it and paste the Google Cloud `Client ID` / `Client Secret`. In Google Cloud, the authorized redirect URI is `<supabase-url>/auth/v1/callback`. Supabase then redirects back to `/auth/callback` on this app.
 
 ## Architecture
 
