@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, CalendarDays, BarChart2, MessageCircle, Settings } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, BarChart2, MessageCircle, Settings, Plane } from 'lucide-react'
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Home' },
   { href: '/technical', icon: BarChart2, label: 'Details' },
   { href: '/overview', icon: CalendarDays, label: 'Outlook' },
+  { href: '/trip', icon: Plane, label: 'Trip' },
   { href: '/chat', icon: MessageCircle, label: 'Chat' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ]

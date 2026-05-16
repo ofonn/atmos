@@ -59,6 +59,11 @@ dependencies:
   intl: ^0.19.0
   collection: ^1.18.0
 
+  # Supabase Auth — per-user accounts. Email/password + Google OAuth.
+  # Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY as
+  # --dart-define values at build time (see mobile/README.md).
+  supabase_flutter: ^2.5.0
+
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1

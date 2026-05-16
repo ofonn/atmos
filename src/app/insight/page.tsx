@@ -5,11 +5,12 @@ import { ArrowLeft, Sparkles, Shirt, CalendarClock, MessageCircle, MapPin } from
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import { useAiContent } from '@/hooks/useAiContent'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { ActivityCard } from '@/components/weather/ActivityCard'
 import { wmoEmoji } from '@/lib/weatherUtils'
 
 export default function InsightPage() {
   const router = useRouter()
-  const { location, current, locLoading } = useWeatherContext()
+  const { location, current, hourly, locLoading } = useWeatherContext()
   const { content, loading: aiLoading } = useAiContent(null, null, null) // Hook will grab cache natively, but we can pass null since it's already initialized by Root/Home
 
   return (
@@ -133,6 +134,11 @@ export default function InsightPage() {
                   <MessageCircle className="w-5 h-5 text-[var(--primary)]" />
                 </div>
               </button>
+
+              {/* AI activity windows */}
+              <div className="mt-6">
+                <ActivityCard hourly={hourly} />
+              </div>
             </div>
           </div>
         )}

@@ -1,16 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin, Bell, Search, Menu, X } from 'lucide-react'
+import { MapPin, Bell, Search, Menu, X, Heart } from 'lucide-react'
 import type { Location } from '@/types/weather'
 
 interface HeaderProps {
   location: Location | null
   onSearch: (city: string) => void
   loading: boolean
+  isSaved?: boolean
+  onToggleSave?: () => void
 }
 
-export function Header({ location, onSearch, loading }: HeaderProps) {
+export function Header({ location, onSearch, loading, isSaved, onToggleSave }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -56,6 +58,19 @@ export function Header({ location, onSearch, loading }: HeaderProps) {
 
       {/* Right: Avatar / Search toggle */}
       <div className="flex items-center gap-3">
+        {location && onToggleSave && (
+          <button
+            onClick={onToggleSave}
+            aria-label={isSaved ? 'Remove from favorites' : 'Add to favorites'}
+            className="text-on-surface-variant hover:text-primary transition-colors"
+          >
+            <Heart
+              className="w-5 h-5"
+              fill={isSaved ? 'currentColor' : 'none'}
+              style={{ color: isSaved ? 'var(--primary)' : undefined }}
+            />
+          </button>
+        )}
         <button
           onClick={() => setSearchOpen(!searchOpen)}
           className="text-on-surface-variant hover:text-primary transition-colors"

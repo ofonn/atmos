@@ -1,0 +1,6 @@
+# Supabase project config — used by the Supabase CLI.
+# `project_id` is replaced with your real project ref by `supabase link`.
+project_id = "atmos"
+
+[db]
+major_version = 15

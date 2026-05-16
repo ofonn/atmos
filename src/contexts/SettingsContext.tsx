@@ -5,7 +5,17 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 export type TempUnit = 'C' | 'F'
 export type WindUnit = 'kmh' | 'mph'
 export type TimeFormat = '12h' | '24h'
-export type HeadlineTone = 'casual' | 'punchy' | 'sarcastic' | 'funny' | 'dramatic' | 'informative' | 'smart' | 'local'
+export type HeadlineTone =
+  | 'casual'
+  | 'punchy'
+  | 'sarcastic'
+  | 'funny'
+  | 'dramatic'
+  | 'informative'
+  | 'smart'
+  | 'local'
+export type AiEmojiUse = 'none' | 'light' | 'heavy'
+export type AiVerbosity = 'short' | 'medium' | 'long'
 
 export interface Settings {
   tempUnit: TempUnit
@@ -15,6 +25,9 @@ export interface Settings {
   headlineTwoLine: boolean
   headlineLocationFlavor: boolean
   headlineTimeAware: boolean
+  aiEmojiUse: AiEmojiUse
+  aiVerbosity: AiVerbosity
+  language: string
 }
 
 const defaults: Settings = {
@@ -25,6 +38,9 @@ const defaults: Settings = {
   headlineTwoLine: false,
   headlineLocationFlavor: false,
   headlineTimeAware: false,
+  aiEmojiUse: 'light',
+  aiVerbosity: 'medium',
+  language: 'en',
 }
 
 const CACHE_KEY = 'atmos_settings'
@@ -53,6 +69,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setSettings(readCache())
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === CACHE_KEY || e.key === null) {
+        setSettings(readCache())
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {

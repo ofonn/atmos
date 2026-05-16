@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 /**
  * Server-side Supabase client for use in Server Components, Route Handlers,
  * and Server Actions. Reads & writes auth cookies via next/headers.
+ *
+ * For `auth.getUser()` + 401 helpers, see `./auth`.
  */
 export function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -25,21 +27,9 @@ export function createSupabaseServerClient() {
             cookieStore.set(name, value, options),
           )
         } catch {
-          // Called from a Server Component — middleware will refresh cookies.
+          // Called from a Server Component — middleware refreshes cookies.
         }
       },
     },
   })
-}
-
-/**
- * Return the authenticated user for API routes / Server Components.
- * Returns null if no valid session.
- */
-export async function getServerUser() {
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  return user
 }
