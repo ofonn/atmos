@@ -93,7 +93,7 @@ function SegmentedControl({
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, aiEmojiUse, aiVerbosity, updateSetting } = useSettings()
+  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, aiEmojiUse, aiVerbosity, videoBackground, videoBackgroundQuality, updateSetting } = useSettings()
   const { location, locLoading, searchCity, syncLocation } = useWeatherContext()
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
@@ -277,6 +277,36 @@ export default function SettingsPage() {
             </button>
           </div>
         ))}
+
+        {/* Home page video background */}
+        <div className="pt-4">
+          <p className="text-[11px] font-label uppercase tracking-widest px-1 mb-1" style={{ color: 'var(--text-muted)' }}>
+            Background
+          </p>
+        </div>
+        <SettingRow icon={Sparkles} label="Weather video">
+          <SegmentedControl
+            options={[
+              { value: 'off', label: 'Off' },
+              { value: 'on', label: 'On' },
+            ]}
+            value={videoBackground === 'unset' ? 'off' : videoBackground}
+            onChange={(v) => updateSetting('videoBackground', v as 'on' | 'off')}
+          />
+        </SettingRow>
+        {videoBackground === 'on' && (
+          <SettingRow icon={Sparkles} label="Video quality">
+            <SegmentedControl
+              options={[
+                { value: 'auto', label: 'Auto' },
+                { value: 'low', label: 'Low' },
+                { value: 'hd', label: 'HD' },
+              ]}
+              value={videoBackgroundQuality}
+              onChange={(v) => updateSetting('videoBackgroundQuality', v as 'auto' | 'low' | 'hd')}
+            />
+          </SettingRow>
+        )}
 
         {/* AI personality */}
         <div className="pt-4">

@@ -10,6 +10,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { HourlyForecast } from '@/components/weather/HourlyForecast'
 import { OutfitCard } from '@/components/weather/OutfitCard'
 import { ShareWeather } from '@/components/share/ShareWeather'
+import { WeatherVideoBackground } from '@/components/weather/WeatherVideoBackground'
 import { WeatherParticles, getEffect } from '@/components/weather/WeatherParticles'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { useWeatherContext } from '@/contexts/WeatherContext'
@@ -295,6 +296,14 @@ export default function Home() {
             </div>
           </form>
         </div>
+      )}
+
+      {/* Weather-adaptive video background — opt-in via onboarding */}
+      {current && (
+        <WeatherVideoBackground
+          conditionCode={current.conditionCode}
+          isDay={current.isDay}
+        />
       )}
 
       {/* ═══════════════════════════════════════════════════════════

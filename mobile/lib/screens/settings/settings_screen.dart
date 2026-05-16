@@ -8,6 +8,7 @@ import '../../state/settings_provider.dart';
 import '../../theme/atmospheric_background.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import '../../widgets/account_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -33,6 +34,7 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              const AccountSection(),
               _section(context, 'Appearance', <Widget>[
                 _row(context, LucideIcons.sun, 'Theme', _segmented<ThemeMode>(
                   context,

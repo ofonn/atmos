@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Whether Supabase was initialized at app startup. False when env vars
-/// were missing — in that case the auth screens render an "unavailable"
-/// notice instead of attempting calls.
+/// True if Supabase was initialized at app startup. False when env vars
+/// were missing — auth UI then renders an "unavailable" notice.
 final supabaseReadyProvider = Provider<bool>((ref) {
   try {
     Supabase.instance.client;
@@ -13,7 +12,8 @@ final supabaseReadyProvider = Provider<bool>((ref) {
   }
 });
 
-/// Live auth state stream. Emits the current Session on every change.
+/// Live auth state stream — emits on every sign-in / sign-out / refresh.
+/// Returns an empty stream when Supabase is unavailable.
 final authStateProvider = StreamProvider<AuthState>((ref) {
   if (!ref.watch(supabaseReadyProvider)) {
     return const Stream<AuthState>.empty();
@@ -21,8 +21,11 @@ final authStateProvider = StreamProvider<AuthState>((ref) {
   return Supabase.instance.client.auth.onAuthStateChange;
 });
 
-/// Current user, or null if signed out / unconfigured.
+/// Current authenticated user, or null. Rebuilds whenever
+/// [authStateProvider] emits so consumers see fresh state.
 final currentUserProvider = Provider<User?>((ref) {
   if (!ref.watch(supabaseReadyProvider)) return null;
+  // Wire-through to the auth stream so this provider re-evaluates on changes.
+  ref.watch(authStateProvider);
   return Supabase.instance.client.auth.currentUser;
 });

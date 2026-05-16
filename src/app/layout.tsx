@@ -11,6 +11,7 @@ import { CloudSync } from '@/components/sync/CloudSync'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SWRegister } from '@/components/pwa/SWRegister'
 import { StreakTracker } from '@/components/streak/StreakTracker'
+import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <OfflineBanner />
                   <PageTransition>{children}</PageTransition>
                   <InstallPrompt />
+                  <OnboardingFlow />
                 </div>
               </WeatherProvider>
             </SettingsProvider>

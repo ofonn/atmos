@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import type { WeatherContextData } from '@/types/weather'
+import { useSettings } from '@/contexts/SettingsContext'
 
 const CHAT_CACHE_KEY = 'atmos_chat_messages'
 
@@ -29,6 +30,7 @@ function saveCachedMessages(messages: ChatMessage[]) {
 }
 
 export function useChat(weatherContext: WeatherContextData) {
+  const { aiEmojiUse, aiVerbosity } = useSettings()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -69,6 +71,7 @@ export function useChat(weatherContext: WeatherContextData) {
             weather: weatherContext,
             localHour: new Date().getHours(),
             localMinute: new Date().getMinutes(),
+            personality: { emojiUse: aiEmojiUse, verbosity: aiVerbosity },
           }),
         })
 
@@ -96,7 +99,7 @@ export function useChat(weatherContext: WeatherContextData) {
 
       setLoading(false)
     },
-    [messages, weatherContext]
+    [messages, weatherContext, aiEmojiUse, aiVerbosity]
   )
 
   const clearChat = useCallback(() => {

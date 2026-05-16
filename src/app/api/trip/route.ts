@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerateWithRotation } from '@/lib/gemini'
 import { requirePlayIntegrity } from '@/lib/playIntegrity'
+import { getServerUser, getUserTier } from '@/lib/supabase/auth'
+import { enforceUsage } from '@/lib/supabase/usage'
 
 interface DailySummary {
   date: string
@@ -14,6 +16,13 @@ interface DailySummary {
 export async function POST(req: NextRequest) {
   const unauthorized = await requirePlayIntegrity(req)
   if (unauthorized) return unauthorized
+
+  const user = await getServerUser()
+  if (user) {
+    const tier = await getUserTier(user.id)
+    const limited = await enforceUsage('trip', tier)
+    if (limited) return limited
+  }
 
   try {
     const { destination, startDate, endDate, daily } = await req.json()

@@ -13,10 +13,15 @@ void main() async {
 
   // Supabase auth — env vars come from --dart-define at build time. Skip
   // initialization when missing so the app still runs without auth.
+  // Guarded against double-init on hot restart.
   const supaUrl = String.fromEnvironment('SUPABASE_URL');
   const supaKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   if (supaUrl.isNotEmpty && supaKey.isNotEmpty) {
-    await Supabase.initialize(url: supaUrl, anonKey: supaKey);
+    try {
+      Supabase.instance.client; // throws if not initialized — we want that path
+    } catch (_) {
+      await Supabase.initialize(url: supaUrl, anonKey: supaKey);
+    }
   }
 
   runApp(const ProviderScope(child: AtmosApp()));
