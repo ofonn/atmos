@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
 
 export async function GET(req: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(req)
+  if (unauthorized) return unauthorized
+
   const { searchParams } = new URL(req.url)
   const lat = searchParams.get('lat')
   const lon = searchParams.get('lon')

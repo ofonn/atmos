@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerateWithRotation } from '@/lib/gemini'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
   casual:      'Talk like a smart friend texting someone about the weather — warm, direct, zero jargon.',
@@ -13,6 +14,9 @@ const TONE_INSTRUCTIONS: Record<string, string> = {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(req)
+  if (unauthorized) return unauthorized
+
   try {
     const {
       current, hourly, daily,

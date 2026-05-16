@@ -32,10 +32,10 @@ jobs:
         working-directory: .
         env:
           HAS_BASE: ${{ secrets.ATMOS_API_BASE != '' }}
-          HAS_KEY: ${{ secrets.ATMOS_CLIENT_KEY != '' }}
+          HAS_PROJECT: ${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER != '' }}
         run: |
-          if [ "$HAS_BASE" != "true" ] || [ "$HAS_KEY" != "true" ]; then
-            echo "::error::Missing repo secret(s). Add ATMOS_API_BASE and ATMOS_CLIENT_KEY in Settings → Secrets and variables → Actions."
+          if [ "$HAS_BASE" != "true" ] || [ "$HAS_PROJECT" != "true" ]; then
+            echo "::error::Missing repo secret(s). Add ATMOS_API_BASE and GOOGLE_CLOUD_PROJECT_NUMBER in Settings → Secrets and variables → Actions."
             exit 1
           fi
 
@@ -76,13 +76,13 @@ jobs:
         run: |
           flutter build apk --release --split-per-abi \
             --dart-define=ATMOS_API_BASE=${{ secrets.ATMOS_API_BASE }} \
-            --dart-define=ATMOS_CLIENT_KEY=${{ secrets.ATMOS_CLIENT_KEY }}
+            --dart-define=GOOGLE_CLOUD_PROJECT_NUMBER=${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
 
       - name: Build universal APK
         run: |
           flutter build apk --release \
             --dart-define=ATMOS_API_BASE=${{ secrets.ATMOS_API_BASE }} \
-            --dart-define=ATMOS_CLIENT_KEY=${{ secrets.ATMOS_CLIENT_KEY }}
+            --dart-define=GOOGLE_CLOUD_PROJECT_NUMBER=${{ secrets.GOOGLE_CLOUD_PROJECT_NUMBER }}
 
       - name: List APK outputs
         run: ls -lh build/app/outputs/flutter-apk/
