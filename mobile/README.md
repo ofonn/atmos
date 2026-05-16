@@ -59,6 +59,38 @@ flutter build apk --release \
 
 Outputs land in `build/app/outputs/flutter-apk/`.
 
+## GitHub Actions builds
+
+`.github/workflows/android-apk.yml` builds the APKs in CI on every push to
+`main` / `claude/**`, on manual dispatch, and on `v*` tags. Tag pushes also
+publish a GitHub Release with the APKs attached. APKs are uploaded as run
+artifacts (90-day retention) — open the run from the **Actions** tab and
+download `atmos-apks-<sha>.zip` from the run page.
+
+### Required GitHub Actions secrets
+
+Repo Settings → Secrets and variables → **Actions** → New repository secret:
+
+| Name | Value |
+|---|---|
+| `ATMOS_API_BASE` | Deployed site URL, e.g. `https://atmos.yourdomain.com` (no trailing slash, no `/api`). |
+| `ATMOS_CLIENT_KEY` | The shared secret. Must equal `ATMOS_MOBILE_KEY` on the server (Vercel env vars). |
+
+The workflow bakes these into the APK via `--dart-define`. The build fails
+fast if either secret is missing.
+
+### Releases
+
+Tag a commit to publish:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The workflow attaches all four APKs (`arm64-v8a`, `armeabi-v7a`, `x86_64`,
+and the universal build) to a GitHub Release named after the tag.
+
 ## Architecture
 
 ```
