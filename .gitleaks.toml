@@ -1,0 +1,42 @@
+# Gitleaks config — pre-commit secret scanning. Install + run:
+#   brew install gitleaks
+#   gitleaks protect --staged --config .gitleaks.toml
+#
+# Or add it as a Husky pre-commit hook. Keep the file small — the
+# defaults already catch most providers (AWS, GCP, Stripe, GitHub
+# tokens, Slack, etc.). We just augment with project-specific
+# patterns.
+
+title = "Atmos gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "atmos-supabase-service-role"
+description = "Supabase service-role JWT detected — must never be in client code"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+'''
+tags = ["supabase", "key"]
+
+[[rules]]
+id = "atmos-gemini-api-key"
+description = "Google API key (Gemini / Maps)"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+tags = ["gemini", "google"]
+
+[[rules]]
+id = "atmos-stripe-secret"
+description = "Stripe live secret key"
+regex = '''sk_live_[0-9a-zA-Z]{24,}'''
+tags = ["stripe", "key"]
+
+[allowlist]
+description = "Test fixtures + docs"
+paths = [
+  '''\.env\.example''',
+  '''docs/.*''',
+  '''CONTRIBUTING\.md''',
+  '''SECURITY\.md''',
+  '''README\.md''',
+  '''\.gitleaks\.toml''',
+]

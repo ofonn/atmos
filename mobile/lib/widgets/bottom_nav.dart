@@ -19,6 +19,7 @@ const List<_NavItem> _items = <_NavItem>[
   _NavItem(path: '/', icon: LucideIcons.layoutDashboard, label: 'Home'),
   _NavItem(path: '/technical', icon: LucideIcons.barChart2, label: 'Details'),
   _NavItem(path: '/overview', icon: LucideIcons.calendarDays, label: 'Outlook'),
+  _NavItem(path: '/trip', icon: LucideIcons.plane, label: 'Trip'),
   _NavItem(path: '/chat', icon: LucideIcons.messageCircle, label: 'Chat'),
   _NavItem(path: '/settings', icon: LucideIcons.settings, label: 'Settings'),
 ];

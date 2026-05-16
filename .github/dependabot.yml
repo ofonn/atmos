@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Next.js + JavaScript deps
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 8
+    labels:
+      - dependencies
+      - javascript
+    groups:
+      next:
+        patterns:
+          - "next"
+          - "next-*"
+          - "eslint-config-next"
+      react:
+        patterns:
+          - "react"
+          - "react-*"
+          - "@types/react"
+          - "@types/react-dom"
+      supabase:
+        patterns:
+          - "@supabase/*"
+      types:
+        patterns:
+          - "@types/*"
+
+  # Flutter / Dart deps
+  - package-ecosystem: pub
+    directory: "/mobile"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - flutter
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci

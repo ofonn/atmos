@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/chat/chat_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/trip/trip_screen.dart';
 import 'screens/insight/insight_screen.dart';
 import 'screens/locations/locations_screen.dart';
 import 'screens/overview/overview_screen.dart';
@@ -88,6 +89,7 @@ class _RoutedApp extends ConsumerWidget {
             GoRoute(path: '/insight', builder: (_, __) => const InsightScreen()),
             GoRoute(path: '/radar', builder: (_, __) => const RadarScreen()),
             GoRoute(path: '/sign-in', builder: (_, __) => const SignInScreen()),
+            GoRoute(path: '/trip', builder: (_, __) => const TripScreen()),
           ],
         ),
       ],
