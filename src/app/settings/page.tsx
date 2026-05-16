@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AccountSection } from '@/components/auth/AccountSection'
 import { ProfileEditor } from '@/components/auth/ProfileEditor'
+import { DangerZone } from '@/components/auth/DangerZone'
 import { StreakBadge } from '@/components/streak/StreakBadge'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
@@ -478,6 +479,10 @@ export default function SettingsPage() {
           <p className="text-[11px] mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
             Powered by Open-Meteo &amp; Google Gemini. Built with Next.js.
           </p>
+        </div>
+
+        <div className="pt-4">
+          <DangerZone />
         </div>
           </div>
         </div>
