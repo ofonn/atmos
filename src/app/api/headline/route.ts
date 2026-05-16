@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerateWithRotation } from '@/lib/gemini'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(req)
+  if (unauthorized) return unauthorized
+
   try {
     const { temp, feelsLike, description, conditionCode, windSpeed, humidity } = await req.json()
 

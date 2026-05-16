@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createGeminiClient, buildSystemPrompt } from '@/lib/gemini'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
 
 const MODEL_ROTATION = [
   'gemini-2.5-flash',
@@ -15,6 +16,9 @@ function isRateLimit(error: any): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(request)
+  if (unauthorized) return unauthorized
+
   const { message, history, weather, localHour, localMinute } = await request.json()
 
   if (!message) {

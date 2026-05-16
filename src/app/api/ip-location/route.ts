@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
 
 export async function GET(request: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(request)
+  if (unauthorized) return unauthorized
+
   try {
     // Get the client's IP from headers (Vercel/proxies set these)
     const forwarded = request.headers.get('x-forwarded-for')
