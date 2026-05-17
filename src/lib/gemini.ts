@@ -50,7 +50,41 @@ export async function geminiGenerateWithRotation(
   throw new Error('Service temporarily unavailable. Please try again shortly.')
 }
 
-export function buildSystemPrompt(weather: WeatherContextData, localHour?: number, localMinute?: number): string {
+export interface PersonalityOptions {
+  /** 'none' | 'light' (1-2 per reply) | 'heavy' (per sentence) */
+  emojiUse?: 'none' | 'light' | 'heavy'
+  /** 'short' (≤50 words) | 'medium' (≤150) | 'long' (≤300) */
+  verbosity?: 'short' | 'medium' | 'long'
+}
+
+function personalityBlock(p?: PersonalityOptions): string {
+  if (!p) return ''
+  const lines: string[] = []
+  if (p.emojiUse === 'none') {
+    lines.push('- ABSOLUTELY NO EMOJI in your responses. Plain text only.')
+  } else if (p.emojiUse === 'heavy') {
+    lines.push('- Use emojis liberally — at least one per sentence where natural.')
+  } else if (p.emojiUse === 'light') {
+    lines.push('- Use emojis sparingly — at most 1–2 per reply, only when they add clarity.')
+  }
+  if (p.verbosity === 'short') {
+    lines.push('- VERBOSITY: very concise. Hard cap at 50 words. No preamble.')
+  } else if (p.verbosity === 'long') {
+    lines.push('- VERBOSITY: detailed. Up to ~300 words when the question warrants depth.')
+  } else if (p.verbosity === 'medium') {
+    lines.push('- VERBOSITY: balanced. Aim for 80–150 words.')
+  }
+  return lines.length > 0
+    ? `\n\nUSER PERSONALITY PREFERENCES (override default style):\n${lines.join('\n')}`
+    : ''
+}
+
+export function buildSystemPrompt(
+  weather: WeatherContextData,
+  localHour?: number,
+  localMinute?: number,
+  personality?: PersonalityOptions,
+): string {
   const hour = typeof localHour === 'number' ? localHour : new Date().getHours()
   const minute = typeof localMinute === 'number' ? localMinute : new Date().getMinutes()
   const timeOfDay = hour < 6 ? 'night' : hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night'
@@ -106,7 +140,7 @@ STYLE GUIDELINES:
 - For clothing: consider wind chill, rain chance, UV, humidity
 - For safety: flag severe weather, high UV, extreme cold/heat, icy conditions, fog
 - If asked off-topic: "I'm obsessed with the atmosphere, so I only do weather! Let's get back to the forecast…"
-- Keep responses under 150 words unless detail is genuinely needed`
+- Keep responses under 150 words unless detail is genuinely needed${personalityBlock(personality)}`
 
   if (weather.current) {
     prompt += `

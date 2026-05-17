@@ -1,0 +1,93 @@
+name: atmos
+description: Atmos — AI weather companion (Android port of the web app).
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Routing
+  go_router: ^14.2.0
+
+  # HTTP
+  dio: ^5.5.0
+
+  # Storage
+  shared_preferences: ^2.2.3
+
+  # Location
+  geolocator: ^12.0.0
+  permission_handler: ^11.3.1
+
+  # Fonts
+  google_fonts: ^6.2.1
+
+  # Icons (Lucide port)
+  lucide_icons: ^0.257.0
+
+  # Maps + RainViewer overlay
+  flutter_map: ^7.0.1
+  flutter_map_cancellable_tile_provider: ^3.0.1
+  latlong2: ^0.9.1
+
+  # Animations & misc UI
+  flutter_animate: ^4.5.0
+  flutter_markdown: ^0.7.3
+  fl_chart: ^0.68.0
+
+  # Voice input
+  speech_to_text: ^7.0.0
+
+  # Device info — perf gating for backdrop blur
+  device_info_plus: ^10.1.1
+
+  # Play Integrity — server-side attestation that the APK is genuine, signed,
+  # Play-distributed, and running on an unmodified device. Replaces the old
+  # shared-secret handshake. See mobile/README.md → "Play Integrity setup".
+  play_integrity_flutter: ^0.0.5
+
+  # Utilities
+  intl: ^0.19.0
+  collection: ^1.18.0
+
+  # Supabase Auth — per-user accounts. Email/password + Google OAuth.
+  # Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY as
+  # --dart-define values at build time (see mobile/README.md).
+  supabase_flutter: ^2.5.0
+
+  # Native share sheet (Share weather card, Trip itinerary, etc.).
+  share_plus: ^10.0.0
+
+  # Network reachability for the offline banner + cache fallback hints.
+  connectivity_plus: ^6.0.0
+
+  # Open external links in Chrome Custom Tab (pricing checkout, portal).
+  url_launcher: ^6.3.0
+
+  # Weather-adaptive video background (opt-in via onboarding).
+  # Pulls clips from bundled assets/ or the deployed Next.js /videos/.
+  video_player: ^2.9.0
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icons/app_icon.png"
+  adaptive_icon_background: "#10131C"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  min_sdk_android: 24

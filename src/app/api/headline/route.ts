@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geminiGenerateWithRotation } from '@/lib/gemini'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
+import { getServerUser, getUserTier } from '@/lib/supabase/auth'
+import { enforceUsage } from '@/lib/supabase/usage'
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requirePlayIntegrity(req)
+  if (unauthorized) return unauthorized
+
+  const user = await getServerUser()
+  if (user) {
+    const tier = await getUserTier(user.id)
+    const limited = await enforceUsage('headline', tier)
+    if (limited) return limited
+  }
+
   try {
     const { temp, feelsLike, description, conditionCode, windSpeed, humidity } = await req.json()
 

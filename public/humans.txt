@@ -1,0 +1,20 @@
+/* the humans responsible & technology colophon */
+
+/* TEAM */
+  Maintainer: ofonn — https://github.com/ofonn
+  Built with: Claude Code (Anthropic) — https://claude.com/claude-code
+
+/* THANKS */
+  Open-Meteo — https://open-meteo.com  (weather data, no API key)
+  Nominatim / OpenStreetMap — reverse geocoding
+  Google Gemini — AI text generation
+  Supabase — auth, database, storage
+  Stripe — billing
+  Pexels / Pixabay / Coverr — CC0 video loops
+
+/* SITE */
+  Last update: 2026-05-17
+  Standards: HTML5, ES2022, CSS3, A11y
+  Components: Next.js 14, Tailwind, Framer Motion, Lucide, SWR, Riverpod (Flutter)
+  Doctype: HTML5
+  Language: English

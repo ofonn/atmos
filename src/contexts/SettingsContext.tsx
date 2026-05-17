@@ -5,7 +5,19 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 export type TempUnit = 'C' | 'F'
 export type WindUnit = 'kmh' | 'mph'
 export type TimeFormat = '12h' | '24h'
-export type HeadlineTone = 'casual' | 'punchy' | 'sarcastic' | 'funny' | 'dramatic' | 'informative' | 'smart' | 'local'
+export type HeadlineTone =
+  | 'casual'
+  | 'punchy'
+  | 'sarcastic'
+  | 'funny'
+  | 'dramatic'
+  | 'informative'
+  | 'smart'
+  | 'local'
+export type AiEmojiUse = 'none' | 'light' | 'heavy'
+export type AiVerbosity = 'short' | 'medium' | 'long'
+export type VideoBgChoice = 'unset' | 'on' | 'off'
+export type VideoBgQuality = 'auto' | 'low' | 'hd'
 
 export interface Settings {
   tempUnit: TempUnit
@@ -15,6 +27,18 @@ export interface Settings {
   headlineTwoLine: boolean
   headlineLocationFlavor: boolean
   headlineTimeAware: boolean
+  aiEmojiUse: AiEmojiUse
+  aiVerbosity: AiVerbosity
+  language: string
+  /**
+   * Weather-based animated video on the home page. `unset` means the
+   * user hasn't been asked yet (we'll show the onboarding sheet).
+   */
+  videoBackground: VideoBgChoice
+  /** `auto` adapts to network + battery; `low` always picks the small clip. */
+  videoBackgroundQuality: VideoBgQuality
+  /** Whether onboarding has been completed (any choice). */
+  onboardingComplete: boolean
 }
 
 const defaults: Settings = {
@@ -25,6 +49,12 @@ const defaults: Settings = {
   headlineTwoLine: false,
   headlineLocationFlavor: false,
   headlineTimeAware: false,
+  aiEmojiUse: 'light',
+  aiVerbosity: 'medium',
+  language: 'en',
+  videoBackground: 'unset',
+  videoBackgroundQuality: 'auto',
+  onboardingComplete: false,
 }
 
 const CACHE_KEY = 'atmos_settings'
@@ -53,6 +83,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setSettings(readCache())
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === CACHE_KEY || e.key === null) {
+        setSettings(readCache())
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createGeminiClient, buildSystemPrompt } from '@/lib/gemini'
+import { createGeminiClient, buildSystemPrompt, type PersonalityOptions } from '@/lib/gemini'
+import { requirePlayIntegrity } from '@/lib/playIntegrity'
+import { getServerUser, getUserTier } from '@/lib/supabase/auth'
+import { enforceUsage } from '@/lib/supabase/usage'
 
 const MODEL_ROTATION = [
   'gemini-2.5-flash',
@@ -15,14 +18,34 @@ function isRateLimit(error: any): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  const { message, history, weather, localHour, localMinute } = await request.json()
+  const unauthorized = await requirePlayIntegrity(request)
+  if (unauthorized) return unauthorized
+
+  // Per-user rate limit when authenticated. Anonymous traffic falls
+  // through the existing Play Integrity gate above.
+  const user = await getServerUser()
+  if (user) {
+    const tier = await getUserTier(user.id)
+    const limited = await enforceUsage('chat', tier)
+    if (limited) return limited
+  }
+
+  const { message, history, weather, localHour, localMinute, personality } =
+    (await request.json()) as {
+      message: string
+      history?: { role: string; content: string }[]
+      weather?: any
+      localHour?: number
+      localMinute?: number
+      personality?: PersonalityOptions
+    }
 
   if (!message) {
     return NextResponse.json({ error: 'Message required' }, { status: 400 })
   }
 
   const genAI = createGeminiClient()
-  const systemPrompt = buildSystemPrompt(weather || {}, localHour, localMinute)
+  const systemPrompt = buildSystemPrompt(weather || {}, localHour, localMinute, personality)
   const chatHistory = (history || []).map((msg: any) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: msg.content }],
