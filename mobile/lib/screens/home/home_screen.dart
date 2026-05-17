@@ -18,9 +18,11 @@ import '../../widgets/ai_fab.dart';
 import '../../widgets/animated_number.dart';
 import '../../widgets/hourly_forecast.dart';
 import '../../widgets/meteo_icon.dart';
+import '../../widgets/onboarding_sheet.dart';
 import '../../widgets/outfit_card.dart';
 import '../../widgets/responsive_headline.dart';
 import '../../widgets/share_button.dart';
+import '../../widgets/weather_video_background.dart';
 import '../../widgets/weather_particles.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,15 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _searchOpen = false;
   final TextEditingController _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Show onboarding on first launch (no-op if already completed).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) OnboardingSheet.maybeShow(context, ref);
+    });
+  }
 
   @override
   void dispose() {
@@ -116,6 +127,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SafeArea(
           child: Stack(
             children: <Widget>[
+              if (snap != null)
+                WeatherVideoBackground(
+                  conditionCode: snap.data.current.weatherCode,
+                  isDay: snap.data.current.isDay == 1,
+                ),
               if (snap != null)
                 Positioned.fill(
                   child: WeatherParticles(

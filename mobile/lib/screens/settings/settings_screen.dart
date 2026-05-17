@@ -129,6 +129,28 @@ class SettingsScreen extends ConsumerWidget {
                 _linkRow(context, LucideIcons.mapPin, 'Use current location',
                     () => ref.read(locationProvider.notifier).syncGps()),
               ]),
+              _section(context, 'Background', <Widget>[
+                _row(context, LucideIcons.video, 'Weather video', _segmented<String>(
+                  context,
+                  current: s.videoBackground == 'unset' ? 'off' : s.videoBackground,
+                  options: const <(String, String)>[
+                    ('off', 'Off'),
+                    ('on', 'On'),
+                  ],
+                  onChange: n.setVideoBackground,
+                )),
+                if (s.videoBackground == 'on')
+                  _row(context, LucideIcons.video, 'Video quality', _segmented<String>(
+                    context,
+                    current: s.videoBackgroundQuality,
+                    options: const <(String, String)>[
+                      ('auto', 'Auto'),
+                      ('low', 'Low'),
+                      ('hd', 'HD'),
+                    ],
+                    onChange: n.setVideoBackgroundQuality,
+                  )),
+              ]),
               _section(context, 'AI personality', <Widget>[
                 _row(context, LucideIcons.sparkles, 'Emoji use', _segmented<String>(
                   context,
