@@ -209,6 +209,27 @@ class SettingsScreen extends ConsumerWidget {
                 }),
               ]),
               const DangerZone(),
+              _section(context, 'Feedback', <Widget>[
+                _linkRow(context, LucideIcons.star, 'Rate Atmos', () async {
+                  await launchUrl(
+                    Uri.parse('https://github.com/ofonn/atmos'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }),
+                _linkRow(context, LucideIcons.messageSquareWarning, 'Report issue', () async {
+                  await launchUrl(
+                    Uri.parse(
+                        'https://github.com/ofonn/atmos/issues/new?template=bug_report.md'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }),
+                _linkRow(context, LucideIcons.sparkles, 'Send AI feedback', () async {
+                  await launchUrl(
+                    Uri.parse('mailto:feedback@atmos.example.com?subject=Atmos%20AI%20feedback'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }),
+              ]),
               _section(context, 'About', <Widget>[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),

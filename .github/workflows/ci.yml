@@ -33,6 +33,9 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
+      - name: Test
+        run: npm test --if-present
+
       - name: Build (type-check + bundle)
         run: npx next build
 
