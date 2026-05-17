@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/models/ai_content.dart';
 import 'api_providers.dart';
+import 'settings_provider.dart';
 import 'storage.dart';
 import 'weather_provider.dart';
 
@@ -73,12 +74,15 @@ class ChatNotifier extends Notifier<ChatState> {
 
     try {
       final DateTime now = DateTime.now();
+      final settings = ref.read(settingsProvider);
       final String reply = await ref.read(aiApiProvider).chat(
             message: trimmed,
             history: state.messages,
             weather: snap.data,
             localHour: now.hour,
             localMinute: now.minute,
+            emojiUse: settings.aiEmojiUse,
+            verbosity: settings.aiVerbosity,
           );
       _appendAssistant(reply.isEmpty ? "I'm not sure how to answer that — try rephrasing." : reply);
     } catch (e) {

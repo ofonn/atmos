@@ -47,6 +47,8 @@ class AiApi {
     required OpenMeteoResponse weather,
     required int localHour,
     required int localMinute,
+    String? emojiUse,
+    String? verbosity,
   }) async {
     final Response<dynamic> r = await _dio.post<dynamic>(
       '/api/chat',
@@ -62,6 +64,11 @@ class AiApi {
         },
         'localHour': localHour,
         'localMinute': localMinute,
+        if (emojiUse != null || verbosity != null)
+          'personality': <String, dynamic>{
+            if (emojiUse != null) 'emojiUse': emojiUse,
+            if (verbosity != null) 'verbosity': verbosity,
+          },
       },
     );
     final Map<String, dynamic> data = r.data as Map<String, dynamic>;

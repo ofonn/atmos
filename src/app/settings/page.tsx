@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { AccountSection } from '@/components/auth/AccountSection'
 import { ProfileEditor } from '@/components/auth/ProfileEditor'
 import { DangerZone } from '@/components/auth/DangerZone'
+import { UsageBars } from '@/components/auth/UsageBars'
 import { StreakBadge } from '@/components/streak/StreakBadge'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
@@ -343,6 +344,8 @@ export default function SettingsPage() {
           <div className="space-y-3 mt-8 md:mt-0">
         {/* Account section */}
         <AccountSection />
+
+        <UsageBars />
 
         <ProfileEditor />
 
