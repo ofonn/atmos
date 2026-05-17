@@ -503,6 +503,60 @@ Optional, this week:
 
 ---
 
+## 10½. Cross-device sync (web ↔ Android, same account)
+
+This works out of the box once both clients point at the **same Supabase
+project** and the user signs in with the **same email**:
+
+| What syncs | Stored in | Sync direction |
+|---|---|---|
+| Saved cities | `saved_locations` | both ways (last-write-wins) |
+| Chat history (last 200 msgs) | `chat_messages` | both ways |
+| Settings (units, theme, AI personality) | `user_preferences` | both ways |
+| Subscription tier | `subscriptions` | server → client (Stripe webhook is source of truth) |
+| Streak | `streaks` | server-driven via `bump_streak` RPC |
+| Profile (display name, avatar URL) | `profiles` | both ways |
+| Push tokens | `push_subscriptions` | client → server only |
+
+How it works:
+
+- **Both clients** use `NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY` env vars
+  (web from Vercel, mobile from `--dart-define`). Sign-up creates a
+  single row in `auth.users`; signing in elsewhere with the same email
+  returns the **same `user.id`**.
+- **On sign-in**, each client runs `pullOnSignIn(user.id)`:
+  - Web: `src/components/sync/CloudSync.tsx` → `src/lib/supabase/sync.ts`
+  - Mobile: `mobile/lib/state/cloud_sync.dart`
+- **Every 30 seconds** while signed in, each client runs `pushAll()` —
+  mirrors local state to Supabase. On the web client we also push on
+  `pagehide` so closing the tab doesn't lose data.
+- **RLS** enforces `auth.uid() = user_id` on every table, so cross-user
+  leakage is impossible at the database layer.
+
+Conflict policy: **last-write-wins, full replace per table**. We don't
+do per-row deltas. This is fine at chat/settings volume and keeps the
+code simple. If you change a setting on web while mobile is offline,
+the mobile change wins when mobile pushes again — change settings on
+the device you used most recently.
+
+**Verification (Monday checklist):**
+1. Apply migrations on the Supabase project (§1.3).
+2. Sign up on the web at `/sign-up`.
+3. Save a city. Wait 30s.
+4. Open the Android app, built with the same `--dart-define
+   SUPABASE_URL` / `SUPABASE_ANON_KEY`.
+5. Sign in with the same email + password.
+6. Open `/locations` (mobile) — the city saved on web should appear
+   within ~1 second.
+7. Send a chat message on mobile. Wait 30s. Refresh web `/chat`. The
+   message should appear.
+
+If a step fails, the usual cause is:
+- Env vars don't match (different Supabase project on each side)
+- Migrations haven't been applied
+- Supabase auth redirect allow-list is missing the mobile deep link
+  (`com.atmos.app://login-callback`) — see §1.4.
+
 ## 11. Code status — what's shipped vs. what's pending
 
 **Shipped on this branch** (waiting on your dashboard work to come alive):
