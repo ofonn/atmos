@@ -382,7 +382,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ? AtmosColors.coolAccent
             : t.textMuted;
 
-    return Column(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.wait<void>(<Future<void>>[
+          ref.read(weatherProvider.notifier).refresh(),
+          // Air-quality provider invalidates via locationProvider too.
+          Future<void>.value(ref.invalidate(airQualityProvider)),
+        ]);
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -590,6 +600,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
+      ),
     );
   }
 
