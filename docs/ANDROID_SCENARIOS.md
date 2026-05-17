@@ -669,7 +669,7 @@ planning, and to track what's actually shipped vs. still needs work.
 | B2 | AndroidManifest deep-link intent filter | ✅ `com.atmos.app://` scheme registered |
 | B3 | Supabase Google OAuth client | 🧑‍💻 Manual task for you (`docs/SETUP.md` §1.5) |
 | B4 | Sign-out button on mobile | ✅ in AccountSection |
-| B5 | Password reset flow on mobile | ❌ — web is done at `/reset`; mobile screen still missing |
+| B5 | Password reset flow on mobile | ✅ `/reset` + `/reset-update`, recovery deep-link routed via NavShell listener |
 | B6 / K1-3 | Mobile cloud sync provider | ✅ `state/cloud_sync.dart`, auto-mounted in `_NavShell` |
 | B7 | Mobile profile editor screen | ✅ `/profile` route |
 | B8 | Account deletion (UI + endpoint) | ✅ `/api/account/delete` + web + mobile `DangerZone` |
@@ -681,7 +681,7 @@ planning, and to track what's actually shipped vs. still needs work.
 | E3 | Preview-only mode for saved locations | ❌ |
 | E4 | Undo snackbar after delete | ✅ on `/locations` |
 | E5 | Home/Work tags + quick-switch | 🟡 migration 0012 added `tag` column; UI not built yet |
-| F3 | Verify QuickPrompts on mobile | 🟡 — verify in `chat_screen.dart` |
+| F3 | Verify QuickPrompts on mobile | ✅ `chat_screen.dart` renders `quickPrompts` chips |
 | F4 | Mobile AI Personality settings | ✅ Settings → AI personality (emoji use + verbosity) |
 | G5 | Reset to defaults | ✅ Settings → Privacy → Reset settings |
 | H1 | Push notifications (FCM + Firebase) | 🟡 — `push_subscriptions` table + `/api/push/subscribe` shipped; FCM project setup is 🧑‍💻 Manual task for you (§5.3) |
@@ -691,8 +691,8 @@ planning, and to track what's actually shipped vs. still needs work.
 | I3 | Special 429 handling in mobile chat | ✅ friendlier copy + special-case |
 | I4 | Friendly error copy | ✅ `api/error_interceptor.dart` maps 401/429/5xx/timeouts |
 | J1 | Privacy policy + in-app page | ✅ web `/privacy`; mobile link opens it via `url_launcher` |
-| J2 | Privacy / permissions screen | ❌ |
-| J3 | About → Security explainer | ❌ |
+| J2 | Privacy / permissions screen | ✅ `/permissions` shows live granted/denied for location, mic, notifications + 'Open Android settings' |
+| J3 | About → Security explainer | ✅ `/security` — 5 explainer cards + how to report a security issue |
 | L1 | Upgrade flow + deep link on mobile | ✅ AccountSection "Upgrade to Pro" opens `${ATMOS_API_BASE}/pricing` in external browser |
 | L2 | Stripe Customer Portal route + button | ✅ `/api/stripe/portal` + Manage subscription button |
 | L3 | Downgrade notice | ❌ |
@@ -700,9 +700,9 @@ planning, and to track what's actually shipped vs. still needs work.
 
 ### Wiring still TODO (small, fast follow-ups)
 
-- Mobile password-reset screen + deep-link route (B5)
-- Mobile preview-only mode + Home/Work tag UI (E3, E5)
-- Mobile QuickPrompts confirmation in `chat_screen.dart` (F3)
+- Mobile preview-only saved-location mode (E3)
+- Mobile Home/Work tag UI to use the new `saved_locations.tag` column (E5)
 - Mobile push delivery (after Firebase project; H1/H2/H3)
-- Mobile privacy + security explainer screens (J2, J3)
-- Mobile downgrade notice (L3)
+- Mobile downgrade notice when subscription expires (L3)
+- Avatar upload via Supabase Storage (blocked on bucket)
+- Real privacy-contact email (replace `atmos.example.com` placeholders)
