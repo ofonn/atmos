@@ -5,6 +5,20 @@ All notable changes will be recorded here. The project follows
 
 ## [Unreleased] — `claude/supabase-auth` branch
 
+### Latest additions (Sun 2026-05-17)
+- Mobile password reset (`/reset` request + `/reset-update` set-new)
+  with deep-link recovery routed via NavShell listener
+- Mobile **Security** and **Permissions** about-screens linked from
+  Settings → Privacy
+- "What's new" one-time toast on web after deploy
+- One-shot downgrade alert when subscription tier flips pro → free
+- 24 vitest tests passing (subscriptions, weather utils, gemini
+  personality prompts, tier resolver decision table)
+- `/api/version` build/commit metadata
+- `/.well-known/change-password` redirect for password managers
+- CSP-report receiver + CSP report-only header in middleware
+- 5 architecture decision records (`docs/adr/0001-0005`)
+
 ### Added
 - **Per-user accounts** via Supabase Auth (email/password + Google OAuth)
 - **Cross-device sync** for saved cities, chat history, and preferences
