@@ -184,6 +184,10 @@ class SettingsScreen extends ConsumerWidget {
                     mode: LaunchMode.externalApplication,
                   );
                 }),
+                _linkRow(context, LucideIcons.refreshCw, 'Replay onboarding', () {
+                  n.setOnboardingComplete(false);
+                  context.go('/');
+                }),
                 _linkRow(context, LucideIcons.rotateCcw, 'Reset settings', () {
                   showDialog<void>(
                     context: context,

@@ -298,6 +298,17 @@ export default function SettingsPage() {
             onChange={(v) => updateSetting('videoBackground', v as 'on' | 'off')}
           />
         </SettingRow>
+        <button
+          onClick={() => {
+            updateSetting('onboardingComplete', false)
+            // Reload so the modal mounts again on next render.
+            if (typeof window !== 'undefined') window.location.href = '/'
+          }}
+          className="w-full text-left px-5 py-3 rounded-2xl text-sm font-medium"
+          style={{ background: 'var(--surface-mid)', color: 'var(--text-muted)' }}
+        >
+          ↻ Replay onboarding
+        </button>
         {videoBackground === 'on' && (
           <SettingRow icon={Sparkles} label="Video quality">
             <SegmentedControl
