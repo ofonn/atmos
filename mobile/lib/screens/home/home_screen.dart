@@ -21,6 +21,7 @@ import '../../widgets/meteo_icon.dart';
 import '../../widgets/onboarding_sheet.dart';
 import '../../widgets/outfit_card.dart';
 import '../../widgets/responsive_headline.dart';
+import '../../widgets/severe_weather_banner.dart';
 import '../../widgets/share_button.dart';
 import '../../widgets/weather_video_background.dart';
 import '../../widgets/weather_particles.dart';
@@ -141,6 +142,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Column(
                 children: <Widget>[
                   _header(loc, locLoading),
+                  if (loc?.current != null)
+                    SevereWeatherBanner(lat: loc!.current!.lat, lon: loc.current!.lon),
                   if (_searchOpen) _searchBar(),
                   Expanded(
                     child: weatherLoading
