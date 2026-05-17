@@ -663,7 +663,7 @@ planning, and to track what's actually shipped vs. still needs work.
 
 | # | What | Status |
 |---|---|---|
-| A2 | Empty-state CTA when geolocation denied | ❌ — needs a tap-to-search affordance on `HomeScreen` |
+| A2 | Empty-state CTA when geolocation denied | ✅ home `_welcome` has 'Use my location' + 'Search a city' |
 | A3 / I1 | Mobile offline banner + `connectivity_plus` dep | ✅ `widgets/offline_banner.dart`, mounted in `_NavShell` |
 | B1 | AccountSection on mobile Settings | ✅ `widgets/account_section.dart` with tier badge + buttons |
 | B2 | AndroidManifest deep-link intent filter | ✅ `com.atmos.app://` scheme registered |
@@ -674,37 +674,35 @@ planning, and to track what's actually shipped vs. still needs work.
 | B7 | Mobile profile editor screen | ✅ `/profile` route |
 | B8 | Account deletion (UI + endpoint) | ✅ `/api/account/delete` + web + mobile `DangerZone` |
 | C2 / F5 | Mobile Trip planner screen | ✅ `/trip` route + Trip nav item |
-| D3 | Mobile OutfitCard | ✅ `widgets/outfit_card.dart` (still needs to be inserted into HomeScreen) |
-| D4 | Mobile Share weather (share_plus) | ✅ `widgets/share_button.dart` (still needs HomeScreen insertion) |
-| D5 | RefreshIndicator on HomeScreen | ❌ — needs `RefreshIndicator` wrap |
-| D6 | Mobile SevereWeatherBanner | ✅ `widgets/severe_weather_banner.dart` (still needs HomeScreen insertion) |
+| D3 | Mobile OutfitCard | ✅ inserted under hourly strip on `HomeScreen` |
+| D4 | Mobile Share weather (share_plus) | ✅ chip on `HomeScreen` |
+| D5 | RefreshIndicator on HomeScreen | ✅ pull-to-refresh re-runs weather + air |
+| D6 | Mobile SevereWeatherBanner | ✅ rendered between header and content |
 | E3 | Preview-only mode for saved locations | ❌ |
-| E4 | Undo snackbar after delete | ❌ |
-| E5 | Home/Work tags + quick-switch | ❌ — schema supports `is_primary` already |
+| E4 | Undo snackbar after delete | ✅ on `/locations` |
+| E5 | Home/Work tags + quick-switch | 🟡 migration 0012 added `tag` column; UI not built yet |
 | F3 | Verify QuickPrompts on mobile | 🟡 — verify in `chat_screen.dart` |
 | F4 | Mobile AI Personality settings | ✅ Settings → AI personality (emoji use + verbosity) |
 | G5 | Reset to defaults | ✅ Settings → Privacy → Reset settings |
 | H1 | Push notifications (FCM + Firebase) | 🟡 — `push_subscriptions` table + `/api/push/subscribe` shipped; FCM project setup is 🧑‍💻 Manual task for you (§5.3) |
 | H2 | Daily briefing cron + dispatch | 🟡 — Edge Function skeleton at `supabase/functions/daily-briefing/` |
 | H3 | Notification tap routing | ❌ — needs `firebase_messaging` integration after H1 |
-| I2 | Retry button on failed chat | ❌ |
-| I3 | Special 429 handling in mobile chat | ❌ |
-| I4 | Friendly error copy | ❌ |
-| J1 | Privacy policy + in-app page | ✅ web `/privacy`; mobile link wired but TODO open via Custom Tab |
+| I2 | Retry button on failed chat | ✅ web + mobile |
+| I3 | Special 429 handling in mobile chat | ✅ friendlier copy + special-case |
+| I4 | Friendly error copy | ✅ `api/error_interceptor.dart` maps 401/429/5xx/timeouts |
+| J1 | Privacy policy + in-app page | ✅ web `/privacy`; mobile link opens it via `url_launcher` |
 | J2 | Privacy / permissions screen | ❌ |
 | J3 | About → Security explainer | ❌ |
 | L1 | Upgrade flow + deep link on mobile | ✅ AccountSection "Upgrade to Pro" opens `${ATMOS_API_BASE}/pricing` in external browser |
 | L2 | Stripe Customer Portal route + button | ✅ `/api/stripe/portal` + Manage subscription button |
 | L3 | Downgrade notice | ❌ |
-| M1 | Friendly Play Integrity rejection | ❌ |
+| M1 | Friendly Play Integrity rejection | ✅ FriendlyErrorInterceptor maps 401 'integrity'/'package' → 'install from Play Store' |
 
 ### Wiring still TODO (small, fast follow-ups)
 
-- Insert `OutfitCard`, `ShareWeatherButton`, `SevereWeatherBanner`
-  into `mobile/lib/screens/home/home_screen.dart` at the right
-  visual slot. The widgets exist; the home layout is dense so it's
-  worth doing carefully.
-- `RefreshIndicator` wrap on `home_screen.dart`.
-- Mobile password-reset screen + deep-link route.
-- Mobile QuickPrompts confirmation.
-- Mobile friendly error copy for 429 + 503.
+- Mobile password-reset screen + deep-link route (B5)
+- Mobile preview-only mode + Home/Work tag UI (E3, E5)
+- Mobile QuickPrompts confirmation in `chat_screen.dart` (F3)
+- Mobile push delivery (after Firebase project; H1/H2/H3)
+- Mobile privacy + security explainer screens (J2, J3)
+- Mobile downgrade notice (L3)
