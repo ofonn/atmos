@@ -1,0 +1,15 @@
+{
+  "editor.formatOnSave": false,
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[dart]": { "editor.defaultFormatter": "Dart-Code.dart-code" },
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.lint": true,
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/.flutter-plugins*": true,
+    "mobile/build": true,
+    ".next": true,
+    "node_modules": true
+  }
+}
