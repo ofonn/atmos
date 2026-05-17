@@ -50,6 +50,10 @@ class CloudSync {
     _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => pushAll());
   }
 
+  /// Called for every auth state change. Pulls remote on first sign-in
+  /// of a new user. Recovery events are NOT handled here — see
+  /// [passwordRecoveryProvider] which the nav shell listens to so it
+  /// can route to /reset-update.
   Future<void> handleAuthEvent(AuthState state) async {
     if (!enabled) return;
     if (state.event == AuthChangeEvent.signedIn ||
