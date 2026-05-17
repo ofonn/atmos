@@ -141,7 +141,19 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
                 ),
                 IconButton(
                   icon: Icon(LucideIcons.trash2, color: AtmosColors.danger, size: 18),
-                  onPressed: () => ref.read(locationProvider.notifier).removeLocation(loc),
+                  onPressed: () {
+                    ref.read(locationProvider.notifier).removeLocation(loc);
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(SnackBar(
+                        content: Text('Removed ${loc.name}'),
+                        duration: const Duration(seconds: 5),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () => ref.read(locationProvider.notifier).saveLocation(loc),
+                        ),
+                      ));
+                  },
                 ),
               ],
             ),

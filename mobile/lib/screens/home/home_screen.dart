@@ -332,10 +332,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: AtmosTypography.body(fontSize: 14, color: t.textMuted),
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () => ref.read(locationProvider.notifier).syncGps(),
               style: FilledButton.styleFrom(backgroundColor: t.primary, foregroundColor: Colors.white),
-              child: const Text('Use my location'),
+              icon: const Icon(LucideIcons.mapPin, size: 16),
+              label: const Text('Use my location'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _searchOpen = true),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: t.text,
+                side: BorderSide(color: t.outline),
+              ),
+              icon: const Icon(LucideIcons.search, size: 16),
+              label: const Text('Search a city'),
             ),
           ],
         ),
