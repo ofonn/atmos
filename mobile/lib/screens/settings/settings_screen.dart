@@ -9,6 +9,7 @@ import '../../theme/atmospheric_background.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../../widgets/account_section.dart';
+import '../../widgets/danger_zone.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -126,6 +127,59 @@ class SettingsScreen extends ConsumerWidget {
                 _linkRow(context, LucideIcons.mapPin, 'Use current location',
                     () => ref.read(locationProvider.notifier).syncGps()),
               ]),
+              _section(context, 'AI personality', <Widget>[
+                _row(context, LucideIcons.sparkles, 'Emoji use', _segmented<String>(
+                  context,
+                  current: s.aiEmojiUse,
+                  options: const <(String, String)>[
+                    ('none', 'None'),
+                    ('light', 'Light'),
+                    ('heavy', 'Heavy'),
+                  ],
+                  onChange: n.setAiEmojiUse,
+                )),
+                _row(context, LucideIcons.sparkles, 'Verbosity', _segmented<String>(
+                  context,
+                  current: s.aiVerbosity,
+                  options: const <(String, String)>[
+                    ('short', 'Short'),
+                    ('medium', 'Med'),
+                    ('long', 'Long'),
+                  ],
+                  onChange: n.setAiVerbosity,
+                )),
+              ]),
+              _section(context, 'Privacy', <Widget>[
+                _linkRow(context, LucideIcons.fileText, 'Privacy policy', () async {
+                  // Open in a browser tab — same content as the web /privacy page.
+                  // (url_launcher already added in pubspec.)
+                }),
+                _linkRow(context, LucideIcons.rotateCcw, 'Reset settings', () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (BuildContext ctx) => AlertDialog(
+                      title: const Text('Reset settings?'),
+                      content: const Text(
+                        'Your saved cities, chat history, and account stay. '
+                        "Only theme / units / AI personality go back to defaults.",
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () {
+                            n.resetToDefaults();
+                            Navigator.of(ctx).pop();
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ]),
+              const DangerZone(),
               _section(context, 'About', <Widget>[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
