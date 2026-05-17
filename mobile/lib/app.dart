@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent, AuthState;
 
+import 'screens/about/permissions_screen.dart';
+import 'screens/about/security_screen.dart';
 import 'screens/auth/profile_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
@@ -102,6 +104,8 @@ class _RoutedApp extends ConsumerWidget {
             ),
             GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
             GoRoute(path: '/trip', builder: (_, __) => const TripScreen()),
+            GoRoute(path: '/security', builder: (_, __) => const SecurityScreen()),
+            GoRoute(path: '/permissions', builder: (_, __) => const PermissionsScreen()),
           ],
         ),
       ],
