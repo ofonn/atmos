@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/models/ai_content.dart';
@@ -81,8 +82,27 @@ class ChatNotifier extends Notifier<ChatState> {
           );
       _appendAssistant(reply.isEmpty ? "I'm not sure how to answer that — try rephrasing." : reply);
     } catch (e) {
-      state = state.copyWith(sending: false, error: 'Could not reach Atmos AI: $e');
+      // Special-case 429 (daily limit) so the UI can show an Upgrade CTA
+      // instead of a generic error. dio throws DioException, but we keep
+      // this dep-light by string-matching the status code.
+      final String es = e.toString();
+      final bool rateLimited = es.contains('429') ||
+          es.contains('Daily limit') ||
+          es.contains('Status code: 429');
+      final String msg = rateLimited
+          ? "You've hit today's free limit. Upgrade for more, or try again tomorrow."
+          : 'The AI is napping. Try again in a moment.';
+      state = state.copyWith(sending: false, error: msg);
     }
+  }
+
+  /// Re-send the last user message after a failure.
+  Future<void> retryLast() async {
+    final ChatMessage? last = state.messages.where((ChatMessage m) => m.role == 'user').lastOrNull;
+    if (last == null) return;
+    // Drop trailing assistant errors (if any) before retrying.
+    state = state.copyWith(error: null);
+    await sendMessage(last.content);
   }
 
   void _appendAssistant(String content) {
