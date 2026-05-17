@@ -5,11 +5,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "preview": "next build && next start",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "check": "bash scripts/deploy-check.sh",
+    "migrate": "supabase db push",
+    "migrate:dry": "supabase db push --dry-run",
+    "supabase:types": "supabase gen types typescript --linked > src/lib/supabase/db.types.generated.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

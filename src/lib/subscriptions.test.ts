@@ -23,4 +23,13 @@ describe('subscriptions', () => {
     expect(TIER_LABEL.free).toBe('Free')
     expect(TIER_LABEL.pro).toBe('Pro')
   })
+
+  it('every supported endpoint resolves to a numeric limit', () => {
+    const endpoints = ['chat', 'headline', 'insight', 'outfit', 'activity', 'trip'] as const
+    for (const e of endpoints) {
+      expect(typeof limitFor(e, 'free')).toBe('number')
+      expect(typeof limitFor(e, 'pro')).toBe('number')
+      expect(limitFor(e, 'free')).toBeGreaterThan(0)
+    }
+  })
 })
