@@ -503,24 +503,46 @@ Optional, this week:
 
 ---
 
-## 11. What's still pending in code (from `docs/SCENARIOS.md`)
+## 11. Code status — what's shipped vs. what's pending
 
-These are mine to build, not yours. I'll knock them out as you connect
-MCPs and unblock me:
+**Shipped on this branch** (waiting on your dashboard work to come alive):
 
-| Pending feature | Status |
+| Feature | Notes |
 |---|---|
-| `/auth/reset` password reset flow | ✅ done on this branch |
-| `/pricing` page + Stripe Checkout | ✅ done on this branch |
-| Stripe webhook handler | ✅ done on this branch |
-| AI personality wired into prompts | ✅ done on this branch |
-| `enforceUsage` on existing AI routes | ✅ done on this branch |
-| Severe-weather banner → Open-Meteo warnings | ✅ done on this branch |
-| Mobile "Sign in" entry in Settings screen | ✅ done on this branch |
-| Mobile AndroidManifest deep-link intent filter | ✅ done on this branch |
-| Avatar upload via Supabase Storage | ⏳ blocked on bucket creation (1.6) |
-| Push subscription table + FCM dispatch | ⏳ blocked on VAPID keys (5.1) |
-| Apple Sign-In | ⏳ defer to iOS work |
+| Supabase migrations 0001–0009 | profiles / subscriptions / saved_locations / chat_messages / api_usage / user_preferences / streaks / push_subscriptions + notification_preferences / stripe_events |
+| Web auth: /sign-in, /sign-up, /reset, /auth/callback, /auth/sign-out | Email + Google OAuth |
+| Mobile auth: SignInScreen + AndroidManifest `com.atmos.app://` intent filter | Email + Google OAuth |
+| Server helpers: getServerUser, requireUser, getUserTier | `src/lib/supabase/auth.ts` |
+| Rate limiting: `enforceUsage` wired into chat, headline, outfit, activity, trip | Skips for anonymous; tier-aware |
+| AI personality (emoji use, verbosity) | Plumbed through `buildSystemPrompt` |
+| Cloud sync (locations / chat / prefs) | Web `CloudSync`; Mobile `cloudSyncProvider` |
+| /pricing page + Stripe Checkout + Customer Portal | Hidden behind sign-in |
+| Stripe webhook with signature verify + idempotency table | `/api/stripe/webhook` |
+| Account deletion | `/api/account/delete` + web `DangerZone` + mobile `DangerZone` |
+| Severe-weather banner | `/api/warnings` heuristic + dismissable web + mobile |
+| Weather video background | `/sign-up`-style onboarding modal, opt-in, `public/videos/` |
+| PWA install prompt + service worker offline cache | Stale-while-revalidate for /api/openmeteo |
+| Push subscription endpoint | `/api/push/subscribe` (web + FCM payloads) |
+| Daily streak (RPC + badge) | bump_streak runs once per session per day |
+| Settings tier badge, Upgrade/Manage buttons | Web + mobile AccountSection |
+| Profile editor | Web `ProfileEditor`, mobile `/profile` route |
+| Mobile Trip planner | `/trip` route on Android |
+| Mobile offline banner | `connectivity_plus` |
+| Mobile share weather | `share_plus` native share sheet |
+| Mobile reset to defaults | Settings → Privacy |
+| Security headers | HSTS, X-Frame-Options, Permissions-Policy etc. in middleware |
+| Repo governance | SECURITY.md, CONTRIBUTING.md, dependabot, gitleaks, PR + issue templates |
+| Hardened .gitignore | Blocks .env*, all keystores, service accounts, Flutter local state |
 
-When you've done section 1, ping me — I can verify the wiring end-to-end
+**Pending in code** (blocked by your dashboard work):
+
+| Pending feature | Blocked on |
+|---|---|
+| Avatar upload via Supabase Storage | Bucket creation (§1.6) |
+| Push delivery (web push + FCM dispatch) | VAPID keys (§5.1) + Firebase project (§5.3) |
+| Daily briefing cron | Push delivery + Edge Function deploy |
+| Apple Sign-In | Defer to iOS work |
+| Privacy policy email | Replace `privacy@atmos.example.com` everywhere with your real address |
+
+When you've done sections 1–4, ping me — I can verify wiring end-to-end
 and tighten anything that surfaces.

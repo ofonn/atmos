@@ -657,48 +657,54 @@ planning, and to track what's actually shipped vs. still needs work.
 
 ## Aggregated to-do list
 
-Below is everything that's ❌ Not implemented or 🟡 Partial, consolidated.
+✅ = shipped on the `claude/supabase-auth` branch
+🟡 = partially built (still needs UX polish)
+❌ = not yet started
 
-| # | What | Type | Owner |
-|---|---|---|---|
-| A2 | Empty-state CTA when geolocation denied | 🔧 Code | Claude |
-| A3 | Mobile offline banner + `connectivity_plus` dep | 🔧 Code | Claude |
-| B1 | AccountSection on mobile Settings | 🔧 Code | Claude (done this branch) |
-| B2 | AndroidManifest deep-link intent filter | 🔧 Code | Claude (done this branch) |
-| B3 | Supabase Google OAuth client | 🧑‍💻 Manual | You |
-| B4 | Sign-out button on mobile | 🔧 Code | Claude (done this branch) |
-| B5 | Password reset flow on mobile | 🔧 Code | Claude |
-| B6 | Mobile cloud sync provider | 🔧 Code | Claude |
-| B7 | Mobile profile editor screen | 🔧 Code | Claude |
-| B8 | Account deletion (UI + endpoint) | 🔧 Code | Claude |
-| C2 | Mobile Trip planner screen | 🔧 Code | Claude |
-| D3 | Mobile OutfitCard | 🔧 Code | Claude |
-| D4 | Mobile Share weather (share_plus) | 🔧 Code | Claude |
-| D5 | RefreshIndicator on HomeScreen | 🔧 Code | Claude |
-| D6 | Mobile SevereWeatherBanner | 🔧 Code | Claude |
-| E3 | Preview-only mode for saved locations | 🔧 Code | Claude |
-| E4 | Undo snackbar after delete | 🔧 Code | Claude |
-| E5 | Home/Work tags + quick-switch | 🔧 Code | Claude |
-| F3 | Verify QuickPrompts on mobile | 🔧 Code | Claude |
-| F4 | Mobile AI Personality settings | 🔧 Code | Claude |
-| F5 | Mobile Trip planner (same as C2) | 🔧 Code | Claude |
-| G5 | Reset to defaults | 🔧 Code | Claude |
-| H1 | Push notifications (FCM + Firebase) | 🧑‍💻 Manual + 🔧 Code | Both |
-| H2 | Daily briefing cron + dispatch | 🔧 Code (after H1) | Claude |
-| H3 | Notification tap routing | 🔧 Code (after H1) | Claude |
-| I1 | Offline banner (same as A3) | 🔧 Code | Claude |
-| I2 | Retry button on failed chat | 🔧 Code | Claude |
-| I3 | Special 429 handling in mobile chat | 🔧 Code | Claude |
-| I4 | Friendly error copy | 🔧 Code | Claude |
-| J1 | Privacy policy + in-app page | 🧑‍💻 Manual (write) + 🔧 Code (page) | Both |
-| J2 | Privacy / permissions screen | 🔧 Code | Claude |
-| J3 | About → Security explainer | 🔧 Code | Claude |
-| K1-3 | Mobile cloud sync (same as B6) | 🔧 Code | Claude |
-| L1 | Upgrade flow + deep link on mobile | 🔧 Code (done this branch on web) | Claude |
-| L2 | Stripe Customer Portal route + button | 🔧 Code | Claude |
-| L3 | Downgrade notice | 🔧 Code | Claude |
-| M1 | Friendly Play Integrity rejection | 🔧 Code | Claude |
+| # | What | Status |
+|---|---|---|
+| A2 | Empty-state CTA when geolocation denied | ❌ — needs a tap-to-search affordance on `HomeScreen` |
+| A3 / I1 | Mobile offline banner + `connectivity_plus` dep | ✅ `widgets/offline_banner.dart`, mounted in `_NavShell` |
+| B1 | AccountSection on mobile Settings | ✅ `widgets/account_section.dart` with tier badge + buttons |
+| B2 | AndroidManifest deep-link intent filter | ✅ `com.atmos.app://` scheme registered |
+| B3 | Supabase Google OAuth client | 🧑‍💻 Manual task for you (`docs/SETUP.md` §1.5) |
+| B4 | Sign-out button on mobile | ✅ in AccountSection |
+| B5 | Password reset flow on mobile | ❌ — web is done at `/reset`; mobile screen still missing |
+| B6 / K1-3 | Mobile cloud sync provider | ✅ `state/cloud_sync.dart`, auto-mounted in `_NavShell` |
+| B7 | Mobile profile editor screen | ✅ `/profile` route |
+| B8 | Account deletion (UI + endpoint) | ✅ `/api/account/delete` + web + mobile `DangerZone` |
+| C2 / F5 | Mobile Trip planner screen | ✅ `/trip` route + Trip nav item |
+| D3 | Mobile OutfitCard | ✅ `widgets/outfit_card.dart` (still needs to be inserted into HomeScreen) |
+| D4 | Mobile Share weather (share_plus) | ✅ `widgets/share_button.dart` (still needs HomeScreen insertion) |
+| D5 | RefreshIndicator on HomeScreen | ❌ — needs `RefreshIndicator` wrap |
+| D6 | Mobile SevereWeatherBanner | ✅ `widgets/severe_weather_banner.dart` (still needs HomeScreen insertion) |
+| E3 | Preview-only mode for saved locations | ❌ |
+| E4 | Undo snackbar after delete | ❌ |
+| E5 | Home/Work tags + quick-switch | ❌ — schema supports `is_primary` already |
+| F3 | Verify QuickPrompts on mobile | 🟡 — verify in `chat_screen.dart` |
+| F4 | Mobile AI Personality settings | ✅ Settings → AI personality (emoji use + verbosity) |
+| G5 | Reset to defaults | ✅ Settings → Privacy → Reset settings |
+| H1 | Push notifications (FCM + Firebase) | 🟡 — `push_subscriptions` table + `/api/push/subscribe` shipped; FCM project setup is 🧑‍💻 Manual task for you (§5.3) |
+| H2 | Daily briefing cron + dispatch | 🟡 — Edge Function skeleton at `supabase/functions/daily-briefing/` |
+| H3 | Notification tap routing | ❌ — needs `firebase_messaging` integration after H1 |
+| I2 | Retry button on failed chat | ❌ |
+| I3 | Special 429 handling in mobile chat | ❌ |
+| I4 | Friendly error copy | ❌ |
+| J1 | Privacy policy + in-app page | ✅ web `/privacy`; mobile link wired but TODO open via Custom Tab |
+| J2 | Privacy / permissions screen | ❌ |
+| J3 | About → Security explainer | ❌ |
+| L1 | Upgrade flow + deep link on mobile | ✅ AccountSection "Upgrade to Pro" opens `${ATMOS_API_BASE}/pricing` in external browser |
+| L2 | Stripe Customer Portal route + button | ✅ `/api/stripe/portal` + Manage subscription button |
+| L3 | Downgrade notice | ❌ |
+| M1 | Friendly Play Integrity rejection | ❌ |
 
-I'll work through these starting with the highest-value items
-(Cloud sync, mobile AccountSection, Trip on mobile, deep link, push
-prep) while you handle the dashboard-level tasks Monday.
+### Wiring still TODO (small, fast follow-ups)
+
+- Insert `OutfitCard`, `ShareWeatherButton`, `SevereWeatherBanner`
+  into `mobile/lib/screens/home/home_screen.dart` at the right
+  visual slot. The widgets exist; the home layout is dense so it's
+  worth doing carefully.
+- `RefreshIndicator` wrap on `home_screen.dart`.
+- Mobile password-reset screen + deep-link route.
+- Mobile QuickPrompts confirmation.
+- Mobile friendly error copy for 429 + 503.

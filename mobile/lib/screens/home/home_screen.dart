@@ -18,7 +18,9 @@ import '../../widgets/ai_fab.dart';
 import '../../widgets/animated_number.dart';
 import '../../widgets/hourly_forecast.dart';
 import '../../widgets/meteo_icon.dart';
+import '../../widgets/outfit_card.dart';
 import '../../widgets/responsive_headline.dart';
+import '../../widgets/share_button.dart';
 import '../../widgets/weather_particles.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -521,6 +523,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             startIndex: nowIdx,
             count: 8,
             settings: settings,
+          ),
+        ),
+        // AI outfit recommendation
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: OutfitCard(
+            temp: c.temperature2m,
+            feelsLike: c.apparentTemperature,
+            conditionCode: c.weatherCode,
+            windSpeed: c.windSpeed10m,
+            humidity: c.relativeHumidity2m.toDouble(),
+            pop: nowIdx < h.precipitationProbability.length
+                ? h.precipitationProbability[nowIdx].toDouble()
+                : 0,
+          ),
+        ),
+        // Share weather chip
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Builder(builder: (BuildContext ctx) {
+              final LocationState? loc = ref.watch(locationProvider).valueOrNull;
+              final String city = loc?.current?.name ?? '';
+              return ShareWeatherButton(
+                cityName: city,
+                temp: c.temperature2m,
+                feelsLike: c.apparentTemperature,
+                description: Wmo.describe(c.weatherCode),
+                tempMin: d.temperature2mMin.isNotEmpty ? d.temperature2mMin[0] : c.temperature2m,
+                tempMax: d.temperature2mMax.isNotEmpty ? d.temperature2mMax[0] : c.temperature2m,
+                unit: settings.tempUnit,
+              );
+            }),
           ),
         ),
       ],

@@ -109,6 +109,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 400 })
   }
 
+  // Idempotency: refuse to re-process the same event. The unique PK
+  // means the second insert errors (23505) and we exit early.
+  try {
+    const admin = getAdminClient()
+    const { error: insErr } = await admin
+      .from('stripe_events')
+      .insert({ id: event.id, type: event.type })
+    if (insErr) {
+      // Duplicate event = already processed — ack and exit.
+      if ((insErr as any).code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+      console.warn('[stripe.webhook] idempotency insert', insErr)
+    }
+  } catch (e) {
+    console.warn('[stripe.webhook] idempotency table missing — skipping', e)
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -142,8 +160,20 @@ export async function POST(req: NextRequest) {
         // Ignore other event types.
         break
     }
+    // Mark processed.
+    try {
+      const admin = getAdminClient()
+      await admin
+        .from('stripe_events')
+        .update({ processed_at: new Date().toISOString() })
+        .eq('id', event.id)
+    } catch {}
   } catch (e: any) {
     console.error('[stripe.webhook] handler error', e)
+    try {
+      const admin = getAdminClient()
+      await admin.from('stripe_events').update({ error: e.message }).eq('id', event.id)
+    } catch {}
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 
