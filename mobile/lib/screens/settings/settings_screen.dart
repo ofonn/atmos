@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../api/dio_client.dart';
 import '../../state/location_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../theme/atmospheric_background.dart';
@@ -148,11 +150,14 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                   onChange: n.setAiVerbosity,
                 )),
+                _linkRow(context, LucideIcons.user, 'Edit profile', () => context.push('/profile')),
               ]),
               _section(context, 'Privacy', <Widget>[
                 _linkRow(context, LucideIcons.fileText, 'Privacy policy', () async {
-                  // Open in a browser tab — same content as the web /privacy page.
-                  // (url_launcher already added in pubspec.)
+                  await launchUrl(
+                    Uri.parse('${ApiConfig.baseUrl}/privacy'),
+                    mode: LaunchMode.externalApplication,
+                  );
                 }),
                 _linkRow(context, LucideIcons.rotateCcw, 'Reset settings', () {
                   showDialog<void>(

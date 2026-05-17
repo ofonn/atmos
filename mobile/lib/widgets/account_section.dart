@@ -22,8 +22,11 @@ class AccountSection extends ConsumerStatefulWidget {
 class _AccountSectionState extends ConsumerState<AccountSection> {
   String _tier = 'free';
   bool _portalLoading = false;
+  String? _loadedForUserId;
 
   Future<void> _loadTier(String userId) async {
+    if (_loadedForUserId == userId) return;
+    _loadedForUserId = userId;
     try {
       final Map<String, dynamic>? row = await Supabase.instance.client
           .from('subscriptions')

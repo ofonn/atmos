@@ -103,13 +103,17 @@ class _TripScreenState extends ConsumerState<TripScreen> {
       for (int i = 0; i < times.length; i++) {
         final String d = times[i] as String;
         if (d.compareTo(fmtStart) >= 0 && d.compareTo(fmtEnd) <= 0) {
+          final num? mn = tMin[i] as num?;
+          final num? mx = tMax[i] as num?;
+          final num? cd = codes[i] as num?;
+          final num? p = i < pops.length ? pops[i] as num? : null;
           filteredDaily.add(<String, dynamic>{
             'date': d,
-            'tempMin': (tMin[i] as num).toDouble(),
-            'tempMax': (tMax[i] as num).toDouble(),
-            'conditionCode': (codes[i] as num).toInt(),
-            'description': _wmoDesc((codes[i] as num).toInt()),
-            'pop': i < pops.length ? (pops[i] as num).toInt() : 0,
+            'tempMin': mn?.toDouble() ?? 0.0,
+            'tempMax': mx?.toDouble() ?? 0.0,
+            'conditionCode': cd?.toInt() ?? 0,
+            'description': _wmoDesc(cd?.toInt() ?? 0),
+            'pop': p?.toInt() ?? 0,
           });
         }
       }
