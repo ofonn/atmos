@@ -146,6 +146,20 @@ function VideoOptIn({ onChoose }: { onChoose: (c: 'on' | 'off') => void }) {
 }
 
 function Permission({ onDone }: { onDone: () => void }) {
+  const handleGotIt = () => {
+    // Kick the browser's geolocation prompt as part of this user click —
+    // important because some browsers require a fresh user gesture.
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      try {
+        navigator.geolocation.getCurrentPosition(
+          () => {},
+          () => {},
+          { timeout: 8000 },
+        )
+      } catch {}
+    }
+    onDone()
+  }
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
@@ -168,7 +182,7 @@ function Permission({ onDone }: { onDone: () => void }) {
         city by name instead.
       </p>
       <button
-        onClick={onDone}
+        onClick={handleGotIt}
         className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold transition-all active:scale-95"
         style={{ background: 'var(--primary)', color: 'var(--bg)' }}
       >
