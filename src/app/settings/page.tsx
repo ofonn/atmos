@@ -9,6 +9,7 @@ import { ProfileEditor } from '@/components/auth/ProfileEditor'
 import { DangerZone } from '@/components/auth/DangerZone'
 import { UsageBars } from '@/components/auth/UsageBars'
 import { StreakBadge } from '@/components/streak/StreakBadge'
+import { FeedbackModal } from '@/components/feedback/FeedbackModal'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
@@ -100,6 +101,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
   const [cityEditOpen, setCityEditOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState<null | 'bug' | 'ai'>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -440,25 +442,34 @@ export default function SettingsPage() {
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)' }}>
           {[
-            { label: 'Rate Atmos', icon: Star, href: 'https://github.com/ofonn/atmos' },
-            { label: 'Report issue', icon: MessageSquareWarning, href: 'https://github.com/ofonn/atmos/issues/new?template=bug_report.md' },
-            { label: 'Send AI feedback', icon: Sparkles, href: 'mailto:feedback@atmos.example.com?subject=Atmos%20AI%20feedback' },
-          ].map((item, i) => (
-            <a
-              key={item.label}
-              href={item.href}
-              target={item.href.startsWith('http') ? '_blank' : undefined}
-              rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-              className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
-              style={{ borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' }}
-            >
-              <div className="flex items-center gap-3">
-                <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
-              </div>
-              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            </a>
-          ))}
+            { label: 'Rate Atmos', icon: Star, href: 'https://github.com/ofonn/atmos', external: true },
+            { label: 'Report issue', icon: MessageSquareWarning, onClick: () => setFeedbackOpen('bug') },
+            { label: 'Send AI feedback', icon: Sparkles, onClick: () => setFeedbackOpen('ai') },
+          ].map((item, i) => {
+            const inner = (
+              <>
+                <div className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
+                </div>
+                <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              </>
+            )
+            const className = "w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
+            const style = { borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' } as React.CSSProperties
+            if ('href' in item && item.href) {
+              return (
+                <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+                  {inner}
+                </a>
+              )
+            }
+            return (
+              <button key={item.label} onClick={item.onClick} className={className} style={style}>
+                {inner}
+              </button>
+            )
+          })}
         </div>
 
         {/* About section */}
@@ -494,6 +505,12 @@ export default function SettingsPage() {
       </main>
 
       <BottomNav />
+
+      <FeedbackModal
+        open={feedbackOpen !== null}
+        defaultCategory={feedbackOpen === 'bug' ? 'bug' : feedbackOpen === 'ai' ? 'ai' : 'other'}
+        onClose={() => setFeedbackOpen(null)}
+      />
 
       {/* Slide-out Bottom Sheet for Enter City (#035) */}
       <AnimatePresence>
