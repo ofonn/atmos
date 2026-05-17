@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../api/dio_client.dart';
 import '../../state/location_provider.dart';
 import '../../state/settings_provider.dart';
 import '../../theme/atmospheric_background.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
+import '../../widgets/account_section.dart';
+import '../../widgets/danger_zone.dart';
+import '../../widgets/feedback_sheet.dart';
+import '../../widgets/usage_bars.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -33,6 +39,8 @@ class SettingsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              const AccountSection(),
+              const UsageBars(),
               _section(context, 'Appearance', <Widget>[
                 _row(context, LucideIcons.sun, 'Theme', _segmented<ThemeMode>(
                   context,
@@ -123,6 +131,102 @@ class SettingsScreen extends ConsumerWidget {
                 _linkRow(context, LucideIcons.search, 'Search for a city', () => context.push('/locations')),
                 _linkRow(context, LucideIcons.mapPin, 'Use current location',
                     () => ref.read(locationProvider.notifier).syncGps()),
+              ]),
+              _section(context, 'Background', <Widget>[
+                _row(context, LucideIcons.video, 'Weather video', _segmented<String>(
+                  context,
+                  current: s.videoBackground == 'unset' ? 'off' : s.videoBackground,
+                  options: const <(String, String)>[
+                    ('off', 'Off'),
+                    ('on', 'On'),
+                  ],
+                  onChange: n.setVideoBackground,
+                )),
+                if (s.videoBackground == 'on')
+                  _row(context, LucideIcons.video, 'Video quality', _segmented<String>(
+                    context,
+                    current: s.videoBackgroundQuality,
+                    options: const <(String, String)>[
+                      ('auto', 'Auto'),
+                      ('low', 'Low'),
+                      ('hd', 'HD'),
+                    ],
+                    onChange: n.setVideoBackgroundQuality,
+                  )),
+              ]),
+              _section(context, 'AI personality', <Widget>[
+                _row(context, LucideIcons.sparkles, 'Emoji use', _segmented<String>(
+                  context,
+                  current: s.aiEmojiUse,
+                  options: const <(String, String)>[
+                    ('none', 'None'),
+                    ('light', 'Light'),
+                    ('heavy', 'Heavy'),
+                  ],
+                  onChange: n.setAiEmojiUse,
+                )),
+                _row(context, LucideIcons.sparkles, 'Verbosity', _segmented<String>(
+                  context,
+                  current: s.aiVerbosity,
+                  options: const <(String, String)>[
+                    ('short', 'Short'),
+                    ('medium', 'Med'),
+                    ('long', 'Long'),
+                  ],
+                  onChange: n.setAiVerbosity,
+                )),
+                _linkRow(context, LucideIcons.user, 'Edit profile', () => context.push('/profile')),
+              ]),
+              _section(context, 'Privacy', <Widget>[
+                _linkRow(context, LucideIcons.fileText, 'Privacy policy', () async {
+                  await launchUrl(
+                    Uri.parse('${ApiConfig.baseUrl}/privacy'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }),
+                _linkRow(context, LucideIcons.refreshCw, 'Replay onboarding', () {
+                  n.setOnboardingComplete(false);
+                  context.go('/');
+                }),
+                _linkRow(context, LucideIcons.rotateCcw, 'Reset settings', () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (BuildContext ctx) => AlertDialog(
+                      title: const Text('Reset settings?'),
+                      content: const Text(
+                        'Your saved cities, chat history, and account stay. '
+                        "Only theme / units / AI personality go back to defaults.",
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () {
+                            n.resetToDefaults();
+                            Navigator.of(ctx).pop();
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ]),
+              const DangerZone(),
+              _section(context, 'Feedback', <Widget>[
+                _linkRow(context, LucideIcons.star, 'Rate Atmos', () async {
+                  await launchUrl(
+                    Uri.parse('https://github.com/ofonn/atmos'),
+                    mode: LaunchMode.externalApplication,
+                  );
+                }),
+                _linkRow(context, LucideIcons.messageSquareWarning, 'Report issue', () {
+                  FeedbackSheet.show(context, initial: FeedbackCategory.bug);
+                }),
+                _linkRow(context, LucideIcons.sparkles, 'Send AI feedback', () {
+                  FeedbackSheet.show(context, initial: FeedbackCategory.ai);
+                }),
               ]),
               _section(context, 'About', <Widget>[
                 Padding(

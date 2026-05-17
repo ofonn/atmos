@@ -6,7 +6,11 @@ import { useEffect, useState } from 'react'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { AccountSection } from '@/components/auth/AccountSection'
 import { ProfileEditor } from '@/components/auth/ProfileEditor'
+import { DangerZone } from '@/components/auth/DangerZone'
+import { UsageBars } from '@/components/auth/UsageBars'
 import { StreakBadge } from '@/components/streak/StreakBadge'
+import { FeedbackModal } from '@/components/feedback/FeedbackModal'
+import { PushToggle } from '@/components/notifications/PushToggle'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
@@ -93,11 +97,12 @@ function SegmentedControl({
 export default function SettingsPage() {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, aiEmojiUse, aiVerbosity, updateSetting } = useSettings()
+  const { tempUnit, windUnit, timeFormat, headlineTone, headlineTwoLine, headlineLocationFlavor, headlineTimeAware, aiEmojiUse, aiVerbosity, videoBackground, videoBackgroundQuality, updateSetting } = useSettings()
   const { location, locLoading, searchCity, syncLocation } = useWeatherContext()
   const [mounted, setMounted] = useState(false)
   const [cityInput, setCityInput] = useState('')
   const [cityEditOpen, setCityEditOpen] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState<null | 'bug' | 'ai'>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -278,6 +283,47 @@ export default function SettingsPage() {
           </div>
         ))}
 
+        {/* Home page video background */}
+        <div className="pt-4">
+          <p className="text-[11px] font-label uppercase tracking-widest px-1 mb-1" style={{ color: 'var(--text-muted)' }}>
+            Background
+          </p>
+        </div>
+        <SettingRow icon={Sparkles} label="Weather video">
+          <SegmentedControl
+            options={[
+              { value: 'off', label: 'Off' },
+              { value: 'on', label: 'On' },
+            ]}
+            value={videoBackground === 'unset' ? 'off' : videoBackground}
+            onChange={(v) => updateSetting('videoBackground', v as 'on' | 'off')}
+          />
+        </SettingRow>
+        <button
+          onClick={() => {
+            updateSetting('onboardingComplete', false)
+            // Reload so the modal mounts again on next render.
+            if (typeof window !== 'undefined') window.location.href = '/'
+          }}
+          className="w-full text-left px-5 py-3 rounded-2xl text-sm font-medium"
+          style={{ background: 'var(--surface-mid)', color: 'var(--text-muted)' }}
+        >
+          ↻ Replay onboarding
+        </button>
+        {videoBackground === 'on' && (
+          <SettingRow icon={Sparkles} label="Video quality">
+            <SegmentedControl
+              options={[
+                { value: 'auto', label: 'Auto' },
+                { value: 'low', label: 'Low' },
+                { value: 'hd', label: 'HD' },
+              ]}
+              value={videoBackgroundQuality}
+              onChange={(v) => updateSetting('videoBackgroundQuality', v as 'auto' | 'low' | 'hd')}
+            />
+          </SettingRow>
+        )}
+
         {/* AI personality */}
         <div className="pt-4">
           <p className="text-[11px] font-label uppercase tracking-widest px-1 mb-1" style={{ color: 'var(--text-muted)' }}>
@@ -312,6 +358,10 @@ export default function SettingsPage() {
           <div className="space-y-3 mt-8 md:mt-0">
         {/* Account section */}
         <AccountSection />
+
+        <UsageBars />
+
+        <PushToggle />
 
         <ProfileEditor />
 
@@ -406,23 +456,34 @@ export default function SettingsPage() {
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)' }}>
           {[
-            { label: 'Rate Atmos', icon: Star },
-            { label: 'Report issue', icon: MessageSquareWarning },
-            { label: 'Send AI feedback', icon: Sparkles },
-          ].map((item, i) => (
-            <button
-              key={item.label}
-              className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
-              style={{ borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' }}
-              onClick={() => {}}
-            >
-              <div className="flex items-center gap-3">
-                <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
-              </div>
-              <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            </button>
-          ))}
+            { label: 'Rate Atmos', icon: Star, href: 'https://github.com/ofonn/atmos', external: true },
+            { label: 'Report issue', icon: MessageSquareWarning, onClick: () => setFeedbackOpen('bug') },
+            { label: 'Send AI feedback', icon: Sparkles, onClick: () => setFeedbackOpen('ai') },
+          ].map((item, i) => {
+            const inner = (
+              <>
+                <div className="flex items-center gap-3">
+                  <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
+                </div>
+                <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              </>
+            )
+            const className = "w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
+            const style = { borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' } as React.CSSProperties
+            if ('href' in item && item.href) {
+              return (
+                <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" className={className} style={style}>
+                  {inner}
+                </a>
+              )
+            }
+            return (
+              <button key={item.label} onClick={item.onClick} className={className} style={style}>
+                {inner}
+              </button>
+            )
+          })}
         </div>
 
         {/* About section */}
@@ -449,11 +510,38 @@ export default function SettingsPage() {
             Powered by Open-Meteo &amp; Google Gemini. Built with Next.js.
           </p>
         </div>
+
+        <div className="pt-4">
+          <DangerZone />
+        </div>
+
+        <p
+          className="text-[10px] text-center pt-3"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <a href="/status" style={{ color: 'var(--primary)' }}>
+            Status &amp; diagnostics
+          </a>{' '}
+          ·{' '}
+          <a href="/privacy" style={{ color: 'var(--primary)' }}>
+            Privacy
+          </a>{' '}
+          ·{' '}
+          <a href="/pricing" style={{ color: 'var(--primary)' }}>
+            Pricing
+          </a>
+        </p>
           </div>
         </div>
       </main>
 
       <BottomNav />
+
+      <FeedbackModal
+        open={feedbackOpen !== null}
+        defaultCategory={feedbackOpen === 'bug' ? 'bug' : feedbackOpen === 'ai' ? 'ai' : 'other'}
+        onClose={() => setFeedbackOpen(null)}
+      />
 
       {/* Slide-out Bottom Sheet for Enter City (#035) */}
       <AnimatePresence>

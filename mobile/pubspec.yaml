@@ -64,6 +64,19 @@ dependencies:
   # --dart-define values at build time (see mobile/README.md).
   supabase_flutter: ^2.5.0
 
+  # Native share sheet (Share weather card, Trip itinerary, etc.).
+  share_plus: ^10.0.0
+
+  # Network reachability for the offline banner + cache fallback hints.
+  connectivity_plus: ^6.0.0
+
+  # Open external links in Chrome Custom Tab (pricing checkout, portal).
+  url_launcher: ^6.3.0
+
+  # Weather-adaptive video background (opt-in via onboarding).
+  # Pulls clips from bundled assets/ or the deployed Next.js /videos/.
+  video_player: ^2.9.0
+
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1

@@ -18,7 +18,12 @@ import '../../widgets/ai_fab.dart';
 import '../../widgets/animated_number.dart';
 import '../../widgets/hourly_forecast.dart';
 import '../../widgets/meteo_icon.dart';
+import '../../widgets/onboarding_sheet.dart';
+import '../../widgets/outfit_card.dart';
 import '../../widgets/responsive_headline.dart';
+import '../../widgets/severe_weather_banner.dart';
+import '../../widgets/share_button.dart';
+import '../../widgets/weather_video_background.dart';
 import '../../widgets/weather_particles.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -31,6 +36,15 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _searchOpen = false;
   final TextEditingController _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Show onboarding on first launch (no-op if already completed).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) OnboardingSheet.maybeShow(context, ref);
+    });
+  }
 
   @override
   void dispose() {
@@ -115,6 +129,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Stack(
             children: <Widget>[
               if (snap != null)
+                WeatherVideoBackground(
+                  conditionCode: snap.data.current.weatherCode,
+                  isDay: snap.data.current.isDay == 1,
+                ),
+              if (snap != null)
                 Positioned.fill(
                   child: WeatherParticles(
                     effect: effectFor(snap.data.current.weatherCode, isDay: snap.data.current.isDay == 1),
@@ -123,6 +142,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Column(
                 children: <Widget>[
                   _header(loc, locLoading),
+                  if (loc?.current != null)
+                    SevereWeatherBanner(lat: loc!.current!.lat, lon: loc.current!.lon),
                   if (_searchOpen) _searchBar(),
                   Expanded(
                     child: weatherLoading
@@ -314,10 +335,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: AtmosTypography.body(fontSize: 14, color: t.textMuted),
             ),
             const SizedBox(height: 24),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () => ref.read(locationProvider.notifier).syncGps(),
               style: FilledButton.styleFrom(backgroundColor: t.primary, foregroundColor: Colors.white),
-              child: const Text('Use my location'),
+              icon: const Icon(LucideIcons.mapPin, size: 16),
+              label: const Text('Use my location'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _searchOpen = true),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: t.text,
+                side: BorderSide(color: t.outline),
+              ),
+              icon: const Icon(LucideIcons.search, size: 16),
+              label: const Text('Search a city'),
             ),
           ],
         ),
@@ -350,7 +382,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ? AtmosColors.coolAccent
             : t.textMuted;
 
-    return Column(
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Future.wait<void>(<Future<void>>[
+          ref.read(weatherProvider.notifier).refresh(),
+          // Air-quality provider invalidates via locationProvider too.
+          Future<void>.value(ref.invalidate(airQualityProvider)),
+        ]);
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -523,7 +565,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             settings: settings,
           ),
         ),
+        // AI outfit recommendation
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: OutfitCard(
+            temp: c.temperature2m,
+            feelsLike: c.apparentTemperature,
+            conditionCode: c.weatherCode,
+            windSpeed: c.windSpeed10m,
+            humidity: c.relativeHumidity2m.toDouble(),
+            pop: nowIdx < h.precipitationProbability.length
+                ? h.precipitationProbability[nowIdx].toDouble()
+                : 0,
+          ),
+        ),
+        // Share weather chip
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Builder(builder: (BuildContext ctx) {
+              final LocationState? loc = ref.watch(locationProvider).valueOrNull;
+              final String city = loc?.current?.name ?? '';
+              return ShareWeatherButton(
+                cityName: city,
+                temp: c.temperature2m,
+                feelsLike: c.apparentTemperature,
+                description: Wmo.describe(c.weatherCode),
+                tempMin: d.temperature2mMin.isNotEmpty ? d.temperature2mMin[0] : c.temperature2m,
+                tempMax: d.temperature2mMax.isNotEmpty ? d.temperature2mMax[0] : c.temperature2m,
+                unit: settings.tempUnit,
+              );
+            }),
+          ),
+        ),
       ],
+      ),
     );
   }
 

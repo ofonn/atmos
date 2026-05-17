@@ -16,6 +16,11 @@ class AtmosSettings {
     this.headlineLocationFlavor = false,
     this.headlineTimeAware = true,
     this.themeMode = ThemeMode.system,
+    this.aiEmojiUse = 'light',
+    this.aiVerbosity = 'medium',
+    this.videoBackground = 'unset',
+    this.videoBackgroundQuality = 'auto',
+    this.onboardingComplete = false,
   });
 
   final String tempUnit; // 'C' | 'F'
@@ -26,6 +31,13 @@ class AtmosSettings {
   final bool headlineLocationFlavor;
   final bool headlineTimeAware;
   final ThemeMode themeMode;
+  // AI personality
+  final String aiEmojiUse; // 'none' | 'light' | 'heavy'
+  final String aiVerbosity; // 'short' | 'medium' | 'long'
+  // Home background
+  final String videoBackground; // 'unset' | 'on' | 'off'
+  final String videoBackgroundQuality; // 'auto' | 'low' | 'hd'
+  final bool onboardingComplete;
 
   AtmosSettings copyWith({
     String? tempUnit,
@@ -36,6 +48,11 @@ class AtmosSettings {
     bool? headlineLocationFlavor,
     bool? headlineTimeAware,
     ThemeMode? themeMode,
+    String? aiEmojiUse,
+    String? aiVerbosity,
+    String? videoBackground,
+    String? videoBackgroundQuality,
+    bool? onboardingComplete,
   }) =>
       AtmosSettings(
         tempUnit: tempUnit ?? this.tempUnit,
@@ -46,6 +63,11 @@ class AtmosSettings {
         headlineLocationFlavor: headlineLocationFlavor ?? this.headlineLocationFlavor,
         headlineTimeAware: headlineTimeAware ?? this.headlineTimeAware,
         themeMode: themeMode ?? this.themeMode,
+        aiEmojiUse: aiEmojiUse ?? this.aiEmojiUse,
+        aiVerbosity: aiVerbosity ?? this.aiVerbosity,
+        videoBackground: videoBackground ?? this.videoBackground,
+        videoBackgroundQuality: videoBackgroundQuality ?? this.videoBackgroundQuality,
+        onboardingComplete: onboardingComplete ?? this.onboardingComplete,
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -57,6 +79,11 @@ class AtmosSettings {
         'headlineLocationFlavor': headlineLocationFlavor,
         'headlineTimeAware': headlineTimeAware,
         'themeMode': themeMode.name,
+        'aiEmojiUse': aiEmojiUse,
+        'aiVerbosity': aiVerbosity,
+        'videoBackground': videoBackground,
+        'videoBackgroundQuality': videoBackgroundQuality,
+        'onboardingComplete': onboardingComplete,
       };
 
   factory AtmosSettings.fromJson(Map<String, dynamic> j) {
@@ -73,6 +100,11 @@ class AtmosSettings {
         (ThemeMode m) => m.name == mode,
         orElse: () => ThemeMode.system,
       ),
+      aiEmojiUse: j['aiEmojiUse']?.toString() ?? 'light',
+      aiVerbosity: j['aiVerbosity']?.toString() ?? 'medium',
+      videoBackground: j['videoBackground']?.toString() ?? 'unset',
+      videoBackgroundQuality: j['videoBackgroundQuality']?.toString() ?? 'auto',
+      onboardingComplete: j['onboardingComplete'] as bool? ?? false,
     );
   }
 }
@@ -99,9 +131,21 @@ class SettingsNotifier extends Notifier<AtmosSettings> {
   void setTimeFormat(String fmt) => _persist(state.copyWith(timeFormat: fmt));
   void setHeadlineTone(String tone) => _persist(state.copyWith(headlineTone: tone));
   void setHeadlineTwoLine(bool v) => _persist(state.copyWith(headlineTwoLine: v));
-  void setHeadlineLocationFlavor(bool v) => _persist(state.copyWith(headlineLocationFlavor: v));
+  void setHeadlineLocationFlavor(bool v) =>
+      _persist(state.copyWith(headlineLocationFlavor: v));
   void setHeadlineTimeAware(bool v) => _persist(state.copyWith(headlineTimeAware: v));
   void setThemeMode(ThemeMode m) => _persist(state.copyWith(themeMode: m));
+  void setAiEmojiUse(String v) => _persist(state.copyWith(aiEmojiUse: v));
+  void setAiVerbosity(String v) => _persist(state.copyWith(aiVerbosity: v));
+  void setVideoBackground(String v) => _persist(state.copyWith(videoBackground: v));
+  void setVideoBackgroundQuality(String v) =>
+      _persist(state.copyWith(videoBackgroundQuality: v));
+  void setOnboardingComplete(bool v) =>
+      _persist(state.copyWith(onboardingComplete: v));
+
+  /// Reset to defaults — keeps onboardingComplete=true so the modal
+  /// doesn't re-appear.
+  void resetToDefaults() => _persist(const AtmosSettings(onboardingComplete: true));
 }
 
 final NotifierProvider<SettingsNotifier, AtmosSettings> settingsProvider =

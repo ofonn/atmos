@@ -1,41 +1,177 @@
-# dependencies
-/node_modules
-/.pnp
+# =============================================================================
+# Node / Next.js
+# =============================================================================
+node_modules/
+.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
-/coverage
+.next/
+out/
+build/
+dist/
 
-/designs_inspo
-/references
-/prev_chat.txt
-/.playwright-mcp
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
+# TypeScript build artefacts
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
+# Coverage
+/coverage
+/.nyc_output
+
+# Caches
+.turbo/
+.swc/
+.cache/
+.eslintcache
+.parcel-cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =============================================================================
+# Environment files — CRITICAL: keep secrets out of git
+# =============================================================================
+# Block every .env variant. Only .env.example files should be committed.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Vercel
+.vercel/
+.vercel.json.bak
+
+# =============================================================================
+# Test artefacts
+# =============================================================================
+test-results/
+playwright-report/
+e2e-results/
+/.playwright-mcp
+
+# =============================================================================
+# IDE / editor / OS
+# =============================================================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =============================================================================
+# Workspace scratch (project-specific — historical)
+# =============================================================================
+/designs_inspo
+/references
+/prev_chat.txt
+/context-snip
+/build_error.log
+/set-weather-forecast-app-realistic-icons-with-various-clouds-sun-moon-disks
+/cd
+/mkdir
+
+# =============================================================================
+# AI tooling local state (no secrets, but noisy)
+# =============================================================================
+.cursor/
+.claude/
+.aider*
+.continue/
+
+# =============================================================================
+# Certificates, keys, service accounts — never commit
+# =============================================================================
+*.pem
+*.key
+!**/public.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Service account JSONs
+**/service-account*.json
+**/sa-*.json
+firebase-adminsdk-*.json
+
+# SSH
+.ssh/
+
+# =============================================================================
+# Supabase CLI working dirs
+# =============================================================================
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# =============================================================================
+# Flutter / Dart / Android (mobile/)
+# =============================================================================
+# Dart tooling
+mobile/.dart_tool/
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/pubspec_overrides.yaml
+
+# Flutter build outputs
+mobile/build/
+mobile/.fvm/
+mobile/coverage/
+mobile/.flutter/
+
+# Generated / IDE
+mobile/.idea/
+mobile/.vscode/
+mobile/*.iml
+
+# Android specifics
+mobile/android/.gradle/
+mobile/android/captures/
+mobile/android/.cxx/
+mobile/android/build/
+mobile/android/app/build/
+
+# Local SDK paths — varies per dev machine
+mobile/android/local.properties
+
+# Release signing — keystore + passwords NEVER in git
+mobile/android/key.properties
+mobile/android/app/*.keystore
+mobile/android/app/*.jks
+mobile/android/app/upload-keystore.jks
+
+# Firebase / Google services config (semi-secret — contains project IDs)
+mobile/android/app/google-services.json
+mobile/android/app/src/**/google-services.json
+
+# iOS / desktop (not currently targeted)
+mobile/ios/
+mobile/macos/
+mobile/linux/
+mobile/windows/
+mobile/web/
+
+# =============================================================================
+# Misc package manager / backup
+# =============================================================================
+*.tgz
+package-lock.json.bak
+.yarn-integrity
+*.bak
+*.orig
+*.tmp

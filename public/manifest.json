@@ -3,15 +3,39 @@
   "short_name": "Atmos",
   "description": "Your intelligent weather companion with AI-powered advice",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#EEF2F8",
-  "theme_color": "#5B96FD",
+  "orientation": "portrait",
+  "background_color": "#10131c",
+  "theme_color": "#10131c",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["weather", "lifestyle", "utilities"],
   "icons": [
     {
       "src": "/icon.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "url": "/chat",
+      "description": "Ask the AI weather assistant"
+    },
+    {
+      "name": "Trip planner",
+      "short_name": "Trip",
+      "url": "/trip",
+      "description": "Plan a trip with an AI packing list"
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "url": "/settings"
     }
   ]
 }

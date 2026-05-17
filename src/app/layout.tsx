@@ -11,6 +11,8 @@ import { CloudSync } from '@/components/sync/CloudSync'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SWRegister } from '@/components/pwa/SWRegister'
 import { StreakTracker } from '@/components/streak/StreakTracker'
+import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
+import { JsonLd } from '@/components/seo/JsonLd'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -25,19 +27,53 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atmos.example.com'
+
 export const metadata: Metadata = {
-  title: 'Atmos — AI Weather Assistant',
-  description: 'Your intelligent weather companion.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Atmos — AI Weather Assistant',
+    template: '%s — Atmos',
+  },
+  description:
+    'Your intelligent weather companion. Hourly forecasts, AI advice, trip planning — beautifully simple.',
+  applicationName: 'Atmos',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
   },
+  openGraph: {
+    type: 'website',
+    siteName: 'Atmos',
+    title: 'Atmos — AI Weather Assistant',
+    description:
+      'Hourly forecasts, AI advice, trip planning. The weather app that thinks with you.',
+    images: ['/icon.png'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Atmos — AI Weather Assistant',
+    description: 'Hourly forecasts, AI advice, trip planning.',
+    images: ['/icon.png'],
+  },
+  formatDetection: { telephone: false },
+}
+
+export const viewport = {
+  themeColor: '#10131c',
+  colorScheme: 'dark light' as const,
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover' as const,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${inter.variable}`}>
+      <head>
+        <JsonLd />
+      </head>
       <body className={`${jakarta.className} min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
@@ -51,6 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <OfflineBanner />
                   <PageTransition>{children}</PageTransition>
                   <InstallPrompt />
+                  <OnboardingFlow />
                 </div>
               </WeatherProvider>
             </SettingsProvider>

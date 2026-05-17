@@ -173,11 +173,51 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return ListView.builder(
       controller: _scroll,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      itemCount: chat.messages.length + (chat.sending ? 1 : 0),
+      itemCount: chat.messages.length + (chat.sending ? 1 : 0) + (chat.error != null ? 1 : 0),
       itemBuilder: (BuildContext context, int i) {
-        if (i == chat.messages.length) return _typing();
+        if (chat.error != null && i == chat.messages.length + (chat.sending ? 1 : 0)) {
+          return _errorBubble(chat.error!);
+        }
+        if (chat.sending && i == chat.messages.length) return _typing();
         return _bubble(chat.messages[i]);
       },
+    );
+  }
+
+  Widget _errorBubble(String message) {
+    final AtmosTokens t = context.atmos;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          constraints: const BoxConstraints(maxWidth: 320),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444).withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(message,
+                  style: TextStyle(color: t.text, fontSize: 13, height: 1.4)),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: t.primary,
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () => ref.read(chatProvider.notifier).retryLast(),
+                icon: const Icon(Icons.refresh, size: 14),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

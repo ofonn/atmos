@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import 'error_interceptor.dart';
 import 'play_integrity_interceptor.dart';
 
 /// Configuration baked at build time via `--dart-define`.
@@ -39,6 +40,7 @@ Dio createDio() {
   dio.interceptors.add(PlayIntegrityInterceptor(
     cloudProjectNumber: ApiConfig.cloudProjectNumber,
   ));
+  dio.interceptors.add(FriendlyErrorInterceptor());
 
   if (kDebugMode) {
     dio.interceptors.add(LogInterceptor(

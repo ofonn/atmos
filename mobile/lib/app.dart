@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'screens/auth/profile_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/chat/chat_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/trip/trip_screen.dart';
+import 'state/cloud_sync.dart';
+import 'widgets/offline_banner.dart';
 import 'screens/insight/insight_screen.dart';
 import 'screens/locations/locations_screen.dart';
 import 'screens/overview/overview_screen.dart';
@@ -88,6 +92,8 @@ class _RoutedApp extends ConsumerWidget {
             GoRoute(path: '/insight', builder: (_, __) => const InsightScreen()),
             GoRoute(path: '/radar', builder: (_, __) => const RadarScreen()),
             GoRoute(path: '/sign-in', builder: (_, __) => const SignInScreen()),
+            GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+            GoRoute(path: '/trip', builder: (_, __) => const TripScreen()),
           ],
         ),
       ],
@@ -95,16 +101,19 @@ class _RoutedApp extends ConsumerWidget {
   }
 }
 
-class _NavShell extends StatelessWidget {
+class _NavShell extends ConsumerWidget {
   const _NavShell({required this.child});
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Mount the cloud-sync listener (no-op when Supabase isn't configured).
+    ref.watch(cloudSyncProvider);
     return Stack(
       children: <Widget>[
         Positioned.fill(child: child),
-        Positioned(left: 0, right: 0, bottom: 0, child: const AtmosBottomNav()),
+        const Positioned(left: 0, right: 0, top: 0, child: SafeArea(child: OfflineBanner())),
+        const Positioned(left: 0, right: 0, bottom: 0, child: AtmosBottomNav()),
       ],
     );
   }
