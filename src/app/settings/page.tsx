@@ -500,6 +500,23 @@ export default function SettingsPage() {
         <div className="pt-4">
           <DangerZone />
         </div>
+
+        <p
+          className="text-[10px] text-center pt-3"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <a href="/status" style={{ color: 'var(--primary)' }}>
+            Status &amp; diagnostics
+          </a>{' '}
+          ·{' '}
+          <a href="/privacy" style={{ color: 'var(--primary)' }}>
+            Privacy
+          </a>{' '}
+          ·{' '}
+          <a href="/pricing" style={{ color: 'var(--primary)' }}>
+            Pricing
+          </a>
+        </p>
           </div>
         </div>
       </main>
