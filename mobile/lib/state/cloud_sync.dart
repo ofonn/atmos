@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,11 +36,19 @@ final Provider<CloudSync> cloudSyncProvider = Provider<CloudSync>((Ref ref) {
 });
 
 class CloudSync {
-  CloudSync({required this.prefs, required this.enabled});
+  CloudSync({required this.prefs, required this.enabled}) {
+    if (enabled) _startPolling();
+  }
 
   final SharedPreferences prefs;
   final bool enabled;
   String? _lastUserId;
+  Timer? _pollTimer;
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => pushAll());
+  }
 
   Future<void> handleAuthEvent(AuthState state) async {
     if (!enabled) return;
@@ -155,6 +164,31 @@ class CloudSync {
                 };
               })
               .toList());
+        }
+      }
+    } catch (_) {}
+
+    // chat_messages: replace last 200
+    try {
+      final String? raw = prefs.getString(StorageKeys.chatMessages);
+      if (raw != null) {
+        final List<dynamic> msgs = jsonDecode(raw) as List<dynamic>;
+        await client.from('chat_messages').delete().eq('user_id', userId);
+        if (msgs.isNotEmpty) {
+          final List<dynamic> trimmed = msgs.length > 200
+              ? msgs.sublist(msgs.length - 200)
+              : msgs;
+          await client.from('chat_messages').insert(trimmed.map((dynamic raw) {
+            final Map<String, dynamic> m = raw as Map<String, dynamic>;
+            return <String, dynamic>{
+              'user_id': userId,
+              'role': (m['role'] == 'assistant') ? 'model' : 'user',
+              'content': m['content'],
+              'created_at': DateTime.fromMillisecondsSinceEpoch(
+                (m['timestamp'] as num?)?.toInt() ?? DateTime.now().millisecondsSinceEpoch,
+              ).toUtc().toIso8601String(),
+            };
+          }).toList());
         }
       }
     } catch (_) {}

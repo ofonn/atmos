@@ -50,6 +50,7 @@ class ChatNotifier extends Notifier<ChatState> {
           StorageKeys.chatMessages,
           jsonEncode(msgs.map((ChatMessage m) => m.toJson()).toList()),
         );
+    // Cloud mirror is handled by CloudSync — it polls every 30s.
   }
 
   Future<void> sendMessage(String content) async {
