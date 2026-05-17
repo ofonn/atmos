@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, AlertTriangle, Loader2 } from 'lucide-react'
+import { Trash2, AlertTriangle, Loader2, Download } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function DangerZone() {
@@ -48,14 +48,24 @@ export function DangerZone() {
         style={{ background: 'var(--surface)', border: '0.5px solid #ff7a85' }}
       >
         {!confirming ? (
-          <button
-            onClick={() => setConfirming(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-colors active:scale-95"
-            style={{ background: 'var(--surface-mid)', color: '#ff7a85' }}
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="text-sm font-medium">Delete my account</span>
-          </button>
+          <div className="space-y-2">
+            <a
+              href="/api/account/export"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-colors active:scale-95"
+              style={{ background: 'var(--surface-mid)', color: 'var(--text)' }}
+            >
+              <Download className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+              <span className="text-sm font-medium">Export my data</span>
+            </a>
+            <button
+              onClick={() => setConfirming(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-colors active:scale-95"
+              style={{ background: 'var(--surface-mid)', color: '#ff7a85' }}
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-sm font-medium">Delete my account</span>
+            </button>
+          </div>
         ) : (
           <div className="space-y-3">
             <div className="flex items-start gap-2">

@@ -77,21 +77,32 @@ export function useChat(weatherContext: WeatherContextData) {
 
         const data = await res.json()
 
-        if (!res.ok) throw new Error(data.error || 'Chat request failed')
-
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: data.response,
-          timestamp: Date.now(),
+        if (res.status === 429) {
+          const friendlyLimit: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content:
+              `You've hit today's free limit (${data.limit ?? '?'} ${data.endpoint ?? 'messages'}). ` +
+              `Upgrade to Pro for higher caps, or try again tomorrow.`,
+            timestamp: Date.now(),
+          }
+          setMessages(prev => [...prev, friendlyLimit])
+        } else if (!res.ok) {
+          throw new Error(data.error || 'Chat request failed')
+        } else {
+          const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: data.response,
+            timestamp: Date.now(),
+          }
+          setMessages(prev => [...prev, assistantMessage])
         }
-
-        setMessages(prev => [...prev, assistantMessage])
       } catch (e: any) {
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: e.message || "Sorry, I couldn't process that. Please try again.",
+          content: 'The AI is napping. Try again in a moment.',
           timestamp: Date.now(),
         }
         setMessages(prev => [...prev, errorMessage])
