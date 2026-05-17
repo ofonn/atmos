@@ -183,8 +183,52 @@ export default function PricingPage() {
         <p className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
           Powered by Stripe. We don&apos;t store your card details.
         </p>
+
+        <div className="pt-8">
+          <p
+            className="text-[11px] font-label uppercase tracking-widest mb-3 px-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Common questions
+          </p>
+          <div
+            className="rounded-2xl overflow-hidden divide-y"
+            style={{ background: 'var(--surface)', borderColor: 'var(--outline)' }}
+          >
+            <Faq q="Can I cancel anytime?" a="Yes. Settings → Manage subscription → cancel. You keep Pro until the end of the current billing period." />
+            <Faq q="Do you store my card?" a="No. Stripe handles the card details. We only see your subscription status." />
+            <Faq q="Does it work across web and Android?" a="Yes. The subscription is tied to your Atmos account, so it applies on every device you sign in to with the same email." />
+            <Faq q="What counts toward a 'chat message'?" a="Each message YOU send counts. The AI's replies don't. Limits reset at midnight UTC." />
+            <Faq q="Refunds?" a="Email feedback@atmos.example.com within 7 days of charging and we'll refund, no questions." />
+          </div>
+        </div>
       </main>
     </div>
+  )
+}
+
+function Faq({ q, a }: { q: string; a: string }) {
+  return (
+    <details className="group">
+      <summary
+        className="px-5 py-4 cursor-pointer flex items-start justify-between gap-3 text-sm font-medium list-none"
+        style={{ color: 'var(--text)' }}
+      >
+        <span>{q}</span>
+        <span
+          className="transition-transform group-open:rotate-45 text-xl leading-none flex-shrink-0"
+          style={{ color: 'var(--primary)' }}
+        >
+          +
+        </span>
+      </summary>
+      <p
+        className="px-5 pb-4 text-[13px] leading-relaxed"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        {a}
+      </p>
+    </details>
   )
 }
 
