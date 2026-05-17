@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, Sparkles, Loader2, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { TIER_LIMITS } from '@/lib/subscriptions'
+import { Footer } from '@/components/layout/Footer'
 
 type Plan = 'monthly' | 'yearly'
 
@@ -203,6 +204,7 @@ export default function PricingPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

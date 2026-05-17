@@ -1,6 +1,8 @@
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
+import { Footer } from '@/components/layout/Footer'
+
 export const metadata = {
   title: 'Privacy — Atmos',
 }
@@ -85,6 +87,7 @@ export default function PrivacyPage() {
           Last updated: 2026-05-16. We&apos;ll bump this date when we materially change anything.
         </p>
       </main>
+      <Footer />
     </div>
   )
 }
