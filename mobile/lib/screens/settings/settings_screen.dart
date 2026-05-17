@@ -12,6 +12,7 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../../widgets/account_section.dart';
 import '../../widgets/danger_zone.dart';
+import '../../widgets/feedback_sheet.dart';
 import '../../widgets/usage_bars.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -216,18 +217,11 @@ class SettingsScreen extends ConsumerWidget {
                     mode: LaunchMode.externalApplication,
                   );
                 }),
-                _linkRow(context, LucideIcons.messageSquareWarning, 'Report issue', () async {
-                  await launchUrl(
-                    Uri.parse(
-                        'https://github.com/ofonn/atmos/issues/new?template=bug_report.md'),
-                    mode: LaunchMode.externalApplication,
-                  );
+                _linkRow(context, LucideIcons.messageSquareWarning, 'Report issue', () {
+                  FeedbackSheet.show(context, initial: FeedbackCategory.bug);
                 }),
-                _linkRow(context, LucideIcons.sparkles, 'Send AI feedback', () async {
-                  await launchUrl(
-                    Uri.parse('mailto:feedback@atmos.example.com?subject=Atmos%20AI%20feedback'),
-                    mode: LaunchMode.externalApplication,
-                  );
+                _linkRow(context, LucideIcons.sparkles, 'Send AI feedback', () {
+                  FeedbackSheet.show(context, initial: FeedbackCategory.ai);
                 }),
               ]),
               _section(context, 'About', <Widget>[
