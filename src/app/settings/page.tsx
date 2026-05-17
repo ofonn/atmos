@@ -440,22 +440,24 @@ export default function SettingsPage() {
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)' }}>
           {[
-            { label: 'Rate Atmos', icon: Star },
-            { label: 'Report issue', icon: MessageSquareWarning },
-            { label: 'Send AI feedback', icon: Sparkles },
+            { label: 'Rate Atmos', icon: Star, href: 'https://github.com/ofonn/atmos' },
+            { label: 'Report issue', icon: MessageSquareWarning, href: 'https://github.com/ofonn/atmos/issues/new?template=bug_report.md' },
+            { label: 'Send AI feedback', icon: Sparkles, href: 'mailto:feedback@atmos.example.com?subject=Atmos%20AI%20feedback' },
           ].map((item, i) => (
-            <button
+            <a
               key={item.label}
+              href={item.href}
+              target={item.href.startsWith('http') ? '_blank' : undefined}
+              rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
               className="w-full flex items-center justify-between px-5 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10"
               style={{ borderBottom: i < 2 ? '0.5px solid var(--outline)' : 'none' }}
-              onClick={() => {}}
             >
               <div className="flex items-center gap-3">
                 <item.icon className="w-5 h-5" style={{ color: 'var(--primary)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{item.label}</span>
               </div>
               <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-            </button>
+            </a>
           ))}
         </div>
 
