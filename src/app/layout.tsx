@@ -12,6 +12,7 @@ import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SWRegister } from '@/components/pwa/SWRegister'
 import { StreakTracker } from '@/components/streak/StreakTracker'
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
+import { WhatsNew } from '@/components/notifications/WhatsNew'
 import { JsonLd } from '@/components/seo/JsonLd'
 import './globals.css'
 
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <PageTransition>{children}</PageTransition>
                   <InstallPrompt />
                   <OnboardingFlow />
+                  <WhatsNew />
                 </div>
               </WeatherProvider>
             </SettingsProvider>

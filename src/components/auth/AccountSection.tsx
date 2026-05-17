@@ -24,11 +24,26 @@ export function AccountSection() {
         if (!data) return
         const expired =
           data.current_period_end && new Date(data.current_period_end) < new Date()
-        if (data.tier === 'pro' && data.status === 'active' && !expired) {
-          setTier('pro')
-        } else {
-          setTier('free')
-        }
+        const next: Tier =
+          data.tier === 'pro' && data.status === 'active' && !expired ? 'pro' : 'free'
+        setTier(next)
+
+        // One-shot downgrade notice: pro → free flip shows once per day.
+        try {
+          const lastKey = `atmos_last_tier_${user.id}`
+          const last = localStorage.getItem(lastKey)
+          if (last === 'pro' && next === 'free') {
+            const day = new Date().toISOString().slice(0, 10)
+            const noticeKey = `atmos_downgrade_notice_${user.id}_${day}`
+            if (!localStorage.getItem(noticeKey)) {
+              localStorage.setItem(noticeKey, '1')
+              alert(
+                'Your Atmos Pro plan has ended. Free daily limits are now in effect — re-subscribe any time from this page.',
+              )
+            }
+          }
+          localStorage.setItem(lastKey, next)
+        } catch {}
       })
   }, [supabase, user])
 
