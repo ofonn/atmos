@@ -39,6 +39,7 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
+    "report-uri /api/security/csp-report",
   ].join('; ')
   res.headers.set('Content-Security-Policy-Report-Only', csp)
 
