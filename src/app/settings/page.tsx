@@ -10,6 +10,7 @@ import { DangerZone } from '@/components/auth/DangerZone'
 import { UsageBars } from '@/components/auth/UsageBars'
 import { StreakBadge } from '@/components/streak/StreakBadge'
 import { FeedbackModal } from '@/components/feedback/FeedbackModal'
+import { PushToggle } from '@/components/notifications/PushToggle'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useWeatherContext } from '@/contexts/WeatherContext'
 import {
@@ -359,6 +360,8 @@ export default function SettingsPage() {
         <AccountSection />
 
         <UsageBars />
+
+        <PushToggle />
 
         <ProfileEditor />
 
