@@ -12,6 +12,7 @@ import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { SWRegister } from '@/components/pwa/SWRegister'
 import { StreakTracker } from '@/components/streak/StreakTracker'
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow'
+import { JsonLd } from '@/components/seo/JsonLd'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -70,6 +71,9 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${inter.variable}`}>
+      <head>
+        <JsonLd />
+      </head>
       <body className={`${jakarta.className} min-h-screen`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
