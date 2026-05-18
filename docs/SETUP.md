@@ -430,7 +430,20 @@ accounts, Flutter local state, etc. Only `.env.example` is committed.
 - `X-Frame-Options: DENY`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: geolocation=(self), camera=()`
-- `Strict-Transport-Security: max-age=63072000; includeSubDomains`
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+- `Content-Security-Policy-Report-Only` (flip to enforcing after a week
+  of clean reports at `/api/security/csp-report`)
+
+#### HSTS preload submission (optional, after prod domain is live)
+Once the site has been on HTTPS-only for 30+ days and the header
+includes `preload` + `includeSubDomains`:
+1. Visit https://hstspreload.org/
+2. Enter your domain → "Check eligibility"
+3. Once green, "Submit"
+4. Browsers will bake your domain into their HSTS list at their next release
+
+⚠️ Preload is **hard to undo** (months of waiting), so only submit
+once you're sure the whole zone is HTTPS-ready.
 
 ### 8.3 Rate limiting
 Per-user daily limits live in `api_usage` + RPC `increment_api_usage`.

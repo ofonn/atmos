@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+# Pre-commit hook — runs gitleaks if installed, otherwise warns and
+# lets the commit through (so contributors without gitleaks can
+# still commit, but get prompted to install it).
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --config .gitleaks.toml --no-banner || {
+    echo
+    echo "Gitleaks found potential secrets in your staged changes."
+    echo "If this is a false positive, add an exception to .gitleaks.toml."
+    exit 1
+  }
+else
+  echo "gitleaks not installed - skipping secret scan."
+  echo "Install with: brew install gitleaks (or your platform's package manager)"
+fi

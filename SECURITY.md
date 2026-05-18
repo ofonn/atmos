@@ -64,6 +64,30 @@ Out of scope:
   `.env.example` is committed.
 - **CI**: pre-commit `gitleaks` recommended (see `docs/SETUP.md` §8.5).
 
+## Key rotation
+
+The two keys that warrant a rotation policy:
+
+- **`SUPABASE_SERVICE_ROLE_KEY`** — bypasses RLS. Rotate **every
+  6 months** as routine, and **immediately** on:
+  - any suspected leak (committed by accident, shared in chat, etc.)
+  - any contributor with access leaving the project
+  - any Vercel access token revocation event
+
+  How: Supabase Dashboard → Project Settings → API → Reset
+  service_role key → update on Vercel → trigger a redeploy. The
+  Stripe webhook, `/api/account/delete`, and push-dispatch all
+  pick up the new key on the next request.
+
+- **`STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`** — rotate
+  annually or on team changes. Stripe Dashboard → Developers →
+  API keys → Roll. The webhook secret must be re-pasted on
+  Vercel **before** rolling, or one webhook batch could fail
+  signature verification.
+
+`GEMINI_API_KEY` and `GOOGLE_PLAY_INTEGRITY_SA_JSON` follow the
+same pattern — annual or on incident.
+
 ## What we still need to do
 
 See `docs/SETUP.md` §10 for the day-one checklist that requires
