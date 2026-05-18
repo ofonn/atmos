@@ -90,9 +90,15 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {
+          // Tap = preview (peek without switching primary)
+          onTap: () => _showPreview(context, ref, loc),
+          // Long-press = set as primary
+          onLongPress: () {
             ref.read(locationProvider.notifier).setAsCurrentLocation(loc);
-            context.go('/');
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Switched to ${loc.name}'),
+              duration: const Duration(seconds: 2),
+            ));
           },
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -119,6 +125,10 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
                                 style: AtmosTypography.headline(
                                     fontSize: 16, fontWeight: FontWeight.w700, color: t.text)),
                           ),
+                          if (loc.tag != null) ...<Widget>[
+                            const SizedBox(width: 8),
+                            _tagChip(t, loc.tag!),
+                          ],
                           if (isCurrent) ...<Widget>[
                             const SizedBox(width: 8),
                             Container(
@@ -139,21 +149,63 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(LucideIcons.trash2, color: AtmosColors.danger, size: 18),
-                  onPressed: () {
-                    ref.read(locationProvider.notifier).removeLocation(loc);
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(SnackBar(
-                        content: Text('Removed ${loc.name}'),
-                        duration: const Duration(seconds: 5),
-                        action: SnackBarAction(
-                          label: 'Undo',
-                          onPressed: () => ref.read(locationProvider.notifier).saveLocation(loc),
-                        ),
-                      ));
+                PopupMenuButton<String>(
+                  icon: Icon(LucideIcons.moreVertical, color: t.textMuted, size: 18),
+                  onSelected: (String v) {
+                    final n = ref.read(locationProvider.notifier);
+                    switch (v) {
+                      case 'use':
+                        n.setAsCurrentLocation(loc);
+                        context.go('/');
+                        break;
+                      case 'home':
+                        n.setTag(loc, 'home');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${loc.name} tagged as Home'), duration: const Duration(seconds: 2)),
+                        );
+                        break;
+                      case 'work':
+                        n.setTag(loc, 'work');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${loc.name} tagged as Work'), duration: const Duration(seconds: 2)),
+                        );
+                        break;
+                      case 'clear':
+                        n.setTag(loc, null);
+                        break;
+                      case 'delete':
+                        n.removeLocation(loc);
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                            content: Text('Removed ${loc.name}'),
+                            duration: const Duration(seconds: 5),
+                            action: SnackBarAction(
+                              label: 'Undo',
+                              onPressed: () => n.saveLocation(loc),
+                            ),
+                          ));
+                        break;
+                    }
                   },
+                  itemBuilder: (BuildContext _) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(value: 'use', child: Text('Set as current')),
+                    PopupMenuItem<String>(
+                      value: 'home',
+                      child: Text(loc.tag == 'home' ? '✓ Tagged as Home' : 'Tag as Home'),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'work',
+                      child: Text(loc.tag == 'work' ? '✓ Tagged as Work' : 'Tag as Work'),
+                    ),
+                    if (loc.tag != null)
+                      const PopupMenuItem<String>(value: 'clear', child: Text('Clear tag')),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -261,6 +313,118 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
           );
         },
       ),
+    );
+  }
+
+  /// Compact chip rendered next to the city name when a tag is set.
+  Widget _tagChip(AtmosTokens t, String tag) {
+    final IconData icon = tag == 'home'
+        ? LucideIcons.house
+        : tag == 'work'
+            ? LucideIcons.briefcase
+            : LucideIcons.tag;
+    final String label = tag[0].toUpperCase() + tag.substring(1);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: t.surfaceMid,
+        borderRadius: BorderRadius.circular(40),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 10, color: t.primary),
+          const SizedBox(width: 4),
+          Text(label,
+              style: AtmosTypography.label(
+                  fontSize: 9, color: t.textMuted, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  /// Read-only "peek" — tap a card to see brief weather without
+  /// switching the primary location. Long-press still switches.
+  void _showPreview(BuildContext context, WidgetRef ref, AtmosLocation loc) {
+    final AtmosTokens t = context.atmos;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: false,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: t.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: t.outline.withOpacity(0.5)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: t.textMuted.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                  ),
+                ),
+                Text(loc.name,
+                    style: AtmosTypography.headline(
+                        fontSize: 22, fontWeight: FontWeight.w700, color: t.text)),
+                if (loc.country.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(loc.country,
+                        style: AtmosTypography.label(fontSize: 12, color: t.textMuted)),
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  'Coords: ${loc.lat.toStringAsFixed(3)}, ${loc.lon.toStringAsFixed(3)}',
+                  style: AtmosTypography.label(fontSize: 11, color: t.textMuted),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: t.text,
+                          side: BorderSide(color: t.outline),
+                        ),
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Close'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: t.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          ref.read(locationProvider.notifier).setAsCurrentLocation(loc);
+                          Navigator.pop(ctx);
+                          context.go('/');
+                        },
+                        child: const Text('Set as current'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

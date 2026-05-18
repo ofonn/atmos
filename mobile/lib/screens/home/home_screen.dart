@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../api/models/location.dart';
 import '../../api/models/open_meteo.dart';
 import '../../state/ai_content_provider.dart';
 import '../../state/location_provider.dart';
@@ -24,6 +25,7 @@ import '../../widgets/responsive_headline.dart';
 import '../../widgets/severe_weather_banner.dart';
 import '../../widgets/share_button.dart';
 import '../../widgets/weather_video_background.dart';
+import '../../widgets/whats_new_sheet.dart';
 import '../../widgets/weather_particles.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -41,8 +43,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     // Show onboarding on first launch (no-op if already completed).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) OnboardingSheet.maybeShow(context, ref);
+    // Then surface release-notes once per version per device.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await OnboardingSheet.maybeShow(context, ref);
+      if (!mounted) return;
+      await WhatsNewSheet.maybeShow(context, ref);
     });
   }
 
@@ -142,6 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Column(
                 children: <Widget>[
                   _header(loc, locLoading),
+                  if (loc != null) _quickSwitch(loc),
                   if (loc?.current != null)
                     SevereWeatherBanner(lat: loc!.current!.lat, lon: loc.current!.lon),
                   if (_searchOpen) _searchBar(),
@@ -215,6 +222,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             icon: Icon(_searchOpen ? LucideIcons.x : LucideIcons.search, size: 18, color: t.textMuted),
             onPressed: () => setState(() => _searchOpen = !_searchOpen),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Quick-switch between saved cities tagged 'home' and 'work'. Only
+  /// renders when at least one of the two exists; both visible means
+  /// the user can tap to toggle which one drives the forecast.
+  Widget _quickSwitch(LocationState loc) {
+    final AtmosTokens t = context.atmos;
+    final AtmosLocation? home = loc.saved.cast<AtmosLocation?>().firstWhere(
+          (AtmosLocation? l) => l?.tag == 'home',
+          orElse: () => null,
+        );
+    final AtmosLocation? work = loc.saved.cast<AtmosLocation?>().firstWhere(
+          (AtmosLocation? l) => l?.tag == 'work',
+          orElse: () => null,
+        );
+    if (home == null && work == null) return const SizedBox.shrink();
+
+    Widget chip(AtmosLocation? l, String label, IconData icon) {
+      if (l == null) return const SizedBox.shrink();
+      final bool active = loc.current != null && loc.current == l;
+      return Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(40),
+          onTap: active ? null : () => ref.read(locationProvider.notifier).setAsCurrentLocation(l),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: active ? t.primary : t.surfaceMid,
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(icon, size: 12, color: active ? Colors.white : t.primary),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: AtmosTypography.label(
+                        fontSize: 11,
+                        color: active ? Colors.white : t.text,
+                        fontWeight: FontWeight.w700)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: <Widget>[
+          chip(home, 'Home', LucideIcons.house),
+          chip(work, 'Work', LucideIcons.briefcase),
         ],
       ),
     );

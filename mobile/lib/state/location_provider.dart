@@ -178,6 +178,35 @@ class LocationNotifier extends AsyncNotifier<LocationState> {
     _persistSaved(next);
   }
 
+  /// Apply or clear a tag on a saved location. Passing `tag=null`
+  /// clears it. The unique partial index on `saved_locations(user_id, tag)
+  /// where tag is not null` means a tag can only live on one row per
+  /// user — set it here we strip it from any other row first.
+  void setTag(AtmosLocation loc, String? tag) {
+    final LocationState? prev = state.valueOrNull;
+    if (prev == null) return;
+    final List<AtmosLocation> next = prev.saved.map((AtmosLocation l) {
+      if (l == loc) return l.copyWith(tag: tag);
+      // Strip the same tag from any sibling row.
+      if (tag != null && l.tag == tag) return l.copyWith(tag: null);
+      return l;
+    }).toList();
+    state = AsyncData<LocationState>(prev.copyWith(saved: next));
+    _persistSaved(next);
+  }
+
+  /// Convenience: switch the user's current weather to the saved
+  /// location tagged `home` or `work`. No-op if no row has that tag.
+  void switchToTag(String tag) {
+    final LocationState? prev = state.valueOrNull;
+    if (prev == null) return;
+    final AtmosLocation? match = prev.saved.cast<AtmosLocation?>().firstWhere(
+          (AtmosLocation? l) => l?.tag == tag,
+          orElse: () => null,
+        );
+    if (match != null) _setAsCurrent(match);
+  }
+
   Future<void> syncGps() async {
     final perm = await Permission.locationWhenInUse.request();
     if (perm.isDenied || perm.isPermanentlyDenied) {

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent, Au
 
 import 'screens/about/permissions_screen.dart';
 import 'screens/about/security_screen.dart';
+import 'screens/about/status_screen.dart';
 import 'screens/auth/profile_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
@@ -106,6 +107,7 @@ class _RoutedApp extends ConsumerWidget {
             GoRoute(path: '/trip', builder: (_, __) => const TripScreen()),
             GoRoute(path: '/security', builder: (_, __) => const SecurityScreen()),
             GoRoute(path: '/permissions', builder: (_, __) => const PermissionsScreen()),
+            GoRoute(path: '/status', builder: (_, __) => const StatusScreen()),
           ],
         ),
       ],

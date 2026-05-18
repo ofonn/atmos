@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,11 +39,36 @@ class _AccountSectionState extends ConsumerState<AccountSection> {
       final String status = row['status'] as String? ?? 'active';
       final String? endIso = row['current_period_end'] as String?;
       final bool expired = endIso != null && DateTime.parse(endIso).isBefore(DateTime.now());
-      if (mounted) {
-        setState(() {
-          _tier = (tier == 'pro' && status == 'active' && !expired) ? 'pro' : 'free';
-        });
-      }
+      final String next = (tier == 'pro' && status == 'active' && !expired) ? 'pro' : 'free';
+
+      // One-shot downgrade notice: pro → free flip shows once per day.
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final String lastKey = 'atmos_last_tier_$userId';
+        final String? last = prefs.getString(lastKey);
+        if (last == 'pro' && next == 'free') {
+          final String day = DateTime.now().toIso8601String().substring(0, 10);
+          final String noticeKey = 'atmos_downgrade_notice_${userId}_$day';
+          if (prefs.getBool(noticeKey) != true) {
+            await prefs.setBool(noticeKey, true);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: const Text(
+                  'Your Atmos Pro plan has ended. Free daily limits are now in effect.',
+                ),
+                duration: const Duration(seconds: 6),
+                action: SnackBarAction(
+                  label: 'Resubscribe',
+                  onPressed: _openUpgrade,
+                ),
+              ));
+            }
+          }
+        }
+        await prefs.setString(lastKey, next);
+      } catch (_) {}
+
+      if (mounted) setState(() => _tier = next);
     } catch (_) {}
   }
 

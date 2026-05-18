@@ -7,6 +7,7 @@ class AtmosLocation {
     required this.lon,
     required this.name,
     required this.country,
+    this.tag,
   });
 
   final double lat;
@@ -14,12 +15,17 @@ class AtmosLocation {
   final String name;
   final String country;
 
+  /// Optional user-set label — 'home', 'work', or null. The
+  /// `saved_locations.tag` column enforces uniqueness per (user, tag).
+  final String? tag;
+
   factory AtmosLocation.fromJson(Map<String, dynamic> j) {
     return AtmosLocation(
       lat: (j['lat'] as num).toDouble(),
       lon: (j['lon'] as num).toDouble(),
       name: j['name'] as String? ?? '',
       country: j['country'] as String? ?? '',
+      tag: j['tag'] as String?,
     );
   }
 
@@ -28,14 +34,22 @@ class AtmosLocation {
         'lon': lon,
         'name': name,
         'country': country,
+        if (tag != null) 'tag': tag,
       };
 
-  AtmosLocation copyWith({double? lat, double? lon, String? name, String? country}) =>
+  AtmosLocation copyWith({
+    double? lat,
+    double? lon,
+    String? name,
+    String? country,
+    Object? tag = _sentinel,
+  }) =>
       AtmosLocation(
         lat: lat ?? this.lat,
         lon: lon ?? this.lon,
         name: name ?? this.name,
         country: country ?? this.country,
+        tag: identical(tag, _sentinel) ? this.tag : tag as String?,
       );
 
   @override
@@ -49,3 +63,5 @@ class AtmosLocation {
   @override
   String toString() => '$name${country.isNotEmpty ? ', $country' : ''}';
 }
+
+const Object _sentinel = Object();
