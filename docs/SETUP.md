@@ -266,6 +266,10 @@ In Vercel → **Project Settings → Environment Variables**, add for the
 | `VAPID_PRIVATE_KEY` | same command above |
 | `VAPID_SUBJECT` | `mailto:you@example.com` |
 | `NEXT_PUBLIC_SITE_URL` | your production URL |
+| `NEXT_PUBLIC_SENTRY_DSN` | sentry.io → New project → Next.js (optional) |
+| `SENTRY_ORG` | sentry.io org slug (optional, build-time) |
+| `SENTRY_PROJECT` | `atmos-web` (optional, build-time) |
+| `SENTRY_AUTH_TOKEN` | sentry.io → Account → Auth tokens → `project:releases` scope (optional, build-time for source-map upload) |
 
 ### 4.3 Custom domain (optional but recommended)
 🧑‍💻 **Manual task for you.**
@@ -426,7 +430,20 @@ accounts, Flutter local state, etc. Only `.env.example` is committed.
 - `X-Frame-Options: DENY`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: geolocation=(self), camera=()`
-- `Strict-Transport-Security: max-age=63072000; includeSubDomains`
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+- `Content-Security-Policy-Report-Only` (flip to enforcing after a week
+  of clean reports at `/api/security/csp-report`)
+
+#### HSTS preload submission (optional, after prod domain is live)
+Once the site has been on HTTPS-only for 30+ days and the header
+includes `preload` + `includeSubDomains`:
+1. Visit https://hstspreload.org/
+2. Enter your domain → "Check eligibility"
+3. Once green, "Submit"
+4. Browsers will bake your domain into their HSTS list at their next release
+
+⚠️ Preload is **hard to undo** (months of waiting), so only submit
+once you're sure the whole zone is HTTPS-ready.
 
 ### 8.3 Rate limiting
 Per-user daily limits live in `api_usage` + RPC `increment_api_usage`.
@@ -563,40 +580,80 @@ If a step fails, the usual cause is:
 
 | Feature | Notes |
 |---|---|
-| Supabase migrations 0001–0009 | profiles / subscriptions / saved_locations / chat_messages / api_usage / user_preferences / streaks / push_subscriptions + notification_preferences / stripe_events |
-| Web auth: /sign-in, /sign-up, /reset, /auth/callback, /auth/sign-out | Email + Google OAuth |
-| Mobile auth: SignInScreen + AndroidManifest `com.atmos.app://` intent filter | Email + Google OAuth |
+| Supabase migrations 0001–0012 | profiles / subscriptions / saved_locations / chat_messages / api_usage / user_preferences / streaks / push_subscriptions + notification_preferences / stripe_events / observability views / feedback / saved_location.tag |
+| Web auth: /sign-in, /sign-up, /reset, /auth/callback, /auth/sign-out | Email + Google OAuth, recovery flow |
+| Mobile auth: SignInScreen, /reset, /reset-update + AndroidManifest `com.atmos.app://` intent filter | Email + Google OAuth, recovery deep-link routed by NavShell listener |
 | Server helpers: getServerUser, requireUser, getUserTier | `src/lib/supabase/auth.ts` |
 | Rate limiting: `enforceUsage` wired into chat, headline, outfit, activity, trip | Skips for anonymous; tier-aware |
-| AI personality (emoji use, verbosity) | Plumbed through `buildSystemPrompt` |
-| Cloud sync (locations / chat / prefs) | Web `CloudSync`; Mobile `cloudSyncProvider` |
+| AI personality (emoji use, verbosity) | Plumbed through `buildSystemPrompt` on both web + mobile chat |
+| Cloud sync (locations / chat / prefs) | Web `CloudSync` + mobile `cloudSyncProvider` w/ 30s push timer |
 | /pricing page + Stripe Checkout + Customer Portal | Hidden behind sign-in |
 | Stripe webhook with signature verify + idempotency table | `/api/stripe/webhook` |
-| Account deletion | `/api/account/delete` + web `DangerZone` + mobile `DangerZone` |
+| Account deletion + data export | `/api/account/{delete,export}` + web DangerZone + mobile DangerZone |
 | Severe-weather banner | `/api/warnings` heuristic + dismissable web + mobile |
-| Weather video background | `/sign-up`-style onboarding modal, opt-in, `public/videos/` |
+| Weather video background | Onboarding modal opt-in, web + mobile, network-adaptive quality |
 | PWA install prompt + service worker offline cache | Stale-while-revalidate for /api/openmeteo |
 | Push subscription endpoint | `/api/push/subscribe` (web + FCM payloads) |
+| Web push subscribe helper + PushToggle on settings | `src/lib/push.ts` — gated by `NEXT_PUBLIC_VAPID_PUBLIC_KEY` |
 | Daily streak (RPC + badge) | bump_streak runs once per session per day |
 | Settings tier badge, Upgrade/Manage buttons | Web + mobile AccountSection |
 | Profile editor | Web `ProfileEditor`, mobile `/profile` route |
-| Mobile Trip planner | `/trip` route on Android |
-| Mobile offline banner | `connectivity_plus` |
-| Mobile share weather | `share_plus` native share sheet |
+| Mobile Trip planner | `/trip` route + Trip nav item |
+| Mobile offline banner | `connectivity_plus`, mounted in NavShell |
+| Mobile share weather | `share_plus` chip on HomeScreen |
+| Mobile outfit card | Inserted after hourly strip on HomeScreen |
+| Mobile severe-weather banner | Between header and content on HomeScreen |
+| Mobile RefreshIndicator on home | Pull-to-refresh re-runs weather + air |
+| Mobile Security + Permissions screens | `/security`, `/permissions` |
 | Mobile reset to defaults | Settings → Privacy |
-| Security headers | HSTS, X-Frame-Options, Permissions-Policy etc. in middleware |
+| Mobile feedback bottom-sheet | 4 categories → `/api/feedback` |
+| In-app FeedbackModal on web | Modal version on /settings |
+| Voice input on web chat | `SpeechRecognition` mic button |
+| WhatsNew toast on web | Version-keyed one-shot |
+| Downgrade notice on web | One-shot daily alert when pro → free flips |
+| /api/me | User + tier + today's usage + limits |
+| /api/version | Commit SHA, branch, env, region |
+| /api/health + /api/health/sync | Liveness + cross-device sync diagnostic |
+| /status page | Client-side dashboard for the two health endpoints |
+| /privacy page | Plain-language policy |
+| /api/feedback (auth + anon) | RLS-aware insert / service-role fallback |
+| /api/account/export | GDPR JSON download |
+| /api/security/csp-report | CSP violation receiver |
+| /.well-known/change-password, /security.txt | Password manager + responsible disclosure |
+| Security headers | HSTS, X-Frame-Options, Permissions-Policy, CSP Report-Only in middleware |
+| JSON-LD structured data | Organization + WebApplication on every page |
+| robots.txt, sitemap.xml | Generated from `src/app/{robots,sitemap}.ts` |
+| 404 + global error pages | Branded, with reset() retry |
+| OG metadata + Twitter cards | viewport + formatDetection in layout |
+| Manifest with shortcuts + theme colors | Chat / Trip / Settings long-press shortcuts |
 | Repo governance | SECURITY.md, CONTRIBUTING.md, dependabot, gitleaks, PR + issue templates |
+| CI workflow | Build + lint + test + analyze + scan |
+| Vitest suite | 34 passing tests across subscriptions, weather utils, gemini personality, tier resolver, utils |
+| 5 Architecture Decision Records | `docs/adr/0001-0005.md` |
+| CHANGELOG.md | Per-release add/change history |
 | Hardened .gitignore | Blocks .env*, all keystores, service accounts, Flutter local state |
+| `docs/MANUAL_TASKS.md` | Standalone Monday checklist |
 
-**Pending in code** (blocked by your dashboard work):
+**Pending in code** (blocked by your dashboard work or by external deps):
 
 | Pending feature | Blocked on |
 |---|---|
 | Avatar upload via Supabase Storage | Bucket creation (§1.6) |
-| Push delivery (web push + FCM dispatch) | VAPID keys (§5.1) + Firebase project (§5.3) |
+| Push delivery (web + FCM dispatch) | VAPID keys (§6.1) + Firebase project (§6.2) |
 | Daily briefing cron | Push delivery + Edge Function deploy |
-| Apple Sign-In | Defer to iOS work |
-| Privacy policy email | Replace `privacy@atmos.example.com` everywhere with your real address |
+| Sentry error tracking (Web + Flutter init) | Sentry projects (§7) — pending implementation task |
+| Mobile Home/Work tag UI | Code-only (schema column already exists) — pending implementation task |
+| Mobile downgrade notice | Code-only — pending implementation task |
+| Mobile WhatsNew sheet | Code-only — pending implementation task |
+| Mobile native /status screen | Code-only — pending implementation task |
+| Privacy / contact emails | Replace `atmos.example.com` placeholders (§9 of `docs/MANUAL_TASKS.md`) |
+| Apple Sign-In + iOS | Defer to iOS work |
 
-When you've done sections 1–4, ping me — I can verify wiring end-to-end
-and tighten anything that surfaces.
+## 12. What's left to build (code)
+
+See the prioritized task list in this session's plan file or the
+"Wiring still TODO" section at the bottom of `docs/ANDROID_SCENARIOS.md`.
+TL;DR — A1 mobile parity, A2 web polish, A3 wider tests, A7 Sentry.
+
+When you've done sections 1–4 of `docs/MANUAL_TASKS.md`, ping me — I
+can verify wiring end-to-end and tighten anything that surfaces.

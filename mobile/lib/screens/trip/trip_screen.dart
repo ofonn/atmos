@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../api/dio_client.dart';
 import '../../state/api_providers.dart';
@@ -147,6 +148,41 @@ class _TripScreenState extends ConsumerState<TripScreen> {
     }
   }
 
+  /// Pretty-prints the result for sharing via WhatsApp / Messages / etc.
+  void _shareItinerary() {
+    final Map<String, dynamic>? r = _result;
+    if (r == null) return;
+    final List<String> packing = (r['packing'] as List<dynamic>).cast<String>();
+    final List<String> watchouts = (r['watchouts'] as List<dynamic>).cast<String>();
+    final StringBuffer s = StringBuffer();
+    s.writeln('Trip to ${r['destinationLabel']}');
+    if (_startDate != null && _endDate != null) {
+      final DateFormat df = DateFormat('MMM d');
+      s.writeln('${df.format(_startDate!)} → ${df.format(_endDate!)}');
+    }
+    if (r['summary'] != null) {
+      s.writeln();
+      s.writeln(r['summary'] as String);
+    }
+    if (watchouts.isNotEmpty) {
+      s.writeln();
+      s.writeln('Watch out for:');
+      for (final String w in watchouts) {
+        s.writeln('• $w');
+      }
+    }
+    if (packing.isNotEmpty) {
+      s.writeln();
+      s.writeln('Packing list:');
+      for (int i = 0; i < packing.length; i++) {
+        s.writeln('${i + 1}. ${packing[i]}');
+      }
+    }
+    s.writeln();
+    s.writeln('— planned with Atmos');
+    Share.share(s.toString(), subject: 'Trip to ${r['destinationLabel']}');
+  }
+
   String _wmoDesc(int code) {
     if (code == 0) return 'Clear';
     if (code <= 3) return 'Partly cloudy';
@@ -221,6 +257,17 @@ class _TripScreenState extends ConsumerState<TripScreen> {
                 ],
                 const SizedBox(height: 12),
                 _packing(t, (_result!['packing'] as List<dynamic>).cast<String>()),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: t.text,
+                    side: BorderSide(color: t.outline),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: _shareItinerary,
+                  icon: const Icon(LucideIcons.share2, size: 14),
+                  label: const Text('Share itinerary'),
+                ),
               ],
             ],
           ),

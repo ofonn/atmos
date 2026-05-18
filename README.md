@@ -13,10 +13,13 @@ Flutter Android   →   /api/*  (Play Integrity gated)
 
 ## Start here
 
-- **First-time setup (Monday checklist)** — `docs/SETUP.md`
+- **Monday checklist (manual dashboard steps)** — `docs/MANUAL_TASKS.md`
+- **Full setup guide** — `docs/SETUP.md`
+- **Architecture decisions** — `docs/adr/`
 - **What's built / what's missing** — `docs/SCENARIOS.md` (web) +
   `docs/ANDROID_SCENARIOS.md` (mobile, 50+ user flows audited)
 - **Architecture + commands** — `CLAUDE.md`
+- **Changelog** — `CHANGELOG.md`
 - **Security policy** — `SECURITY.md`
 - **Contributing** — `CONTRIBUTING.md`
 
@@ -27,7 +30,8 @@ Flutter Android   →   /api/*  (Play Integrity gated)
 npm install
 cp .env.example .env.local        # fill in keys per docs/SETUP.md §1
 npm run dev                       # http://localhost:3000
-npx next build                    # type-check + lint + bundle
+npm test                          # vitest — 34 tests passing
+npm run check                     # install + lint + test + build
 
 # Mobile (Android)
 cd mobile
@@ -37,29 +41,44 @@ flutter run --dart-define=ATMOS_API_BASE=http://10.0.2.2:3000 \
             --dart-define=SUPABASE_ANON_KEY=…
 
 # Supabase migrations
-supabase link --project-ref <ref>
-supabase db push
+npm run migrate                   # supabase db push
 ```
 
 ## High-level features
 
 **Web + mobile (parity)**
-- Current + hourly + 14-day weather
+- Current + hourly + 14-day weather, severe-weather banner
 - AI headlines, outfit advice, activity windows, trip packing list
-- Per-user saved cities, chat history, preferences (cloud-synced)
+- Per-user saved cities, chat history, preferences (cloud-synced —
+  same email = same data on every device)
 - Free / Pro tiers with daily AI rate limits
+- Account + sign-in / sign-up / password reset / profile / delete
+- AI personality picker (emoji use, verbosity)
+- Onboarding with optional weather-adaptive video backgrounds
+- Daily-open streak
 
 **Web-only (today)**
-- Onboarding flow with weather-video-background opt-in
 - Stripe Checkout + Customer Portal
-- Password reset, profile editor, account deletion
+- Voice input on chat (`SpeechRecognition`)
+- `/pricing`, `/status`, `/privacy`, `/reset` pages
+- WhatsNew + downgrade toasts
+- PWA install prompt + offline-cache service worker
+- JSON-LD structured data, OG metadata, robots.txt, sitemap.xml
+- `/api/health`, `/api/health/sync`, `/api/version` diagnostics
+- `/api/account/export` GDPR data dump
+- `/.well-known/{security.txt,change-password}`
 
 **Mobile-only (today)**
 - Play Integrity attestation gating /api/*
-- Voice input in chat
+- Native About → Security + Permissions screens
+
+**Coverage** — 34 vitest tests across subscriptions / weather utils /
+gemini personality / tier resolver / unit conversions. CI runs build +
+lint + analyze + test + gitleaks on every push.
 
 See the SCENARIOS docs for exactly which user flows are implemented
-vs. missing, with effort estimates per gap.
+vs. missing, with effort estimates per gap. See `docs/MANUAL_TASKS.md`
+for the human dashboard work.
 
 ## License
 

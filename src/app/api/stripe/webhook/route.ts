@@ -171,6 +171,11 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     console.error('[stripe.webhook] handler error', e)
     try {
+      // Sentry capture — no-op if DSN unset.
+      const Sentry = await import('@sentry/nextjs')
+      Sentry.captureException(e, { tags: { route: 'stripe.webhook', event: event.type, event_id: event.id } })
+    } catch {}
+    try {
       const admin = getAdminClient()
       await admin.from('stripe_events').update({ error: e.message }).eq('id', event.id)
     } catch {}

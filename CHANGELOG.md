@@ -5,6 +5,24 @@ All notable changes will be recorded here. The project follows
 
 ## [Unreleased] — `claude/supabase-auth` branch
 
+### Latest additions (Mon 2026-05-18)
+- Mobile Home/Work tags + quick-switch chips on home (E5)
+- Mobile preview-only saved-location bottom sheet (E3)
+- Mobile downgrade snackbar w/ Resubscribe (L3)
+- Mobile WhatsNew sheet — version-keyed, chained after onboarding
+- Mobile native `/status` screen — row-count diagnostic mirrors web
+- Mobile Trip → Share itinerary via system share sheet
+- Sentry observability for web + Flutter (DSN-gated, no-op on forks)
+- Husky pre-commit hook running gitleaks on staged files
+- HSTS preload submission walkthrough + key rotation policy (SECURITY.md)
+- Lighthouse CI on PRs against `/`, `/pricing`, `/privacy`
+- Vitest mocks for `sync.ts` push/pull order + `playIntegrity.ts`
+  strict / lenient gates + TierLimits shape stability — 55 tests
+- `docs/MANUAL_TASKS.md` — standalone printable Monday checklist
+- Styled in-page downgrade banner on web (replaces alert())
+- Feedback context capture (path, url, viewport, ua)
+- robots / sitemap vitest coverage
+
 ### Latest additions (Sun 2026-05-17)
 - Mobile password reset (`/reset` request + `/reset-update` set-new)
   with deep-link recovery routed via NavShell listener
@@ -55,12 +73,36 @@ All notable changes will be recorded here. The project follows
 - Settings: tier badge, Upgrade / Manage subscription buttons, usage
   bars, AI personality controls, video background controls, danger zone
 
-### Pending (waiting on Monday dashboard work)
-- Live Stripe + Play Integrity + Supabase project values
-- Supabase Storage bucket for avatars
-- Firebase project for FCM push delivery
-- VAPID keys for web push
-- Real privacy contact email in `security.txt`, `humans.txt`, settings
+### Pending — manual dashboard work
+
+See `docs/MANUAL_TASKS.md` for the full Monday checklist. The
+shortlist:
+
+- Create Supabase project + apply migrations 0001–0012 + auth allow-list
+- Create Stripe products + webhook + put price IDs / secrets on Vercel
+- Create Google OAuth client + paste to Supabase
+- Create Play Integrity service account (after Play Store publish)
+- Generate Android upload keystore + first AAB
+- (Optional) VAPID keys + Firebase project for push
+- (Optional) Sentry projects (web + Flutter) for error tracking
+- Replace `atmos.example.com` placeholders across the repo
+
+### Pending — code (no dashboard needed)
+
+- Mobile Home/Work tag UI (schema column already exists, migration 0012)
+- Mobile quick-switch between Home / Work cities
+- Mobile preview-only saved-location mode
+- Mobile downgrade-pro-to-free banner
+- Mobile WhatsNew sheet
+- Mobile native `/status` screen
+- Mobile pollen / sun-UV / comparison / precip / temp-trend cards
+- Web downgrade alert → styled in-page banner
+- Lazy-load Leaflet on `/radar`
+- jsdom + first component test
+- Mocked vitest tests for sync + playIntegrity
+- Sentry on web + Flutter (gated by DSN env)
+- Husky pre-commit + gitleaks
+- Lighthouse CI
 
 ## 1.0.0 — Previous state
 

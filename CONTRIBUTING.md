@@ -104,6 +104,14 @@ A debug APK is built on every push to a feature branch by the GitHub
 Actions workflow in `.github/workflows/`. Production builds need the
 keystore secrets configured (see `docs/SETUP.md` §6.5).
 
+## Pre-commit hook
+
+`npm install` registers a husky pre-commit hook at `.husky/pre-commit`
+that runs `gitleaks protect --staged` if `gitleaks` is on your PATH.
+Install once with `brew install gitleaks` (or your platform's
+package manager). If not installed, the hook prints a hint and lets
+the commit through — CI re-runs gitleaks via the workflow anyway.
+
 ## Security
 
 See `SECURITY.md`. Don't open public issues for vulnerabilities.

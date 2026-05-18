@@ -12,6 +12,7 @@ export function AccountSection() {
   const router = useRouter()
   const [tier, setTier] = useState<Tier>('free')
   const [portalLoading, setPortalLoading] = useState(false)
+  const [showDowngradeBanner, setShowDowngradeBanner] = useState(false)
 
   useEffect(() => {
     if (!supabase || !user) return
@@ -37,9 +38,7 @@ export function AccountSection() {
             const noticeKey = `atmos_downgrade_notice_${user.id}_${day}`
             if (!localStorage.getItem(noticeKey)) {
               localStorage.setItem(noticeKey, '1')
-              alert(
-                'Your Atmos Pro plan has ended. Free daily limits are now in effect — re-subscribe any time from this page.',
-              )
+              setShowDowngradeBanner(true)
             }
           }
           localStorage.setItem(lastKey, next)
@@ -72,6 +71,32 @@ export function AccountSection() {
 
   return (
     <div>
+      {showDowngradeBanner && (
+        <div
+          role="status"
+          className="mb-3 rounded-2xl px-4 py-3 flex items-start gap-3"
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+            boxShadow: '0 4px 20px rgba(245, 158, 11, 0.25)',
+          }}
+        >
+          <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0 text-white" />
+          <div className="flex-1 min-w-0 text-white">
+            <p className="text-sm font-bold">Your Atmos Pro plan ended</p>
+            <p className="text-[11px] opacity-90 leading-snug">
+              Free daily limits are now in effect. Resubscribe any time
+              from the Upgrade button below.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowDowngradeBanner(false)}
+            aria-label="Dismiss"
+            className="text-white/80 hover:text-white p-1"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <p
         className="text-[11px] font-label uppercase tracking-widest px-1 mb-1"
         style={{ color: 'var(--text-muted)' }}

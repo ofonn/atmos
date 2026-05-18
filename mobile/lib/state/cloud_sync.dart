@@ -75,7 +75,7 @@ class CloudSync {
     try {
       final List<Map<String, dynamic>> rows = await client
           .from('saved_locations')
-          .select('name, country, admin1, lat, lon')
+          .select('name, country, admin1, lat, lon, tag')
           .eq('user_id', userId);
       if (rows.isNotEmpty) {
         await prefs.setString(
@@ -87,6 +87,7 @@ class CloudSync {
                     'admin1': r['admin1'],
                     'lat': r['lat'],
                     'lon': r['lon'],
+                    if (r['tag'] != null) 'tag': r['tag'],
                   })
               .toList()),
         );
@@ -165,6 +166,7 @@ class CloudSync {
                   'admin1': m['admin1'],
                   'lat': m['lat'],
                   'lon': m['lon'],
+                  'tag': m['tag'],
                 };
               })
               .toList());

@@ -32,4 +32,21 @@ describe('subscriptions', () => {
       expect(limitFor(e, 'free')).toBeGreaterThan(0)
     }
   })
+
+  // Catches accidental key renames — `enforceUsage` looks these up by
+  // string, so renaming a TierLimits field silently breaks rate-limiting.
+  it('TierLimits JSON shape is stable', () => {
+    const keys = Object.keys(TIER_LIMITS.free).sort()
+    expect(keys).toEqual(
+      [
+        'activitiesPerDay',
+        'chatMessagesPerDay',
+        'headlinesPerDay',
+        'insightsPerDay',
+        'outfitsPerDay',
+        'savedLocations',
+        'tripsPerDay',
+      ].sort(),
+    )
+  })
 })

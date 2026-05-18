@@ -186,6 +186,7 @@ class SettingsScreen extends ConsumerWidget {
                 }),
                 _linkRow(context, LucideIcons.shield, 'Security', () => context.push('/security')),
                 _linkRow(context, LucideIcons.key, 'Permissions', () => context.push('/permissions')),
+                _linkRow(context, LucideIcons.activity, 'Status & diagnostics', () => context.push('/status')),
                 _linkRow(context, LucideIcons.refreshCw, 'Replay onboarding', () {
                   n.setOnboardingComplete(false);
                   context.go('/');
