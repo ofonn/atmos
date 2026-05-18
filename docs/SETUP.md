@@ -266,6 +266,10 @@ In Vercel → **Project Settings → Environment Variables**, add for the
 | `VAPID_PRIVATE_KEY` | same command above |
 | `VAPID_SUBJECT` | `mailto:you@example.com` |
 | `NEXT_PUBLIC_SITE_URL` | your production URL |
+| `NEXT_PUBLIC_SENTRY_DSN` | sentry.io → New project → Next.js (optional) |
+| `SENTRY_ORG` | sentry.io org slug (optional, build-time) |
+| `SENTRY_PROJECT` | `atmos-web` (optional, build-time) |
+| `SENTRY_AUTH_TOKEN` | sentry.io → Account → Auth tokens → `project:releases` scope (optional, build-time for source-map upload) |
 
 ### 4.3 Custom domain (optional but recommended)
 🧑‍💻 **Manual task for you.**

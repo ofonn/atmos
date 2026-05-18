@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
 export default function GlobalError({
   error,
@@ -10,8 +11,10 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Surface to console — no analytics yet.
     console.error('[atmos] global error', error)
+    // Sentry init is a no-op when NEXT_PUBLIC_SENTRY_DSN is unset,
+    // so this call is safe regardless of configuration.
+    Sentry.captureException(error, { extra: { digest: error.digest } })
   }, [error])
 
   return (

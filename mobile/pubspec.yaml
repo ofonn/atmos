@@ -77,6 +77,10 @@ dependencies:
   # Pulls clips from bundled assets/ or the deployed Next.js /videos/.
   video_player: ^2.9.0
 
+  # Crash reporting. Gated by --dart-define=SENTRY_DSN=…  — a no-op
+  # if not set (Sentry.init is skipped entirely in main.dart).
+  sentry_flutter: ^8.9.0
+
 dev_dependencies:
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.13.1
