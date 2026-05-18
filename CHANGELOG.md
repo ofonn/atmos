@@ -5,6 +5,24 @@ All notable changes will be recorded here. The project follows
 
 ## [Unreleased] — `claude/supabase-auth` branch
 
+### Latest additions (Mon 2026-05-18)
+- Mobile Home/Work tags + quick-switch chips on home (E5)
+- Mobile preview-only saved-location bottom sheet (E3)
+- Mobile downgrade snackbar w/ Resubscribe (L3)
+- Mobile WhatsNew sheet — version-keyed, chained after onboarding
+- Mobile native `/status` screen — row-count diagnostic mirrors web
+- Mobile Trip → Share itinerary via system share sheet
+- Sentry observability for web + Flutter (DSN-gated, no-op on forks)
+- Husky pre-commit hook running gitleaks on staged files
+- HSTS preload submission walkthrough + key rotation policy (SECURITY.md)
+- Lighthouse CI on PRs against `/`, `/pricing`, `/privacy`
+- Vitest mocks for `sync.ts` push/pull order + `playIntegrity.ts`
+  strict / lenient gates + TierLimits shape stability — 55 tests
+- `docs/MANUAL_TASKS.md` — standalone printable Monday checklist
+- Styled in-page downgrade banner on web (replaces alert())
+- Feedback context capture (path, url, viewport, ua)
+- robots / sitemap vitest coverage
+
 ### Latest additions (Sun 2026-05-17)
 - Mobile password reset (`/reset` request + `/reset-update` set-new)
   with deep-link recovery routed via NavShell listener

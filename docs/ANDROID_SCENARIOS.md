@@ -678,9 +678,9 @@ planning, and to track what's actually shipped vs. still needs work.
 | D4 | Mobile Share weather (share_plus) | ✅ chip on `HomeScreen` |
 | D5 | RefreshIndicator on HomeScreen | ✅ pull-to-refresh re-runs weather + air |
 | D6 | Mobile SevereWeatherBanner | ✅ rendered between header and content |
-| E3 | Preview-only mode for saved locations | ❌ |
+| E3 | Preview-only mode for saved locations | ✅ tap = peek bottom-sheet; long-press = switch primary |
 | E4 | Undo snackbar after delete | ✅ on `/locations` |
-| E5 | Home/Work tags + quick-switch | 🟡 migration 0012 added `tag` column; UI not built yet |
+| E5 | Home/Work tags + quick-switch | ✅ PopupMenu on /locations sets Home/Work; chip strip on HomeScreen flips between them |
 | F3 | Verify QuickPrompts on mobile | ✅ `chat_screen.dart` renders `quickPrompts` chips |
 | F4 | Mobile AI Personality settings | ✅ Settings → AI personality (emoji use + verbosity) |
 | G5 | Reset to defaults | ✅ Settings → Privacy → Reset settings |
@@ -695,23 +695,26 @@ planning, and to track what's actually shipped vs. still needs work.
 | J3 | About → Security explainer | ✅ `/security` — 5 explainer cards + how to report a security issue |
 | L1 | Upgrade flow + deep link on mobile | ✅ AccountSection "Upgrade to Pro" opens `${ATMOS_API_BASE}/pricing` in external browser |
 | L2 | Stripe Customer Portal route + button | ✅ `/api/stripe/portal` + Manage subscription button |
-| L3 | Downgrade notice | ❌ |
+| L3 | Downgrade notice | ✅ AccountSection snackbar w/ Resubscribe action on pro → free flip |
 | M1 | Friendly Play Integrity rejection | ✅ FriendlyErrorInterceptor maps 401 'integrity'/'package' → 'install from Play Store' |
 
 ### Wiring still TODO (small, fast follow-ups)
 
-- Mobile preview-only saved-location mode (E3)
-- Mobile Home/Work tag UI to use the new `saved_locations.tag` column (E5)
 - Mobile push delivery (after Firebase project; H1/H2/H3)
-- Mobile downgrade notice when subscription expires (L3)
-- Mobile WhatsNew sheet (mirror web `WhatsNew`)
-- Mobile native `/status` screen (mirror web `/status`)
 - Mobile pollen / sun-UV / comparison / precip / temp-trend cards
   (web has them — port to mobile)
-- Mobile share trip itinerary
-- Sentry observability (web + Flutter) once DSN env lands
 - Avatar upload via Supabase Storage (blocked on bucket)
 - Real privacy-contact email (replace `atmos.example.com` placeholders)
+
+### Recently shipped (and now testable on Android)
+
+- E3 preview-only saved-location bottom sheet
+- E5 Home/Work tags via PopupMenu + chip strip on home
+- L3 downgrade snackbar on pro → free flip with Resubscribe action
+- Mobile WhatsNew sheet (version-keyed, after onboarding)
+- Mobile native `/status` page with row-count diagnostic
+- Mobile Trip → Share itinerary via system share sheet
+- Sentry init gated by `--dart-define=SENTRY_DSN=…`
 
 ### Test scenarios unblocked by upcoming tasks (A1)
 
