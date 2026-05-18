@@ -704,5 +704,27 @@ planning, and to track what's actually shipped vs. still needs work.
 - Mobile Home/Work tag UI to use the new `saved_locations.tag` column (E5)
 - Mobile push delivery (after Firebase project; H1/H2/H3)
 - Mobile downgrade notice when subscription expires (L3)
+- Mobile WhatsNew sheet (mirror web `WhatsNew`)
+- Mobile native `/status` screen (mirror web `/status`)
+- Mobile pollen / sun-UV / comparison / precip / temp-trend cards
+  (web has them — port to mobile)
+- Mobile share trip itinerary
+- Sentry observability (web + Flutter) once DSN env lands
 - Avatar upload via Supabase Storage (blocked on bucket)
 - Real privacy-contact email (replace `atmos.example.com` placeholders)
+
+### Test scenarios unblocked by upcoming tasks (A1)
+
+Once the items above ship, the following NEW user flows become testable
+end-to-end on Android:
+
+| New scenario | What you test |
+|---|---|
+| Long-press a saved city → "Set as Home" / "Set as Work" / "Clear tag" | E5 |
+| Home screen → tap segmented control to flip Home ↔ Work weather | E5 quick-switch |
+| Tap a saved city without it replacing your current weather | E3 preview |
+| Cancel Pro → next session shows "Your Pro plan ended" banner | L3 |
+| Fresh install → see a one-time "What's new in 2026.05.17" sheet | mobile WhatsNew |
+| Settings → diagnostics → row counts visible match web `/status` | mobile /status |
+| Trip planner result → share button → packing list lands in WhatsApp | mobile share trip |
+| Force-quit → re-open → critical exception ends up in Sentry dashboard | Sentry mobile |
