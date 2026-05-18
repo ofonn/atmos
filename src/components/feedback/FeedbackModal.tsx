@@ -35,7 +35,20 @@ export function FeedbackModal({ open, defaultCategory = 'other', onClose }: Prop
       const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, message: message.trim(), source: 'web' }),
+        body: JSON.stringify({
+          category,
+          message: message.trim(),
+          source: 'web',
+          context: {
+            path: typeof window !== 'undefined' ? window.location.pathname : null,
+            url: typeof window !== 'undefined' ? window.location.href : null,
+            viewport:
+              typeof window !== 'undefined'
+                ? { w: window.innerWidth, h: window.innerHeight }
+                : null,
+            ua: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+          },
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to send')
