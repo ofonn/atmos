@@ -39,12 +39,14 @@ class AtmosTypography {
     double fontSize = 11,
     FontWeight fontWeight = FontWeight.w500,
     Color? color,
+    double? height,
     double letterSpacing = 0.6,
   }) {
     return GoogleFonts.inter(
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
+      height: height,
       letterSpacing: letterSpacing,
     );
   }

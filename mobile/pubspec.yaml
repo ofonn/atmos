@@ -50,11 +50,6 @@ dependencies:
   # Device info — perf gating for backdrop blur
   device_info_plus: ^10.1.1
 
-  # Play Integrity — server-side attestation that the APK is genuine, signed,
-  # Play-distributed, and running on an unmodified device. Replaces the old
-  # shared-secret handshake. See mobile/README.md → "Play Integrity setup".
-  play_integrity_flutter: ^0.0.5
-
   # Utilities
   intl: ^0.19.0
   collection: ^1.18.0

@@ -199,7 +199,7 @@ export default function ChatPage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl mx-auto"
+        className="sticky top-0 z-50 flex items-center justify-between px-4 h-14 flex-shrink-0 backdrop-blur-2xl saturate-150 w-full max-w-xl lg:max-w-3xl mx-auto"
         style={{
           background: 'var(--nav-bg)',
           borderBottom: '1px solid var(--nav-border)'
@@ -273,7 +273,7 @@ export default function ChatPage() {
       </header>
 
       {/* Chat Thread */}
-      <main ref={scrollRef} onScroll={handleScroll} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl mx-auto">
+      <main ref={scrollRef} onScroll={handleScroll} className="relative flex-1 overflow-y-auto scrollbar-hide px-4 py-4 w-full max-w-xl lg:max-w-3xl mx-auto">
         {messages.length === 0 ? (
           /* Empty state — centered with quick prompts inline */
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-6">
@@ -315,7 +315,7 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-8 max-w-xl mx-auto">
+          <div className="space-y-8 max-w-xl lg:max-w-3xl mx-auto">
             {/* Date chip */}
             <div className="flex justify-center">
               <span
@@ -479,7 +479,7 @@ export default function ChatPage() {
 
       {/* Input area */}
       <div
-        className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4 w-full max-w-xl mx-auto"
+        className="relative z-10 flex-shrink-0 px-4 pt-2 pb-4 w-full max-w-xl lg:max-w-3xl mx-auto"
         style={{ background: 'var(--bg)' }}
       >
         {/* Quick prompts — only in empty state (handled above), show inline chips otherwise */}
