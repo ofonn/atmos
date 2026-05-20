@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent, AuthState;
 
 import 'screens/about/permissions_screen.dart';
@@ -23,48 +22,11 @@ import 'screens/radar/radar_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/technical/technical_screen.dart';
 import 'state/settings_provider.dart';
-import 'state/storage.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
 
-class AtmosApp extends ConsumerStatefulWidget {
+class AtmosApp extends ConsumerWidget {
   const AtmosApp({super.key});
-
-  @override
-  ConsumerState<AtmosApp> createState() => _AtmosAppState();
-}
-
-class _AtmosAppState extends ConsumerState<AtmosApp> {
-  SharedPreferences? _prefs;
-
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((SharedPreferences p) {
-      setState(() => _prefs = p);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_prefs == null) {
-      return MaterialApp(
-        theme: AtmosTheme.dark(),
-        home: const Scaffold(body: SizedBox.shrink()),
-      );
-    }
-    return ProviderScope(
-      parent: ProviderScope.containerOf(context, listen: false),
-      overrides: <Override>[
-        sharedPrefsProvider.overrideWithValue(_prefs!),
-      ],
-      child: const _RoutedApp(),
-    );
-  }
-}
-
-class _RoutedApp extends ConsumerWidget {
-  const _RoutedApp();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

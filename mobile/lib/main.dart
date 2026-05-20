@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'state/storage.dart';
 
 Future<void> _initSupabase() async {
   const supaUrl = String.fromEnvironment('SUPABASE_URL');
@@ -23,7 +25,16 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
+  // Load SharedPreferences here so we can override sharedPrefsProvider at the
+  // top-level ProviderScope. Nested-scope overrides don't reach providers
+  // accessed from sibling consumers, which left the app on a blank screen.
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
   await _initSupabase();
+
+  final List<Override> overrides = <Override>[
+    sharedPrefsProvider.overrideWithValue(prefs),
+  ];
 
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   if (sentryDsn.isNotEmpty) {
@@ -37,9 +48,15 @@ void main() async {
         // 100% errors; 10% traces in prod (tune later via tracesSampler).
         options.tracesSampleRate = 0.1;
       },
-      appRunner: () => runApp(const ProviderScope(child: AtmosApp())),
+      appRunner: () => runApp(ProviderScope(
+        overrides: overrides,
+        child: const AtmosApp(),
+      )),
     );
   } else {
-    runApp(const ProviderScope(child: AtmosApp()));
+    runApp(ProviderScope(
+      overrides: overrides,
+      child: const AtmosApp(),
+    ));
   }
 }
