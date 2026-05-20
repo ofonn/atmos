@@ -224,7 +224,7 @@ class SettingsScreen extends ConsumerWidget {
                     mode: LaunchMode.externalApplication,
                   );
                 }),
-                _linkRow(context, LucideIcons.messageSquareWarning, 'Report issue', () {
+                _linkRow(context, LucideIcons.alertTriangle, 'Report issue', () {
                   FeedbackSheet.show(context, initial: FeedbackCategory.bug);
                 }),
                 _linkRow(context, LucideIcons.sparkles, 'Send AI feedback', () {

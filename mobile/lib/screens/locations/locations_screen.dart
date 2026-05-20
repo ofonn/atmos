@@ -319,7 +319,7 @@ class _LocationsScreenState extends ConsumerState<LocationsScreen> {
   /// Compact chip rendered next to the city name when a tag is set.
   Widget _tagChip(AtmosTokens t, String tag) {
     final IconData icon = tag == 'home'
-        ? LucideIcons.house
+        ? LucideIcons.home
         : tag == 'work'
             ? LucideIcons.briefcase
             : LucideIcons.tag;

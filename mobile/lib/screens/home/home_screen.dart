@@ -278,7 +278,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: Row(
         children: <Widget>[
-          chip(home, 'Home', LucideIcons.house),
+          chip(home, 'Home', LucideIcons.home),
           chip(work, 'Work', LucideIcons.briefcase),
         ],
       ),
@@ -452,7 +452,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         await Future.wait<void>(<Future<void>>[
           ref.read(weatherProvider.notifier).refresh(),
           // Air-quality provider invalidates via locationProvider too.
-          Future<void>.value(ref.invalidate(airQualityProvider)),
+          Future<void>.sync(() => ref.invalidate(airQualityProvider)),
         ]);
       },
       child: ListView(
