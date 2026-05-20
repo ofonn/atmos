@@ -43,14 +43,25 @@ class LocationNotifier extends AsyncNotifier<LocationState> {
   Future<LocationState> build() async {
     final saved = _readSaved();
     final cached = _readCurrent();
-    LocationState seed = LocationState(current: cached, saved: saved, loading: false);
-    // Background-refresh GPS if we have an existing location; else go through fallback chain.
-    if (cached == null) {
-      seed = await _firstTimeBootstrap(seed);
-    } else {
+    // Offline-first: never await network in build(). The first frame must
+    // render with whatever is cached. Bootstrap chains run in background and
+    // mutate state asynchronously once they resolve.
+    Future<void>.microtask(() async {
+      if (cached == null) {
+        try {
+          final geo = ref.read(geoApiProvider);
+          final AtmosLocation? ip =
+              await geo.ipLocation().timeout(const Duration(seconds: 5));
+          if (ip != null && state.valueOrNull?.current == null) {
+            _setAsCurrent(ip);
+          }
+        } catch (_) {
+          // No network / timeout — stay offline; UI is already up.
+        }
+      }
       _silentGpsUpdate();
-    }
-    return seed;
+    });
+    return LocationState(current: cached, saved: saved, loading: false);
   }
 
   List<AtmosLocation> _readSaved() {
@@ -74,18 +85,6 @@ class LocationNotifier extends AsyncNotifier<LocationState> {
     } catch (_) {
       return null;
     }
-  }
-
-  Future<LocationState> _firstTimeBootstrap(LocationState seed) async {
-    final geo = ref.read(geoApiProvider);
-    final AtmosLocation? ip = await geo.ipLocation();
-    LocationState next = seed;
-    if (ip != null) {
-      next = next.copyWith(current: ip);
-      _persistCurrent(ip);
-    }
-    _silentGpsUpdate();
-    return next;
   }
 
   Future<void> _silentGpsUpdate() async {

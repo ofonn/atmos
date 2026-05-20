@@ -9,6 +9,7 @@ class StorageKeys {
   static const String chatMessages = 'atmos_chat_messages';
   static const String aiContent = 'atmos_ai_content';
   static const String settings = 'atmos_settings';
+  static const String cachedWeather = 'atmos_cached_weather';
 }
 
 /// Initialised in `app.dart` before `runApp`.

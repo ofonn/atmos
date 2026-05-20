@@ -28,7 +28,19 @@ class WeatherNotifier extends AsyncNotifier<WeatherSnapshot?> {
     if (current == null) return null;
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) => refresh());
-    return _fetch(current);
+    // Offline-first: return null synchronously so the home screen renders its
+    // welcome/empty state immediately. The fetch runs in background and emits
+    // an AsyncData/AsyncError when it lands (or after a 10s timeout).
+    Future<void>.microtask(() async {
+      try {
+        final WeatherSnapshot snap =
+            await _fetch(current).timeout(const Duration(seconds: 10));
+        state = AsyncData<WeatherSnapshot?>(snap);
+      } catch (e, st) {
+        state = AsyncError<WeatherSnapshot?>(e, st);
+      }
+    });
+    return null;
   }
 
   Future<WeatherSnapshot> _fetch(AtmosLocation loc) async {
@@ -44,7 +56,9 @@ class WeatherNotifier extends AsyncNotifier<WeatherSnapshot?> {
     if (loc == null) return;
     state = const AsyncLoading<WeatherSnapshot?>().copyWithPrevious(state);
     try {
-      state = AsyncData<WeatherSnapshot?>(await _fetch(loc));
+      state = AsyncData<WeatherSnapshot?>(
+        await _fetch(loc).timeout(const Duration(seconds: 10)),
+      );
     } catch (e, st) {
       state = AsyncError<WeatherSnapshot?>(e, st);
     }
@@ -60,7 +74,19 @@ class AirQualityNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   Future<Map<String, dynamic>?> build() async {
     final AtmosLocation? loc = ref.watch(locationProvider).valueOrNull?.current;
     if (loc == null) return null;
-    return ref.read(weatherApiProvider).airPollution(lat: loc.lat, lon: loc.lon);
+    // Offline-first: don't block the UI on the AQI fetch.
+    Future<void>.microtask(() async {
+      try {
+        final Map<String, dynamic>? data = await ref
+            .read(weatherApiProvider)
+            .airPollution(lat: loc.lat, lon: loc.lon)
+            .timeout(const Duration(seconds: 8));
+        state = AsyncData<Map<String, dynamic>?>(data);
+      } catch (e, st) {
+        state = AsyncError<Map<String, dynamic>?>(e, st);
+      }
+    });
+    return null;
   }
 }
 
