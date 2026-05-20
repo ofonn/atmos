@@ -246,7 +246,7 @@ export default function Home() {
           CONTAINER 1 — HEADER
           Fixed-height bounding box: location + search toggle
           ═══════════════════════════════════════════════════════════ */}
-      <header className="relative flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-1 w-full max-w-xl mx-auto">
+      <header className="relative flex-shrink-0 flex items-center justify-between px-5 pt-4 pb-1 w-full max-w-xl lg:max-w-3xl mx-auto">
         <button
           onClick={() => setSearchOpen(!searchOpen)}
           aria-label={searchOpen ? 'Close city search' : 'Open city search'}
@@ -280,7 +280,7 @@ export default function Home() {
 
       {/* Search overlay — borrows space from headline container when open */}
       {searchOpen && (
-        <div className="relative flex-shrink-0 px-5 pt-2 pb-1 w-full max-w-xl mx-auto">
+        <div className="relative flex-shrink-0 px-5 pt-2 pb-1 w-full max-w-xl lg:max-w-3xl mx-auto">
           <form onSubmit={handleSearch}>
             <div className="flex items-center gap-3 rounded-2xl px-4 py-2.5 glass-input">
               <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-muted)' }} aria-hidden="true" />
@@ -313,7 +313,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           MAIN CONTENT AREA — flex-1, distributes space to children
           ═══════════════════════════════════════════════════════════ */}
-      <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden w-full max-w-xl mx-auto">
+      <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden w-full max-w-xl lg:max-w-3xl mx-auto">
         {loading ? (
           /* Loading skeleton — same container proportions */
           <div className="flex-1 flex flex-col px-5">

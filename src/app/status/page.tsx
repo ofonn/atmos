@@ -54,7 +54,7 @@ export default function StatusPage() {
         </h1>
       </header>
 
-      <main className="relative z-10 flex-1 px-6 pt-6 pb-32 w-full max-w-xl mx-auto space-y-4">
+      <main className="relative z-10 flex-1 px-6 pt-6 pb-32 w-full max-w-xl lg:max-w-3xl mx-auto space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--primary)' }} />
