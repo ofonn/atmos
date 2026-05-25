@@ -42,7 +42,7 @@ dependencies:
   # Animations & misc UI
   flutter_animate: ^4.5.0
   flutter_markdown: ^0.7.3
-  fl_chart: ^0.68.0
+  fl_chart: ^1.2.0
 
   # Voice input
   speech_to_text: ^7.0.0
